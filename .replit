@@ -1,0 +1,9 @@
+modules = ["nodejs-20"]
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+JWT_SECRET = "58717dcddfd478603eeb4bbc0848ce3f963170a63b74f2fa11fcf304335d73e8ae2ddb07d5bae8d877182aca48903d85f9bb253f7d23c40fd3217096fbc36108"
