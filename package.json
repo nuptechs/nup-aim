@@ -12,9 +12,6 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@nup/app-kit": "workspace:*",
-    "@nup/ui": "workspace:*",
-    "@nup/api-client": "workspace:*",
     "@google-cloud/vision": "^4.3.3",
     "@google/genai": "^1.28.0",
     "@sendgrid/mail": "^8.1.0",
