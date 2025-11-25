@@ -1,35 +1,27 @@
-import { defineNupAppConfig } from "@nup/app-kit/vite";
-import runtimeErrorModal from "@replit/vite-plugin-runtime-error-modal";
-import path from "path";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
-export default defineNupAppConfig({
+export default defineConfig({
+  plugins: [react()],
   server: {
-    port: 5003,
-  },
-  plugins: [
-    runtimeErrorModal(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
-        ]
-      : []),
-  ],
-  resolve: {
-    alias: {
-      "@nup/ui": path.resolve(import.meta.dirname, "../../packages/@nup/ui/src/index.ts"),
-      "@nup/api-client": path.resolve(import.meta.dirname, "../../packages/@nup/api-client/src/index.ts"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+    port: 5000,
+    host: '0.0.0.0',
+    hmr: {
+      host: 'localhost',
+      port: 5000,
     },
   },
-  root: path.resolve(import.meta.dirname, "client"),
-  base: process.env.BASE_PREFIX || '/',
-  define: {
-    'import.meta.env.VITE_BASE_PREFIX': JSON.stringify(process.env.BASE_PREFIX || '/'),
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './client/src'),
+      '@assets': path.resolve(__dirname, 'attached_assets'),
+    },
   },
+  root: path.resolve(__dirname, 'client'),
+  base: '/',
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(__dirname, 'dist/public'),
+    emptyOutDir: true,
   },
 });
