@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/ApiAuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ToastProvider, useToast } from './contexts/ToastContext';
 import { LoginForm } from './components/LoginForm';
 import { EmailVerification } from './components/EmailVerification';
 import { SessionTimeoutWarning } from './components/SessionTimeoutWarning';
@@ -13,16 +15,18 @@ import { MitigationsForm } from './components/MitigationsForm';
 import { ConclusionsForm } from './components/ConclusionsForm';
 import { DocumentPreview } from './components/DocumentPreview';
 import { AnalysisManager } from './components/AnalysisManager';
+import { Dashboard } from './components/Dashboard';
+import { AIAssistant } from './components/AIAssistant';
+import { Onboarding } from './components/Onboarding';
 import { exportToWord } from './utils/documentExporter';
 import { saveAnalysis, generateNewId } from './utils/storage';
 import { getDefaultProject } from './utils/projectStorage';
 import { registerNuPAIMSections } from './hooks/useCustomFields';
 import { ImpactAnalysis } from './types';
-import { Save, FolderOpen } from 'lucide-react';
+import { Save, FolderOpen, LayoutDashboard, FileText } from 'lucide-react';
 
 const createInitialData = (): ImpactAnalysis => {
   const defaultProject = getDefaultProject();
-  const currentYear = new Date().getFullYear();
   
   return {
     id: generateNewId(),
@@ -54,11 +58,12 @@ const createInitialData = (): ImpactAnalysis => {
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, hasPermission, logout } = useAuth();
+  const toast = useToast();
   const [data, setData] = useState<ImpactAnalysis>(createInitialData());
   const [customFieldsValues, setCustomFieldsValues] = useState<Record<string, Record<string, any>>>({});
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'preview'>('dashboard');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [showAnalysisManager, setShowAnalysisManager] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -66,6 +71,14 @@ const AppContent: React.FC = () => {
   const [currentView, setCurrentView] = useState<'login' | 'verify-email' | 'app'>('login');
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [showSessionWarning, setShowSessionWarning] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const onboardingComplete = localStorage.getItem('nup-aim-onboarding-complete');
+    if (isAuthenticated && !onboardingComplete) {
+      setShowOnboarding(true);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     // Check URL for email verification token
@@ -253,35 +266,59 @@ const AppContent: React.FC = () => {
   const canManageAnalyses = hasPermission('ANALYSIS', 'VIEW') || hasPermission('ANALYSIS', 'EDIT') || hasPermission('ANALYSIS', 'DELETE');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 theme-transition">
       <Header onExport={handleExport} isExporting={isExporting} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-8 max-w-md mx-auto">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-8 max-w-lg mx-auto shadow-soft">
           <button
-            onClick={() => setActiveTab('form')}
-            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'form'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
+              activeTab === 'dashboard'
+                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
+            <LayoutDashboard className="w-4 h-4" />
+            Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab('form')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
+              activeTab === 'form'
+                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
             Formulário
           </button>
           <button
             onClick={() => setActiveTab('preview')}
-            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
               activeTab === 'preview'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Visualização
           </button>
         </div>
 
-        {activeTab === 'form' ? (
+        {activeTab === 'dashboard' ? (
+          <Dashboard 
+            onNewAnalysis={() => {
+              handleNewAnalysis();
+              setActiveTab('form');
+            }}
+            onNavigate={(view) => {
+              if (view === 'analyses') {
+                setShowAnalysisManager(true);
+              }
+            }}
+          />
+        ) : activeTab === 'form' ? (
           <div className="max-w-4xl mx-auto space-y-6">
             <FormSection
               title="Informações Básicas"
@@ -478,15 +515,45 @@ const AppContent: React.FC = () => {
           onLogout={handleLogout}
         />
       )}
+
+      {/* AI Assistant */}
+      {isAuthenticated && activeTab === 'form' && (
+        <AIAssistant 
+          analysisContext={{
+            title: data.title,
+            description: data.description,
+            project: data.project
+          }}
+        />
+      )}
+
+      {/* Onboarding */}
+      {showOnboarding && (
+        <Onboarding
+          onComplete={() => {
+            setShowOnboarding(false);
+            localStorage.setItem('nup-aim-onboarding-complete', 'true');
+            toast.success('Bem-vindo ao NuP-AIM! Você está pronto para começar.');
+          }}
+          onSkip={() => {
+            setShowOnboarding(false);
+            localStorage.setItem('nup-aim-onboarding-complete', 'true');
+          }}
+        />
+      )}
     </div>
   );
 };
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
 

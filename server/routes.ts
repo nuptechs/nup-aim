@@ -640,4 +640,113 @@ export function registerRoutes(app: Express) {
       });
     }
   });
+
+  // ============================================
+  // AI ASSISTANT ROUTES
+  // ============================================
+
+  // Generate AI analysis suggestions
+  app.post('/api/ai/generate-suggestions', authenticateToken, async (req, res) => {
+    try {
+      const { title, description, processes } = req.body;
+      
+      if (!title || !description) {
+        return res.status(400).json({ error: 'Title and description are required' });
+      }
+
+      const { generateAnalysisSuggestions } = await import('./gemini');
+      const suggestions = await generateAnalysisSuggestions(title, description, processes || []);
+      
+      res.json({ success: true, suggestions });
+    } catch (error: any) {
+      console.error('AI suggestion error:', error);
+      res.status(500).json({ error: 'Failed to generate AI suggestions', message: error.message });
+    }
+  });
+
+  // Improve text with AI
+  app.post('/api/ai/improve-text', authenticateToken, async (req, res) => {
+    try {
+      const { text, context } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ error: 'Text is required' });
+      }
+
+      const { improveText } = await import('./gemini');
+      const improvedText = await improveText(text, context || 'analysis');
+      
+      res.json({ success: true, improvedText });
+    } catch (error: any) {
+      console.error('AI improve text error:', error);
+      res.status(500).json({ error: 'Failed to improve text', message: error.message });
+    }
+  });
+
+  // Get smart suggestions for a field
+  app.post('/api/ai/smart-suggestions', authenticateToken, async (req, res) => {
+    try {
+      const { field, currentValue, analysisContext } = req.body;
+      
+      if (!field) {
+        return res.status(400).json({ error: 'Field name is required' });
+      }
+
+      const { generateSmartSuggestions } = await import('./gemini');
+      const suggestions = await generateSmartSuggestions(field, currentValue || '', analysisContext || {});
+      
+      res.json({ success: true, suggestions });
+    } catch (error: any) {
+      console.error('AI smart suggestions error:', error);
+      res.status(500).json({ error: 'Failed to generate suggestions', message: error.message });
+    }
+  });
+
+  // Chat with AI assistant
+  app.post('/api/ai/chat', authenticateToken, async (req, res) => {
+    try {
+      const { message, history, analysisContext } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+      }
+
+      const { chatWithAssistant } = await import('./gemini');
+      const response = await chatWithAssistant(message, history || [], analysisContext);
+      
+      res.json({ success: true, response });
+    } catch (error: any) {
+      console.error('AI chat error:', error);
+      res.status(500).json({ error: 'Failed to process chat message', message: error.message });
+    }
+  });
+
+  // ============================================
+  // DASHBOARD ANALYTICS ROUTES
+  // ============================================
+
+  // Get dashboard statistics
+  app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
+    try {
+      const analysesCount = await db.select().from(analyses);
+      const projectsCount = await db.select().from(projects);
+      const usersCount = await db.select().from(users);
+      const impactsCount = await db.select().from(impacts);
+      const risksCount = await db.select().from(risks);
+      
+      const stats = {
+        totalAnalyses: analysesCount.length,
+        totalProjects: projectsCount.length,
+        totalUsers: usersCount.length,
+        totalImpacts: impactsCount.length,
+        totalRisks: risksCount.length,
+        recentAnalyses: analysesCount.slice(-5),
+      };
+      
+      res.json({ success: true, stats });
+    } catch (error: any) {
+      console.error('Dashboard stats error:', error);
+      res.status(500).json({ error: 'Failed to get dashboard stats', message: error.message });
+    }
+  });
 }

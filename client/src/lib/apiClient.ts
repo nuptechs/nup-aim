@@ -14,8 +14,12 @@ class ApiClient {
 
   constructor() {
     this.baseURL = API_BASE_URL;
-    // Get token from localStorage if it exists
     this.token = localStorage.getItem('nup_aim_auth_token');
+  }
+
+  getToken(): string | null {
+    this.token = localStorage.getItem('nup_aim_auth_token');
+    return this.token;
   }
 
   setAuthToken(token: string | null) {
@@ -38,8 +42,9 @@ class ApiClient {
       ...((options.headers as Record<string, string>) || {}),
     };
 
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+    const currentToken = this.getToken();
+    if (currentToken) {
+      headers.Authorization = `Bearer ${currentToken}`;
     }
 
     try {
