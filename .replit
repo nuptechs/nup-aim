@@ -10,6 +10,7 @@ JWT_SECRET = "58717dcddfd478603eeb4bbc0848ce3f963170a63b74f2fa11fcf304335d73e8ae
 
 [agent]
 expertMode = true
+integrations = ["javascript_gemini_ai_integrations:1.0.0"]
 
 [[ports]]
 localPort = 5000
