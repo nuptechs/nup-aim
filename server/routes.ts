@@ -487,11 +487,27 @@ export function registerRoutes(app: Express) {
     }
   });
   
+  // Helper function to normalize analysis response to camelCase
+  const normalizeAnalysis = (row: any) => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    author: row.author,
+    version: row.version,
+    projectId: row.project_id || row.projectId,
+    createdBy: row.created_by || row.createdBy,
+    data: row.data,
+    createdAt: row.created_at || row.createdAt,
+    updatedAt: row.updated_at || row.updatedAt
+  });
+  
   // Analyses routes
   app.get('/api/analyses', authenticateToken, async (req, res) => {
     try {
       const analysesResult = await db.select().from(analyses);
-      res.json(analysesResult);
+      // Normalize to camelCase for frontend
+      const normalizedResults = analysesResult.map(normalizeAnalysis);
+      res.json(normalizedResults);
     } catch (error) {
       console.error('Analyses fetch error:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -500,7 +516,7 @@ export function registerRoutes(app: Express) {
   
   app.post('/api/analyses', authenticateToken, async (req: any, res) => {
     try {
-      const { title, description, author, projectId } = req.body;
+      const { title, description, author, projectId, data } = req.body;
   
       if (!title || !author) {
         return res.status(400).json({ error: 'Title and author are required' });
@@ -512,13 +528,63 @@ export function registerRoutes(app: Express) {
           description,
           author,
           projectId,
+          data: data || {},
           createdBy: req.user.userId
         })
         .returning();
   
-      res.status(201).json(newAnalysis[0]);
+      // Normalize to camelCase for frontend
+      res.status(201).json(normalizeAnalysis(newAnalysis[0]));
     } catch (error) {
       console.error('Analysis creation error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  app.put('/api/analyses/:id', authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { title, description, author, projectId, data } = req.body;
+  
+      const updateData: any = { updatedAt: new Date() };
+      if (title !== undefined) updateData.title = title;
+      if (description !== undefined) updateData.description = description;
+      if (author !== undefined) updateData.author = author;
+      if (projectId !== undefined) updateData.projectId = projectId;
+      if (data !== undefined) updateData.data = data;
+  
+      const updatedAnalysis = await db.update(analyses)
+        .set(updateData)
+        .where(eq(analyses.id, id))
+        .returning();
+  
+      if (updatedAnalysis.length === 0) {
+        return res.status(404).json({ error: 'Analysis not found' });
+      }
+  
+      // Normalize to camelCase for frontend
+      res.json(normalizeAnalysis(updatedAnalysis[0]));
+    } catch (error) {
+      console.error('Analysis update error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  app.delete('/api/analyses/:id', authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+  
+      const deletedAnalysis = await db.delete(analyses)
+        .where(eq(analyses.id, id))
+        .returning();
+  
+      if (deletedAnalysis.length === 0) {
+        return res.status(404).json({ error: 'Analysis not found' });
+      }
+  
+      res.json({ success: true, message: 'Analysis deleted successfully', data: normalizeAnalysis(deletedAnalysis[0]) });
+    } catch (error) {
+      console.error('Analysis delete error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });

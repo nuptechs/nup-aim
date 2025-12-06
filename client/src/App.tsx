@@ -21,6 +21,7 @@ import { Onboarding } from './components/Onboarding';
 import { exportToWord } from './utils/documentExporter';
 import { saveAnalysis, generateNewId } from './utils/storage';
 import { getDefaultProject } from './utils/projectStorage';
+import apiClient from './lib/apiClient';
 import { registerNuPAIMSections } from './hooks/useCustomFields';
 import { ImpactAnalysis } from './types';
 import { Save, FolderOpen, LayoutDashboard, FileText } from 'lucide-react';
@@ -164,6 +165,7 @@ const AppContent: React.FC = () => {
     setIsSaving(true);
     let customFieldsSaved = true;
     let customFieldsErrors: string[] = [];
+    let databaseSaved = false;
     
     try {
       // Save the main analysis data with custom fields values
@@ -171,7 +173,67 @@ const AppContent: React.FC = () => {
         ...data,
         customFieldsValues
       };
+      
+      // First, save to localStorage as fallback
       saveAnalysis(analysisWithCustomFields);
+      
+      // Try to save to database via API
+      try {
+        const dbId = (data as any).dbId;
+        const isNewAnalysis = !dbId;
+        
+        // Prepare complete analysis data for database
+        const analysisDataForDb = {
+          scope: data.scope,
+          impacts: data.impacts,
+          risks: data.risks,
+          mitigations: data.mitigations,
+          conclusions: data.conclusions,
+          customFieldsValues: customFieldsValues,
+          date: data.date,
+          version: data.version,
+          project: data.project
+        };
+        
+        if (isNewAnalysis) {
+          // Create new analysis in database
+          const response = await apiClient.createAnalysis({
+            title: data.title,
+            description: data.description,
+            author: data.author,
+            projectId: null,
+            data: analysisDataForDb
+          });
+          
+          if (response.success && response.data) {
+            console.log('✅ Análise criada no banco de dados:', response.data.id);
+            databaseSaved = true;
+            // Update local data with database ID and persist to localStorage
+            const updatedData = { ...data, dbId: response.data.id };
+            setData(updatedData);
+            saveAnalysis({ ...updatedData, customFieldsValues });
+          } else {
+            console.warn('⚠️ Falha ao salvar no banco:', response.error);
+          }
+        } else {
+          // Update existing analysis
+          const response = await apiClient.updateAnalysis(dbId, {
+            title: data.title,
+            description: data.description,
+            author: data.author,
+            data: analysisDataForDb
+          });
+          
+          if (response.success) {
+            console.log('✅ Análise atualizada no banco de dados');
+            databaseSaved = true;
+          } else {
+            console.warn('⚠️ Falha ao atualizar no banco:', response.error);
+          }
+        }
+      } catch (dbError) {
+        console.warn('⚠️ Erro ao salvar no banco de dados:', dbError);
+      }
       
       // Save custom fields values to the microservice
       const { getCustomFieldsSDK } = await import('./hooks/useCustomFields');
@@ -193,19 +255,24 @@ const AppContent: React.FC = () => {
       
       // Show success/warning message based on results
       const msgDiv = document.createElement('div');
-      msgDiv.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${
-        customFieldsSaved ? 'bg-green-500' : 'bg-yellow-500'
-      } text-white`;
+      let bgColor = 'bg-green-500';
+      let message = '';
       
-      if (customFieldsSaved) {
-        msgDiv.textContent = 'Análise salva com sucesso!';
+      if (databaseSaved && customFieldsSaved) {
+        message = 'Análise salva no banco de dados com sucesso!';
+      } else if (databaseSaved && !customFieldsSaved) {
+        bgColor = 'bg-yellow-500';
+        message = `Análise salva no banco. Campos personalizados com erro: ${customFieldsErrors.join(', ')}`;
+      } else if (!databaseSaved && customFieldsSaved) {
+        bgColor = 'bg-yellow-500';
+        message = 'Análise salva localmente. Falha ao salvar no banco de dados.';
       } else {
-        msgDiv.innerHTML = `
-          <div><strong>Análise salva localmente</strong></div>
-          <div class="text-sm">Alguns campos personalizados não foram salvos no servidor.</div>
-          <div class="text-xs mt-1">Seções afetadas: ${customFieldsErrors.join(', ')}</div>
-        `;
+        bgColor = 'bg-yellow-500';
+        message = 'Análise salva localmente apenas.';
       }
+      
+      msgDiv.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${bgColor} text-white`;
+      msgDiv.textContent = message;
       
       document.body.appendChild(msgDiv);
       
@@ -213,7 +280,7 @@ const AppContent: React.FC = () => {
         if (document.body.contains(msgDiv)) {
           document.body.removeChild(msgDiv);
         }
-      }, customFieldsSaved ? 3000 : 5000);
+      }, databaseSaved ? 3000 : 5000);
     } catch (error) {
       console.error('Erro ao salvar análise:', error);
       alert('Erro ao salvar a análise. Tente novamente.');
