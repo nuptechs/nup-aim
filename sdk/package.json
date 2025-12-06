@@ -1,0 +1,71 @@
+{
+  "name": "@nupidentity/sdk",
+  "version": "1.0.0",
+  "description": "Official NuPIdentity SDK for easy OIDC/SSO integration",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.mjs",
+      "require": "./dist/react/index.js"
+    },
+    "./express": {
+      "types": "./dist/express/index.d.ts",
+      "import": "./dist/express/index.mjs",
+      "require": "./dist/express/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "nupidentity",
+    "oidc",
+    "sso",
+    "authentication",
+    "identity",
+    "oauth2"
+  ],
+  "author": "NuPtechs",
+  "license": "MIT",
+  "dependencies": {
+    "cookie-parser": "^1.4.6"
+  },
+  "peerDependencies": {
+    "express": ">=4.0.0",
+    "react": ">=17.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.6",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nuptechs/nupidentity-sdk"
+  }
+}
