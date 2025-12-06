@@ -51,6 +51,7 @@ export const analyses = aimSchema.table('analyses', {
   version: text('version').default('1.0'),
   projectId: uuid('project_id').references(() => projects.id),
   createdBy: uuid('created_by').references(() => users.id),
+  data: jsonb('data').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`)
 });

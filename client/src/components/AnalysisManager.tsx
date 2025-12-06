@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Edit, Trash2, Plus, Search, Calendar, User, Copy } from 'lucide-react';
+import { FileText, Edit, Trash2, Plus, Search, Calendar, User, Copy, Database, HardDrive, Loader2 } from 'lucide-react';
 import { ImpactAnalysis } from '../types';
 import { getStoredAnalyses, deleteAnalysis } from '../utils/storage';
 import { CopyAnalysisModal } from './CopyAnalysisModal';
 import { useAuth } from '../contexts/ApiAuthContext';
+import apiClient from '../lib/apiClient';
 
 interface AnalysisManagerProps {
   onLoadAnalysis: (analysis: ImpactAnalysis) => void;
@@ -22,25 +23,107 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'project'>('date');
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [selectedAnalysisForCopy, setSelectedAnalysisForCopy] = useState<ImpactAnalysis | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [dataSource, setDataSource] = useState<'local' | 'database' | 'both'>('both');
 
   useEffect(() => {
     loadAnalyses();
   }, []);
 
-  const loadAnalyses = () => {
-    const stored = getStoredAnalyses();
-    setAnalyses(stored);
+  const loadAnalyses = async () => {
+    setIsLoading(true);
+    try {
+      // Load from localStorage first (always available)
+      const localAnalyses = getStoredAnalyses();
+      
+      // Try to load from database
+      let dbAnalyses: ImpactAnalysis[] = [];
+      try {
+        const response = await apiClient.getAnalyses();
+        if (response.success && response.data) {
+          // Convert database format to local format, including full data from JSONB field
+          dbAnalyses = response.data.map((dbAnalysis: any) => {
+            const storedData = dbAnalysis.data || {};
+            return {
+              id: dbAnalysis.id,
+              dbId: dbAnalysis.id,
+              title: dbAnalysis.title || '',
+              description: dbAnalysis.description || '',
+              author: dbAnalysis.author || '',
+              date: storedData.date || (dbAnalysis.createdAt ? new Date(dbAnalysis.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
+              version: storedData.version || dbAnalysis.version || '1.0',
+              project: storedData.project || '',
+              scope: storedData.scope || { processes: [] },
+              impacts: storedData.impacts || { business: [], technical: [], operational: [], financial: [] },
+              risks: storedData.risks || [],
+              mitigations: storedData.mitigations || [],
+              conclusions: storedData.conclusions || { summary: '', recommendations: [], nextSteps: [] },
+              customFieldsValues: storedData.customFieldsValues || {},
+              fromDatabase: true
+            };
+          });
+          console.log(`✅ Carregadas ${dbAnalyses.length} análises do banco de dados`);
+        }
+      } catch (dbError) {
+        console.warn('⚠️ Não foi possível carregar análises do banco:', dbError);
+      }
+      
+      // Merge analyses (database + local, avoiding duplicates by dbId)
+      const dbIds = new Set(dbAnalyses.map(a => a.id));
+      // Include local analyses that don't have a dbId or whose dbId isn't in the database results
+      const uniqueLocalAnalyses = localAnalyses.filter(a => {
+        const localDbId = (a as any).dbId;
+        if (!localDbId) return true; // Local-only analysis without database backup
+        return !dbIds.has(localDbId); // Not already in database results
+      });
+      
+      // Put database analyses first, then local ones
+      const mergedAnalyses = [...dbAnalyses, ...uniqueLocalAnalyses];
+      
+      setAnalyses(mergedAnalyses);
+      setDataSource(dbAnalyses.length > 0 ? (uniqueLocalAnalyses.length > 0 ? 'both' : 'database') : 'local');
+    } catch (error) {
+      console.error('Erro ao carregar análises:', error);
+      // Fallback to localStorage only
+      const localAnalyses = getStoredAnalyses();
+      setAnalyses(localAnalyses);
+      setDataSource('local');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (analysis: ImpactAnalysis) => {
     if (!hasPermission('ANALYSIS', 'DELETE')) {
       alert('Você não tem permissão para excluir análises.');
       return;
     }
 
     if (window.confirm('Tem certeza que deseja excluir esta análise?')) {
-      deleteAnalysis(id);
-      loadAnalyses();
+      try {
+        // Delete from localStorage
+        deleteAnalysis(analysis.id);
+        
+        // Also delete from database if it has a dbId
+        const dbId = (analysis as any).dbId;
+        if (dbId) {
+          try {
+            const response = await apiClient.deleteAnalysis(dbId);
+            if (response.success) {
+              console.log('✅ Análise excluída do banco de dados');
+            } else {
+              console.warn('⚠️ Falha ao excluir do banco:', response.error);
+            }
+          } catch (dbError) {
+            console.warn('⚠️ Erro ao excluir do banco de dados:', dbError);
+          }
+        }
+        
+        loadAnalyses();
+      } catch (error) {
+        console.error('Erro ao excluir análise:', error);
+        alert('Erro ao excluir a análise.');
+      }
     }
   };
 
@@ -154,9 +237,47 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
               </select>
             </div>
 
+            {/* Data Source Indicator */}
+            <div className="flex items-center gap-2 mb-4 text-xs text-gray-500">
+              {isLoading ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Carregando análises...
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  {dataSource === 'database' && (
+                    <>
+                      <Database className="w-3 h-3 text-green-500" />
+                      <span>Dados do banco de dados</span>
+                    </>
+                  )}
+                  {dataSource === 'local' && (
+                    <>
+                      <HardDrive className="w-3 h-3 text-yellow-500" />
+                      <span>Dados locais (localStorage)</span>
+                    </>
+                  )}
+                  {dataSource === 'both' && (
+                    <>
+                      <Database className="w-3 h-3 text-green-500" />
+                      <span className="mx-1">+</span>
+                      <HardDrive className="w-3 h-3 text-yellow-500" />
+                      <span>Banco de dados + Local</span>
+                    </>
+                  )}
+                  <span className="ml-2">({analyses.length} análise{analyses.length !== 1 ? 's' : ''})</span>
+                </span>
+              )}
+            </div>
+
             {/* Analysis Grid */}
             <div className="overflow-auto max-h-[60vh]">
-              {filteredAnalyses.length === 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                </div>
+              ) : filteredAnalyses.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -219,7 +340,7 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
                           )}
                           {canDelete && (
                             <button
-                              onClick={() => handleDelete(analysis.id)}
+                              onClick={() => handleDelete(analysis)}
                               className="p-1 text-red-600 hover:text-red-800 transition-colors"
                               title="Excluir"
                             >
