@@ -24,7 +24,13 @@ if (JWT_SECRET.length < 32) {
 
 console.log('✅ [Security] JWT_SECRET configured (' + JWT_SECRET.length + ' chars)');
 
-export function registerRoutes(app: Express) {
+interface RouteOptions {
+  ssoEnabled?: boolean;
+}
+
+export function registerRoutes(app: Express, options: RouteOptions = {}) {
+  const { ssoEnabled = false } = options;
+  
   // Apply middleware
   app.use(corsMiddleware);
   app.use(express.json({ limit: '5mb' }));
@@ -38,7 +44,8 @@ export function registerRoutes(app: Express) {
       status: 'healthy',
       service: 'NuP-AIM', 
       version: '1.0.0',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      authMode: ssoEnabled ? 'sso' : 'local'
     });
   });
 
@@ -47,15 +54,23 @@ export function registerRoutes(app: Express) {
       status: 'healthy',
       service: 'NuP-AIM', 
       version: '1.0.0',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      authMode: ssoEnabled ? 'sso' : 'local'
     });
   });
 
   // ============================================
-  // AUTH ROUTES
+  // AUTH ROUTES (only when SSO is disabled)
   // ============================================
+  
+  if (ssoEnabled) {
+    console.log('ℹ️  [Routes] Local auth routes disabled - using SSO');
+  } else {
+    console.log('ℹ️  [Routes] Local auth routes enabled');
+  }
 
-  // Auth routes
+  // Auth routes - only register when SSO is NOT enabled
+  if (!ssoEnabled) {
   app.post('/api/auth/login', async (req, res) => {
     try {
       let { email, password } = req.body;
@@ -376,6 +391,7 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+  } // End of if (!ssoEnabled) block for local auth routes
   
   // Custom Fields Microservice Proxy
   const CUSTOM_FIELDS_SERVICE_URL = 'http://localhost:3002';
