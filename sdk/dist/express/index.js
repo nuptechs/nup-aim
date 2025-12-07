@@ -64,7 +64,7 @@ var NuPIdentityClient = class {
       scopes: config.scopes ?? ["openid", "profile", "email"]
     };
   }
-  async discover(retries = 3) {
+  async discover(retries = 2) {
     if (this.discoveryDocument) {
       return this.discoveryDocument;
     }
@@ -72,9 +72,8 @@ var NuPIdentityClient = class {
     let lastError = null;
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        console.log(`[NuPIdentity] Attempting discovery (${attempt}/${retries})...`);
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 1e4);
+        const timeout = setTimeout(() => controller.abort(), 5e3);
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeout);
         if (!response.ok) {
@@ -87,12 +86,11 @@ var NuPIdentityClient = class {
         lastError = error;
         console.error(`[NuPIdentity] Discovery attempt ${attempt} failed:`, error);
         if (attempt < retries) {
-          console.log(`[NuPIdentity] Retrying in ${attempt * 2} seconds...`);
-          await new Promise((resolve) => setTimeout(resolve, attempt * 2e3));
+          await new Promise((resolve) => setTimeout(resolve, 1e3));
         }
       }
     }
-    throw new Error(`[NuPIdentity] Failed to discover OIDC configuration after ${retries} attempts: ${lastError?.message}`);
+    throw new Error(`[NuPIdentity] Failed to discover OIDC configuration: ${lastError?.message}`);
   }
   async getJWKS() {
     const now = Date.now();
