@@ -847,7 +847,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
   app.get('/api/templates/available-fields', authenticateToken, async (req, res) => {
     try {
       const fields = getAvailableFields();
-      res.json({ success: true, fields });
+      res.json({ fields });
     } catch (error: any) {
       console.error('Get available fields error:', error);
       res.status(500).json({ error: 'Falha ao obter campos disponíveis', message: error.message });
@@ -873,7 +873,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
       .from(documentTemplates)
       .orderBy(desc(documentTemplates.createdAt));
       
-      res.json({ success: true, templates });
+      res.json({ templates });
     } catch (error: any) {
       console.error('List templates error:', error);
       res.status(500).json({ error: 'Falha ao listar templates', message: error.message });
@@ -893,7 +893,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
         return res.status(404).json({ error: 'Template não encontrado' });
       }
       
-      res.json({ success: true, template });
+      res.json({ template });
     } catch (error: any) {
       console.error('Get template error:', error);
       res.status(500).json({ error: 'Falha ao obter template', message: error.message });
@@ -936,7 +936,6 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
         .returning();
       
       res.status(201).json({ 
-        success: true, 
         template: newTemplate,
         markersFound: parsedMarkers.length,
         message: `Template criado com sucesso. ${parsedMarkers.length} marcadores encontrados.`
@@ -978,7 +977,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
         return res.status(404).json({ error: 'Template não encontrado' });
       }
       
-      res.json({ success: true, template: updatedTemplate });
+      res.json({ template: updatedTemplate });
     } catch (error: any) {
       console.error('Update template error:', error);
       res.status(500).json({ error: 'Falha ao atualizar template', message: error.message });
@@ -998,7 +997,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
         return res.status(404).json({ error: 'Template não encontrado' });
       }
       
-      res.json({ success: true, message: 'Template excluído com sucesso' });
+      res.json({ message: 'Template excluído com sucesso' });
     } catch (error: any) {
       console.error('Delete template error:', error);
       res.status(500).json({ error: 'Falha ao excluir template', message: error.message });
@@ -1038,7 +1037,6 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
       }
       
       res.json({ 
-        success: true, 
         template: updatedTemplate,
         markersFound: parsedMarkers.length,
         message: `Documento reanalisado. ${parsedMarkers.length} marcadores encontrados.`
@@ -1068,7 +1066,6 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
       const validation = await validateFieldMappings(parsedMarkers, fieldMappings);
       
       res.json({ 
-        success: true, 
         validation,
         message: validation.valid 
           ? 'Todos os marcadores estão mapeados corretamente'
@@ -1120,7 +1117,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
       
       const data = await getAnalysisData(analysisId);
       
-      res.json({ success: true, data });
+      res.json({ data });
     } catch (error: any) {
       console.error('Preview data error:', error);
       res.status(500).json({ error: 'Falha ao obter dados da análise', message: error.message });
@@ -1159,7 +1156,6 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
         .returning();
       
       res.status(201).json({ 
-        success: true, 
         template: duplicated,
         message: 'Template duplicado com sucesso'
       });

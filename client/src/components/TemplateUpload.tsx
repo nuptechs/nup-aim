@@ -95,18 +95,14 @@ export const TemplateUpload: React.FC<TemplateUploadProps> = ({ onComplete, onCa
         }
 
         try {
-          const response = await apiClient.post('/api/templates', {
+          const response = await apiClient.post<{ template: any }>('/api/templates', {
             name: name.trim(),
             description: description.trim(),
             fileName: file.name,
             fileContent: base64Content
           });
 
-          if (response.success) {
-            onComplete(response.template);
-          } else {
-            setError(response.error || 'Erro ao fazer upload do template');
-          }
+          onComplete(response.template);
         } catch (err: any) {
           setError(err.message || 'Erro ao fazer upload do template');
         } finally {
