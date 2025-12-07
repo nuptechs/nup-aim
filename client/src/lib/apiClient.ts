@@ -191,6 +191,45 @@ class ApiClient {
   logout() {
     this.setAuthToken(null);
   }
+
+  // Generic HTTP methods for flexible API calls
+  async get<T = any>(endpoint: string): Promise<T> {
+    const response = await this.request<T>(endpoint, { method: 'GET' });
+    if (!response.success) {
+      throw new Error(response.error || 'Request failed');
+    }
+    return response.data as T;
+  }
+
+  async post<T = any>(endpoint: string, data?: any): Promise<T> {
+    const response = await this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Request failed');
+    }
+    return response.data as T;
+  }
+
+  async put<T = any>(endpoint: string, data?: any): Promise<T> {
+    const response = await this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Request failed');
+    }
+    return response.data as T;
+  }
+
+  async delete<T = any>(endpoint: string): Promise<T> {
+    const response = await this.request<T>(endpoint, { method: 'DELETE' });
+    if (!response.success) {
+      throw new Error(response.error || 'Request failed');
+    }
+    return response.data as T;
+  }
 }
 
 // Export singleton instance
