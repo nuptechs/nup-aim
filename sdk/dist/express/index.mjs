@@ -1,10 +1,3 @@
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
-
 // src/core/client.ts
 import * as crypto from "crypto";
 var NuPIdentityClient = class {
@@ -442,10 +435,10 @@ function ensureAnyPermission(options, ...anyPermissions) {
   };
   return [authMiddleware, permissionMiddleware];
 }
-function createAuthRoutes(options) {
-  const express = __require("express");
-  const cookieParser = __require("cookie-parser");
-  const router = express.Router();
+async function createAuthRoutes(options, expressApp) {
+  const cookieParserModule = await import("cookie-parser");
+  const cookieParser = cookieParserModule.default || cookieParserModule;
+  const router = expressApp.Router();
   router.use(cookieParser());
   const OAUTH_STATE_COOKIE = "nupidentity_oauth_state";
   const OAUTH_VERIFIER_COOKIE = "nupidentity_code_verifier";
@@ -624,11 +617,12 @@ async function setupNuPIdentity(app, options) {
   console.log(`[NuPIdentity] Initializing integration for system: ${manifest.system.id}`);
   await client.discover();
   console.log(`[NuPIdentity] Connected to ${clientConfig.issuer}`);
-  const authRoutes = createAuthRoutes({
+  const expressModule = await import("express");
+  const authRoutes = await createAuthRoutes({
     ...clientConfig,
     successRedirect,
     failureRedirect
-  });
+  }, expressModule.default || expressModule);
   app.use(authRoutePrefix, authRoutes);
   console.log(`[NuPIdentity] Auth routes mounted at ${authRoutePrefix}`);
   const syncFunctions = async () => {

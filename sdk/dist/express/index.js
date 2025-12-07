@@ -481,10 +481,10 @@ function ensureAnyPermission(options, ...anyPermissions) {
   };
   return [authMiddleware, permissionMiddleware];
 }
-function createAuthRoutes(options) {
-  const express = require("express");
-  const cookieParser = require("cookie-parser");
-  const router = express.Router();
+async function createAuthRoutes(options, expressApp) {
+  const cookieParserModule = await import("cookie-parser");
+  const cookieParser = cookieParserModule.default || cookieParserModule;
+  const router = expressApp.Router();
   router.use(cookieParser());
   const OAUTH_STATE_COOKIE = "nupidentity_oauth_state";
   const OAUTH_VERIFIER_COOKIE = "nupidentity_code_verifier";
@@ -663,11 +663,12 @@ async function setupNuPIdentity(app, options) {
   console.log(`[NuPIdentity] Initializing integration for system: ${manifest.system.id}`);
   await client.discover();
   console.log(`[NuPIdentity] Connected to ${clientConfig.issuer}`);
-  const authRoutes = createAuthRoutes({
+  const expressModule = await import("express");
+  const authRoutes = await createAuthRoutes({
     ...clientConfig,
     successRedirect,
     failureRedirect
-  });
+  }, expressModule.default || expressModule);
   app.use(authRoutePrefix, authRoutes);
   console.log(`[NuPIdentity] Auth routes mounted at ${authRoutePrefix}`);
   const syncFunctions = async () => {

@@ -1,4 +1,4 @@
-import { N as NuPIdentityConfig, O as OIDCDiscoveryDocument, J as JWKS, T as TokenPayload, b as TokenSet, U as UserInfo, S as SystemManifest, a as SystemRegistrationResult, c as UserSystemPermissions } from './index-B_NFA8jC.mjs';
+import { N as NuPIdentityConfig, O as OIDCDiscoveryDocument, J as JWKS, T as TokenPayload, b as TokenSet, U as UserInfo, S as SystemManifest, a as SystemRegistrationResult, c as UserSystemPermissions } from './index-B_NFA8jC.js';
 import { Request, Response, RequestHandler } from 'express';
 
 declare class NuPIdentityClient {
@@ -60,6 +60,8 @@ interface AuthRoutesOptions extends NuPIdentityMiddlewareOptions {
     successRedirect?: string;
     failureRedirect?: string;
 }
-declare function createAuthRoutes(options: AuthRoutesOptions): any;
+declare function createAuthRoutes(options: AuthRoutesOptions, expressApp: {
+    Router: () => any;
+}): Promise<any>;
 
 export { type AuthRoutesOptions as A, NuPIdentityClient as N, ensureAnyPermission as a, attachUser as b, ensureScope as c, ensureOrganization as d, ensurePermission as e, createAuthRoutes as f, type NuPIdentityMiddlewareOptions as g, requireNuPAuth as r };

@@ -479,10 +479,10 @@ function ensureAnyPermission(options, ...anyPermissions) {
   };
   return [authMiddleware, permissionMiddleware];
 }
-function createAuthRoutes(options) {
-  const express = require("express");
-  const cookieParser = require("cookie-parser");
-  const router = express.Router();
+async function createAuthRoutes(options, expressApp) {
+  const cookieParserModule = await import("cookie-parser");
+  const cookieParser = cookieParserModule.default || cookieParserModule;
+  const router = expressApp.Router();
   router.use(cookieParser());
   const OAUTH_STATE_COOKIE = "nupidentity_oauth_state";
   const OAUTH_VERIFIER_COOKIE = "nupidentity_code_verifier";
