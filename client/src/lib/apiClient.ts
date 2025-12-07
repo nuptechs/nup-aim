@@ -100,6 +100,15 @@ class ApiClient {
     return this.request('/health');
   }
 
+  // Auth mode check
+  async getAuthMode(): Promise<{ mode: 'sso' | 'local'; ssoLoginUrl: string | null; ssoLogoutUrl: string | null }> {
+    const response = await this.request<{ mode: 'sso' | 'local'; ssoLoginUrl: string | null; ssoLogoutUrl: string | null }>('/api/auth/mode');
+    if (response.success && response.data) {
+      return response.data;
+    }
+    return { mode: 'local', ssoLoginUrl: null, ssoLogoutUrl: null };
+  }
+
   // Authentication endpoints
   async login(email: string, password: string) {
     const response = await this.request<{ token: string; user: any }>('/api/auth/login', {

@@ -67,6 +67,17 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
   });
 
   // ============================================
+  // AUTH MODE ENDPOINT (always available)
+  // ============================================
+  app.get('/api/auth/mode', (req, res) => {
+    res.json({
+      mode: ssoEnabled ? 'sso' : 'local',
+      ssoLoginUrl: ssoEnabled ? '/auth/sso/login' : null,
+      ssoLogoutUrl: ssoEnabled ? '/auth/sso/logout' : null,
+    });
+  });
+
+  // ============================================
   // AUTH ROUTES (only when SSO is disabled)
   // ============================================
   
