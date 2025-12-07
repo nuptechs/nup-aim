@@ -49,7 +49,7 @@ export async function setupNuPIdentityAuth(app: Express): Promise<NuPIdentitySet
     });
     
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('SSO setup timeout after 10s')), 10000)
+      setTimeout(() => reject(new Error('SSO setup timeout after 30s')), 30000)
     );
     
     const nup = await Promise.race([setupPromise, timeoutPromise]) as any;
