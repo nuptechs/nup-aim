@@ -1800,12 +1800,16 @@ async function setupNuPIdentityAuth(app2) {
   try {
     const sdk = await import("@nupidentity/sdk/express");
     const { setupNuPIdentity } = sdk;
-    const nup = await setupNuPIdentity(app2, {
+    const setupPromise = setupNuPIdentity(app2, {
       ...config,
       manifest,
       authRoutePrefix: "/auth/sso",
       failOnSyncError: false
     });
+    const timeoutPromise = new Promise(
+      (_, reject) => setTimeout(() => reject(new Error("SSO setup timeout after 10s")), 1e4)
+    );
+    const nup = await Promise.race([setupPromise, timeoutPromise]);
     if (nup.isRegistered) {
       console.log("\u2705 [NuPIdentity] Sistema registrado com sucesso");
     } else {
