@@ -64,6 +64,6 @@ waitForPort = 5000
 outputType = "webview"
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "vm"
 run = ["bash", "-c", "NODE_ENV=production node dist/index.js"]
 build = ["npm", "run", "build"]
