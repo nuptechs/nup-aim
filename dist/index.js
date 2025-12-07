@@ -8,88 +8,75 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// client/src/utils/fieldExtractor.ts
-import { v4 as uuidv4 } from "uuid";
-var mapHTMLInputTypeToFieldType, determineFieldType, determineComplexity, calculateFunctionPoints;
-var init_fieldExtractor = __esm({
-  "client/src/utils/fieldExtractor.ts"() {
-    mapHTMLInputTypeToFieldType = (htmlType) => {
-      const mapping = {
-        "text": "text",
-        "password": "text",
-        "email": "email",
-        "tel": "text",
-        "number": "number",
-        "date": "date",
-        "datetime-local": "date",
-        "time": "text",
-        "checkbox": "checkbox",
-        "radio": "radio",
-        "file": "file",
-        "url": "url",
-        "search": "text",
-        "color": "text",
-        "range": "number",
-        "hidden": "text"
-      };
-      return mapping[htmlType.toLowerCase()] || "text";
-    };
-    determineFieldType = (explicitType, name) => {
-      if (explicitType) {
-        return mapHTMLInputTypeToFieldType(explicitType);
-      }
-      const lowerName = name.toLowerCase();
-      if (lowerName.includes("email")) return "email";
-      if (lowerName.includes("senha") || lowerName.includes("password")) return "text";
-      if (lowerName.includes("data") || lowerName.includes("date") || lowerName.includes("nascimento")) return "date";
-      if (lowerName.includes("n\xFAmero") || lowerName.includes("number") || lowerName.includes("quantidade") || lowerName.includes("quantity") || lowerName.includes("valor") || lowerName.includes("amount") || lowerName.includes("pre\xE7o") || lowerName.includes("price")) return "number";
-      if (lowerName.includes("descri\xE7\xE3o") || lowerName.includes("description") || lowerName.includes("observa\xE7\xE3o") || lowerName.includes("observation") || lowerName.includes("coment\xE1rio") || lowerName.includes("comment") || lowerName.includes("mensagem") || lowerName.includes("message")) return "textarea";
-      if (lowerName.includes("aceito") || lowerName.includes("accept") || lowerName.includes("concordo") || lowerName.includes("agree") || lowerName.includes("lembrar") || lowerName.includes("remember")) return "checkbox";
-      if (lowerName.includes("sexo") || lowerName.includes("gender") || lowerName.includes("op\xE7\xE3o") || lowerName.includes("option")) return "radio";
-      if (lowerName.includes("estado") || lowerName.includes("state") || lowerName.includes("pa\xEDs") || lowerName.includes("country") || lowerName.includes("categoria") || lowerName.includes("category") || lowerName.includes("tipo") || lowerName.includes("type") || lowerName.includes("status")) return "select";
-      if (lowerName.includes("arquivo") || lowerName.includes("file") || lowerName.includes("anexo") || lowerName.includes("attachment") || lowerName.includes("upload")) return "file";
-      if (lowerName.includes("url") || lowerName.includes("site") || lowerName.includes("website") || lowerName.includes("link")) return "url";
-      return "text";
-    };
-    determineComplexity = (fieldType, name) => {
-      if (["file", "textarea"].includes(fieldType)) {
-        return "High";
-      }
-      if (["date", "select", "email", "url", "number"].includes(fieldType)) {
-        return "Average";
-      }
-      const lowerName = name.toLowerCase();
-      if (lowerName.includes("cpf") || lowerName.includes("cnpj") || lowerName.includes("password") || lowerName.includes("senha") || lowerName.includes("completo") || lowerName.includes("complete")) {
-        return "High";
-      }
-      if (lowerName.length > 20 || lowerName.includes(" ")) {
-        return "Average";
-      }
-      return "Low";
-    };
-    calculateFunctionPoints = (fieldType, complexity) => {
-      if (["text", "email", "number", "date", "checkbox", "radio", "file", "url"].includes(fieldType)) {
-        if (complexity === "Low") return 3;
-        if (complexity === "Average") return 4;
-        return 6;
-      }
-      if (["textarea", "select"].includes(fieldType)) {
-        if (complexity === "Low") return 4;
-        if (complexity === "Average") return 5;
-        return 7;
-      }
-      return 4;
-    };
-  }
-});
-
-// client/src/utils/geminiFieldExtractor.ts
+// server/geminiFieldExtractor.ts
 var geminiFieldExtractor_exports = {};
 __export(geminiFieldExtractor_exports, {
   extractFieldsWithGemini: () => extractFieldsWithGemini
 });
 import { GoogleGenAI } from "@google/genai";
-import { v4 as uuidv42 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
+function mapHTMLInputTypeToFieldType(htmlType) {
+  const mapping = {
+    "text": "text",
+    "password": "text",
+    "email": "email",
+    "tel": "text",
+    "number": "number",
+    "date": "date",
+    "datetime-local": "date",
+    "time": "text",
+    "checkbox": "checkbox",
+    "radio": "radio",
+    "file": "file",
+    "url": "url",
+    "search": "text",
+    "color": "text",
+    "range": "number",
+    "hidden": "text"
+  };
+  return mapping[htmlType.toLowerCase()] || "text";
+}
+function determineFieldType(explicitType, name) {
+  if (explicitType) {
+    return mapHTMLInputTypeToFieldType(explicitType);
+  }
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes("email")) return "email";
+  if (lowerName.includes("senha") || lowerName.includes("password")) return "text";
+  if (lowerName.includes("data") || lowerName.includes("date") || lowerName.includes("nascimento")) return "date";
+  if (lowerName.includes("n\xFAmero") || lowerName.includes("number") || lowerName.includes("quantidade") || lowerName.includes("quantity") || lowerName.includes("valor") || lowerName.includes("amount") || lowerName.includes("pre\xE7o") || lowerName.includes("price")) return "number";
+  if (lowerName.includes("descri\xE7\xE3o") || lowerName.includes("description") || lowerName.includes("observa\xE7\xE3o") || lowerName.includes("observation") || lowerName.includes("coment\xE1rio") || lowerName.includes("comment") || lowerName.includes("mensagem") || lowerName.includes("message")) return "textarea";
+  if (lowerName.includes("aceito") || lowerName.includes("accept") || lowerName.includes("concordo") || lowerName.includes("agree") || lowerName.includes("lembrar") || lowerName.includes("remember")) return "checkbox";
+  if (lowerName.includes("sexo") || lowerName.includes("gender") || lowerName.includes("op\xE7\xE3o") || lowerName.includes("option")) return "radio";
+  if (lowerName.includes("estado") || lowerName.includes("state") || lowerName.includes("pa\xEDs") || lowerName.includes("country") || lowerName.includes("categoria") || lowerName.includes("category") || lowerName.includes("tipo") || lowerName.includes("type") || lowerName.includes("status")) return "select";
+  if (lowerName.includes("arquivo") || lowerName.includes("file") || lowerName.includes("anexo") || lowerName.includes("attachment") || lowerName.includes("upload")) return "file";
+  return "text";
+}
+function determineComplexity(fieldType, fieldName) {
+  const complexTypes = ["file", "select", "radio"];
+  const simpleTypes = ["checkbox", "hidden"];
+  if (complexTypes.includes(fieldType)) return "High";
+  if (simpleTypes.includes(fieldType)) return "Low";
+  const complexKeywords = ["valor", "price", "amount", "total", "quantidade"];
+  const lowerName = fieldName.toLowerCase();
+  if (complexKeywords.some((k) => lowerName.includes(k))) return "High";
+  return "Average";
+}
+function calculateFunctionPoints(fieldType, complexity) {
+  const fpMatrix = {
+    "text": { "Low": 3, "Average": 4, "High": 6 },
+    "number": { "Low": 3, "Average": 4, "High": 6 },
+    "date": { "Low": 4, "Average": 5, "High": 7 },
+    "select": { "Low": 4, "Average": 5, "High": 7 },
+    "file": { "Low": 5, "Average": 7, "High": 10 },
+    "textarea": { "Low": 3, "Average": 4, "High": 6 },
+    "checkbox": { "Low": 2, "Average": 3, "High": 4 },
+    "radio": { "Low": 3, "Average": 4, "High": 6 },
+    "email": { "Low": 3, "Average": 4, "High": 6 },
+    "url": { "Low": 3, "Average": 4, "High": 6 }
+  };
+  return fpMatrix[fieldType]?.[complexity] || fpMatrix["text"][complexity];
+}
 function identifyDerivedFields(fields) {
   const derivedKeywords = [
     "total",
@@ -142,21 +129,19 @@ function identifyDerivedFields(fields) {
 async function extractFieldsWithGemini(imageBase64) {
   try {
     console.log("\u{1F916} Iniciando extra\xE7\xE3o de campos com Gemini AI...");
-    const isServer = typeof process !== "undefined" && process.env;
-    const apiKey = isServer ? process.env.GEMINI_API_KEY : import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error("GEMINI_API_KEY n\xE3o configurada");
     }
     const ai2 = new GoogleGenAI({ apiKey });
     const base64Image = imageBase64.replace(/^data:image\/\w+;base64,/, "");
     console.log(`\u{1F4E4} Enviando imagem para Gemini 2.5 Flash (tamanho: ${Math.round(base64Image.length / 1024)} KB)`);
-    const startTime = performance.now();
+    const startTime = Date.now();
     const response = await ai2.models.generateContent({
       model: "gemini-2.5-flash",
-      generationConfig: {
+      config: {
         responseMimeType: "application/json",
         temperature: 0.1
-        // Baixa temperatura para respostas mais consistentes
       },
       contents: [
         {
@@ -175,8 +160,8 @@ async function extractFieldsWithGemini(imageBase64) {
         }
       ]
     });
-    const endTime = performance.now();
-    console.log(`\u2705 Resposta recebida do Gemini em ${Math.round(endTime - startTime)}ms`);
+    const endTime = Date.now();
+    console.log(`\u2705 Resposta recebida do Gemini em ${endTime - startTime}ms`);
     let responseText = response.text;
     if (!responseText) {
       throw new Error("Resposta vazia do Gemini");
@@ -200,7 +185,7 @@ async function extractFieldsWithGemini(imageBase64) {
       const complexity = determineComplexity(fieldType, field.name);
       const fpValue = calculateFunctionPoints(fieldType, complexity);
       return {
-        id: uuidv42(),
+        id: uuidv4(),
         name: field.name,
         label: field.label,
         type: fieldType,
@@ -211,7 +196,6 @@ async function extractFieldsWithGemini(imageBase64) {
         source: "Gemini AI",
         fieldCategory: field.category || "neutro",
         confidence: 0.95,
-        // Gemini tem alta confiança
         value: field.value
       };
     });
@@ -238,8 +222,7 @@ async function extractFieldsWithGemini(imageBase64) {
 }
 var OPTIMIZED_PROMPT;
 var init_geminiFieldExtractor = __esm({
-  "client/src/utils/geminiFieldExtractor.ts"() {
-    init_fieldExtractor();
+  "server/geminiFieldExtractor.ts"() {
     OPTIMIZED_PROMPT = `Analise esta tela de sistema e extraia TODOS os campos de dados vis\xEDveis.
 
 EXTRAIA:

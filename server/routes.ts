@@ -718,8 +718,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
         return res.status(400).json({ error: 'Image data is required' });
       }
   
-      // Import dynamically to avoid circular dependencies
-      const { extractFieldsWithGemini } = await import('../client/src/utils/geminiFieldExtractor');
+      const { extractFieldsWithGemini } = await import('./geminiFieldExtractor');
       
       console.log('🤖 Processing image with Gemini AI...');
       const fields = await extractFieldsWithGemini(imageBase64);
