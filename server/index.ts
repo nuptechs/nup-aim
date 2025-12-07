@@ -10,7 +10,10 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
-const publicPath = path.join(__dirname, '../dist/public');
+const isProduction = process.env.NODE_ENV === 'production';
+const publicPath = isProduction 
+  ? path.join(__dirname, 'public') 
+  : path.join(__dirname, '../dist/public');
 
 async function initializeApp() {
   // Setup NuPIdentity SSO first (if configured)
