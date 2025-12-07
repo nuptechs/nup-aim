@@ -1,9 +1,14 @@
 import jwt from 'jsonwebtoken';
 
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable is required in production');
-}
-const JWT_SECRET: string = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+// JWT_SECRET is resolved lazily to allow Replit to inject secrets during deploy
+// The validation happens at runtime when authenticateToken is first called
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  return secret || 'dev-secret-change-in-production';
+};
 
 export interface AuthRequest extends Request {
   user?: {
@@ -21,7 +26,7 @@ export const authenticateToken = (req: any, res: any, next: any) => {
     return res.status(401).json({ error: 'Access token required' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+  jwt.verify(token, getJwtSecret(), (err: any, user: any) => {
     if (err) return res.status(403).json({ error: 'Invalid token' });
     req.user = user;
     next();

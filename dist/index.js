@@ -559,13 +559,24 @@ var documentTemplates = aimSchema.table("document_templates", {
 });
 
 // server/db.ts
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?"
-  );
+var _db = null;
+function getDb() {
+  if (_db) return _db;
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      "DATABASE_URL must be set. Did you forget to provision a database?"
+    );
+  }
+  const client = postgres(process.env.DATABASE_URL);
+  _db = drizzle(client, { schema: schema_exports });
+  return _db;
 }
-var client = postgres(process.env.DATABASE_URL);
-var db = drizzle(client, { schema: schema_exports });
+var db = new Proxy({}, {
+  get(target, prop) {
+    const realDb = getDb();
+    return realDb[prop];
+  }
+});
 
 // server/routes.ts
 import { eq as eq2, and, or, desc } from "drizzle-orm";
@@ -599,17 +610,20 @@ var corsMiddleware = cors({
 
 // server/middleware/auth.middleware.ts
 import jwt from "jsonwebtoken";
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
-  throw new Error("JWT_SECRET environment variable is required in production");
-}
-var JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+var getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable is required in production");
+  }
+  return secret || "dev-secret-change-in-production";
+};
 var authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   if (!token) {
     return res.status(401).json({ error: "Access token required" });
   }
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, getJwtSecret(), (err, user) => {
     if (err) return res.status(403).json({ error: "Invalid token" });
     req.user = user;
     next();
@@ -883,20 +897,21 @@ async function validateFieldMappings(parsedMarkers, fieldMappings) {
 }
 
 // server/routes.ts
-var JWT_SECRET2 = process.env.JWT_SECRET || "";
-if (!JWT_SECRET2) {
-  console.error("\u{1F534} [FATAL] JWT_SECRET environment variable is required");
-  console.error("\u{1F534} [FATAL] NuP-AIM cannot start without a secure JWT_SECRET");
-  console.error(`\u{1F4A1} Generate one with: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`);
-  throw new Error("JWT_SECRET is required. Set it in Secrets tab.");
-}
-if (JWT_SECRET2.length < 32) {
-  console.error("\u{1F534} [FATAL] JWT_SECRET is too short (min 32 chars)");
-  throw new Error("JWT_SECRET must be at least 32 characters long");
-}
-console.log("\u2705 [Security] JWT_SECRET configured (" + JWT_SECRET2.length + " chars)");
+var JWT_SECRET = "";
 function registerRoutes(app2, options = {}) {
   const { ssoEnabled: ssoEnabled2 = false } = options;
+  JWT_SECRET = process.env.JWT_SECRET || "";
+  if (!JWT_SECRET) {
+    console.error("\u{1F534} [FATAL] JWT_SECRET environment variable is required");
+    console.error("\u{1F534} [FATAL] NuP-AIM cannot start without a secure JWT_SECRET");
+    console.error(`\u{1F4A1} Generate one with: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`);
+    throw new Error("JWT_SECRET is required. Set it in Secrets tab.");
+  }
+  if (JWT_SECRET.length < 32) {
+    console.error("\u{1F534} [FATAL] JWT_SECRET is too short (min 32 chars)");
+    throw new Error("JWT_SECRET must be at least 32 characters long");
+  }
+  console.log("\u2705 [Security] JWT_SECRET configured (" + JWT_SECRET.length + " chars)");
   app2.use(corsMiddleware);
   app2.use(express.json({ limit: "5mb" }));
   app2.use(express.urlencoded({ limit: "5mb", extended: true }));
@@ -968,7 +983,7 @@ function registerRoutes(app2, options = {}) {
             email: user.email,
             profileId: user.profileId
           },
-          JWT_SECRET2,
+          JWT_SECRET,
           { expiresIn: "24h" }
         );
         await db.update(users).set({ lastLogin: /* @__PURE__ */ new Date() }).where(eq2(users.id, user.id));
@@ -1027,7 +1042,7 @@ function registerRoutes(app2, options = {}) {
         const passwordHash = await bcrypt.hash(password, saltRounds);
         const verificationToken = jwt2.sign(
           { email, type: "email_verification" },
-          JWT_SECRET2,
+          JWT_SECRET,
           { expiresIn: "24h" }
         );
         const [newUser] = await db.insert(users).values({
@@ -1063,7 +1078,7 @@ function registerRoutes(app2, options = {}) {
         if (!token) {
           return res.status(400).json({ error: "Verification token is required" });
         }
-        const decoded = jwt2.verify(token, JWT_SECRET2);
+        const decoded = jwt2.verify(token, JWT_SECRET);
         if (decoded.type !== "email_verification") {
           return res.status(400).json({ error: "Invalid token type" });
         }
@@ -1115,7 +1130,7 @@ function registerRoutes(app2, options = {}) {
         }
         const verificationToken = jwt2.sign(
           { email, type: "email_verification" },
-          JWT_SECRET2,
+          JWT_SECRET,
           { expiresIn: "24h" }
         );
         await db.update(users).set({
