@@ -18,23 +18,35 @@ var NuPIdentityClient = class {
       scopes: config.scopes ?? ["openid", "profile", "email"]
     };
   }
-  async discover() {
+  async discover(retries = 3) {
     if (this.discoveryDocument) {
       return this.discoveryDocument;
     }
     const url = `${this.config.issuer}/.well-known/openid-configuration`;
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Discovery failed: ${response.status} ${response.statusText}`);
+    let lastError = null;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`[NuPIdentity] Attempting discovery (${attempt}/${retries})...`);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 1e4);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!response.ok) {
+          throw new Error(`Discovery failed: ${response.status} ${response.statusText}`);
+        }
+        this.discoveryDocument = await response.json();
+        console.log("[NuPIdentity] Discovery document loaded successfully");
+        return this.discoveryDocument;
+      } catch (error) {
+        lastError = error;
+        console.error(`[NuPIdentity] Discovery attempt ${attempt} failed:`, error);
+        if (attempt < retries) {
+          console.log(`[NuPIdentity] Retrying in ${attempt * 2} seconds...`);
+          await new Promise((resolve) => setTimeout(resolve, attempt * 2e3));
+        }
       }
-      this.discoveryDocument = await response.json();
-      console.log("[NuPIdentity] Discovery document loaded successfully");
-      return this.discoveryDocument;
-    } catch (error) {
-      console.error("[NuPIdentity] Failed to fetch discovery document:", error);
-      throw new Error(`[NuPIdentity] Failed to discover OIDC configuration: ${error}`);
     }
+    throw new Error(`[NuPIdentity] Failed to discover OIDC configuration after ${retries} attempts: ${lastError?.message}`);
   }
   async getJWKS() {
     const now = Date.now();
