@@ -15,21 +15,9 @@ import {
   getAnalysisData 
 } from './templateService';
 
-const JWT_SECRET: string = process.env.JWT_SECRET || '';
-
-if (!JWT_SECRET) {
-  console.error('🔴 [FATAL] JWT_SECRET environment variable is required');
-  console.error('🔴 [FATAL] NuP-AIM cannot start without a secure JWT_SECRET');
-  console.error('💡 Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
-  throw new Error('JWT_SECRET is required. Set it in Secrets tab.');
-}
-
-if (JWT_SECRET.length < 32) {
-  console.error('🔴 [FATAL] JWT_SECRET is too short (min 32 chars)');
-  throw new Error('JWT_SECRET must be at least 32 characters long');
-}
-
-console.log('✅ [Security] JWT_SECRET configured (' + JWT_SECRET.length + ' chars)');
+// JWT_SECRET is validated lazily inside registerRoutes to allow
+// Replit to inject secrets during the deploy promote stage
+let JWT_SECRET: string = '';
 
 interface RouteOptions {
   ssoEnabled?: boolean;
@@ -37,6 +25,24 @@ interface RouteOptions {
 
 export function registerRoutes(app: Express, options: RouteOptions = {}) {
   const { ssoEnabled = false } = options;
+  
+  // Validate JWT_SECRET at runtime, not at module load time
+  // This allows Replit to inject secrets during deploy before validation runs
+  JWT_SECRET = process.env.JWT_SECRET || '';
+  
+  if (!JWT_SECRET) {
+    console.error('🔴 [FATAL] JWT_SECRET environment variable is required');
+    console.error('🔴 [FATAL] NuP-AIM cannot start without a secure JWT_SECRET');
+    console.error('💡 Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+    throw new Error('JWT_SECRET is required. Set it in Secrets tab.');
+  }
+
+  if (JWT_SECRET.length < 32) {
+    console.error('🔴 [FATAL] JWT_SECRET is too short (min 32 chars)');
+    throw new Error('JWT_SECRET must be at least 32 characters long');
+  }
+
+  console.log('✅ [Security] JWT_SECRET configured (' + JWT_SECRET.length + ' chars)');
   
   // Apply middleware
   app.use(corsMiddleware);
