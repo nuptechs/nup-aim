@@ -24,7 +24,8 @@ import { getDefaultProject } from './utils/projectStorage';
 import apiClient from './lib/apiClient';
 import { registerNuPAIMSections } from './hooks/useCustomFields';
 import { ImpactAnalysis } from './types';
-import { Save, FolderOpen, LayoutDashboard, FileText } from 'lucide-react';
+import { Save, FolderOpen, LayoutDashboard, FileText, FileSpreadsheet } from 'lucide-react';
+import { TemplateManager } from './components/TemplateManager';
 
 const createInitialData = (): ImpactAnalysis => {
   const defaultProject = getDefaultProject();
@@ -64,7 +65,7 @@ const AppContent: React.FC = () => {
   const [customFieldsValues, setCustomFieldsValues] = useState<Record<string, Record<string, any>>>({});
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'preview'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'preview' | 'templates'>('dashboard');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [showAnalysisManager, setShowAnalysisManager] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -338,7 +339,7 @@ const AppContent: React.FC = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-8 max-w-lg mx-auto shadow-soft">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-8 max-w-2xl mx-auto shadow-soft">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -371,6 +372,17 @@ const AppContent: React.FC = () => {
           >
             Visualização
           </button>
+          <button
+            onClick={() => setActiveTab('templates')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
+              activeTab === 'templates'
+                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Templates
+          </button>
         </div>
 
         {activeTab === 'dashboard' ? (
@@ -385,6 +397,8 @@ const AppContent: React.FC = () => {
               }
             }}
           />
+        ) : activeTab === 'templates' ? (
+          <TemplateManager onClose={() => setActiveTab('dashboard')} />
         ) : activeTab === 'form' ? (
           <div className="max-w-4xl mx-auto space-y-6">
             <FormSection
