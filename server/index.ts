@@ -15,17 +15,33 @@ const publicPath = isProduction
   ? path.join(__dirname, 'public') 
   : path.join(__dirname, '../dist/public');
 
-// Track SSO initialization status
+// Track initialization status
+let appReady = false;
 let ssoInitialized = false;
 let ssoEnabled = false;
 
-// Register health check FIRST - before any async initialization
-// This ensures autoscale can verify the server is running
+// Register health check endpoints FIRST - before any async initialization
+// This ensures autoscale can verify the server is running immediately
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
+    ready: appReady,
     ssoReady: ssoInitialized
+  });
+});
+
+// Root path health check for Autoscale (responds immediately)
+app.get('/', (req, res, next) => {
+  // If app is ready, let the SPA fallback handle it
+  if (appReady) {
+    return next();
+  }
+  // During initialization, return health status
+  res.status(200).json({ 
+    status: 'starting', 
+    message: 'Application is initializing...',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -65,6 +81,10 @@ async function initializeApp() {
       res.sendFile(path.join(publicPath, 'index.html'));
     }
   });
+  
+  // Mark app as ready after all routes are registered
+  appReady = true;
+  console.log('✅ [NuP-AIM] App is ready to serve requests');
 }
 
 // Start the server immediately
