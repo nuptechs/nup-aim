@@ -52,11 +52,12 @@ export async function setupNuPIdentity(
   await client.discover();
   console.log(`[NuPIdentity] Connected to ${clientConfig.issuer}`);
 
-  const authRoutes = createAuthRoutes({
+  const expressModule = await import('express');
+  const authRoutes = await createAuthRoutes({
     ...clientConfig,
     successRedirect,
     failureRedirect,
-  } as AuthRoutesOptions);
+  } as AuthRoutesOptions, expressModule.default || expressModule);
   
   app.use(authRoutePrefix, authRoutes);
   console.log(`[NuPIdentity] Auth routes mounted at ${authRoutePrefix}`);

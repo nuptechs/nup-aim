@@ -241,10 +241,10 @@ export interface AuthRoutesOptions extends NuPIdentityMiddlewareOptions {
   failureRedirect?: string;
 }
 
-export function createAuthRoutes(options: AuthRoutesOptions) {
-  const express = require('express');
-  const cookieParser = require('cookie-parser');
-  const router = express.Router();
+export async function createAuthRoutes(options: AuthRoutesOptions, expressApp: { Router: () => any }) {
+  const cookieParserModule = await import('cookie-parser');
+  const cookieParser = cookieParserModule.default || cookieParserModule;
+  const router = expressApp.Router();
   
   router.use(cookieParser());
   

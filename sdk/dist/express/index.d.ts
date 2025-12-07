@@ -1,5 +1,5 @@
-import { N as NuPIdentityClient, r as requireNuPAuth, e as ensurePermission, a as ensureAnyPermission } from '../index-BDWt_wAS.js';
-export { A as AuthRoutesOptions, g as NuPIdentityMiddlewareOptions, b as attachUser, f as createAuthRoutes, d as ensureOrganization, c as ensureScope } from '../index-BDWt_wAS.js';
+import { N as NuPIdentityClient, r as requireNuPAuth, e as ensurePermission, a as ensureAnyPermission } from '../index-BMZtpHsL.js';
+export { A as AuthRoutesOptions, g as NuPIdentityMiddlewareOptions, b as attachUser, f as createAuthRoutes, d as ensureOrganization, c as ensureScope } from '../index-BMZtpHsL.js';
 import { Express } from 'express';
 import { N as NuPIdentityConfig, S as SystemManifest, a as SystemRegistrationResult } from '../index-B_NFA8jC.js';
 
