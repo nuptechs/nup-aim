@@ -9,8 +9,8 @@ import { apiClient } from '../lib/apiClient';
 import { Card, CardContent } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { SkeletonLoader } from './ui/LoadingSpinner';
-import TemplateUpload from './TemplateUpload';
-import TemplateFieldMapper from './TemplateFieldMapper';
+import { TemplateUpload } from './TemplateUpload';
+import { TemplateFieldMapper } from './TemplateFieldMapper';
 
 interface Template {
   id: string;
