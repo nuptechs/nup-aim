@@ -896,7 +896,7 @@ if (JWT_SECRET2.length < 32) {
 }
 console.log("\u2705 [Security] JWT_SECRET configured (" + JWT_SECRET2.length + " chars)");
 function registerRoutes(app2, options = {}) {
-  const { ssoEnabled = false } = options;
+  const { ssoEnabled: ssoEnabled2 = false } = options;
   app2.use(corsMiddleware);
   app2.use(express.json({ limit: "5mb" }));
   app2.use(express.urlencoded({ limit: "5mb", extended: true }));
@@ -906,7 +906,7 @@ function registerRoutes(app2, options = {}) {
       service: "NuP-AIM",
       version: "1.0.0",
       timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-      authMode: ssoEnabled ? "sso" : "local"
+      authMode: ssoEnabled2 ? "sso" : "local"
     });
   });
   app2.get("/api/health", (req, res) => {
@@ -915,22 +915,22 @@ function registerRoutes(app2, options = {}) {
       service: "NuP-AIM",
       version: "1.0.0",
       timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-      authMode: ssoEnabled ? "sso" : "local"
+      authMode: ssoEnabled2 ? "sso" : "local"
     });
   });
   app2.get("/api/auth/mode", (req, res) => {
     res.json({
-      mode: ssoEnabled ? "sso" : "local",
-      ssoLoginUrl: ssoEnabled ? "/auth/sso/login" : null,
-      ssoLogoutUrl: ssoEnabled ? "/auth/sso/logout" : null
+      mode: ssoEnabled2 ? "sso" : "local",
+      ssoLoginUrl: ssoEnabled2 ? "/auth/sso/login" : null,
+      ssoLogoutUrl: ssoEnabled2 ? "/auth/sso/logout" : null
     });
   });
-  if (ssoEnabled) {
+  if (ssoEnabled2) {
     console.log("\u2139\uFE0F  [Routes] Local auth routes disabled - using SSO");
   } else {
     console.log("\u2139\uFE0F  [Routes] Local auth routes enabled");
   }
-  if (!ssoEnabled) {
+  if (!ssoEnabled2) {
     app2.post("/api/auth/login", async (req, res) => {
       try {
         let { email, password } = req.body;
@@ -1840,31 +1840,49 @@ var app = express2();
 var PORT = parseInt(process.env.PORT || "5000", 10);
 var isProduction = process.env.NODE_ENV === "production";
 var publicPath = isProduction ? path.join(__dirname, "public") : path.join(__dirname, "../dist/public");
+var ssoInitialized = false;
+var ssoEnabled = false;
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    ssoReady: ssoInitialized
+  });
+});
 async function initializeApp() {
-  const nup = await setupNuPIdentityAuth(app);
-  if (nup.isEnabled) {
-    console.log("\u{1F510} [Auth] Modo SSO NuPIdentity ativado");
-  } else {
-    console.log("\u{1F510} [Auth] Modo autentica\xE7\xE3o local ativado");
+  try {
+    const nup = await setupNuPIdentityAuth(app);
+    ssoEnabled = nup.isEnabled;
+    ssoInitialized = true;
+    if (nup.isEnabled) {
+      console.log("\u{1F510} [Auth] Modo SSO NuPIdentity ativado");
+    } else {
+      console.log("\u{1F510} [Auth] Modo autentica\xE7\xE3o local ativado");
+    }
+    registerRoutes(app, { ssoEnabled: nup.isEnabled });
+  } catch (error) {
+    console.error("\u26A0\uFE0F [NuPIdentity] SSO setup failed, falling back to local auth:", error);
+    ssoInitialized = true;
+    ssoEnabled = false;
+    registerRoutes(app, { ssoEnabled: false });
   }
-  registerRoutes(app, { ssoEnabled: nup.isEnabled });
   app.use(express2.static(publicPath));
   app.get("*", (req, res) => {
-    if (req.path.startsWith("/api") || req.path.startsWith("/health") || req.path.startsWith("/auth")) {
+    if (req.path.startsWith("/api") || req.path.startsWith("/auth")) {
       res.status(404).json({ error: "Not found" });
     } else {
       res.sendFile(path.join(publicPath, "index.html"));
     }
   });
-  if (!process.env.COMPOSED_DEV) {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`\u{1F680} [NuP-AIM] Server running on port ${PORT}`);
-    });
-  }
 }
-initializeApp().catch((err) => {
+var server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`\u{1F680} [NuP-AIM] Server listening on port ${PORT}`);
+  console.log(`\u{1F4C1} [NuP-AIM] Serving static files from: ${publicPath}`);
+});
+initializeApp().then(() => {
+  console.log("\u2705 [NuP-AIM] Application fully initialized");
+}).catch((err) => {
   console.error("\u274C [NuP-AIM] Failed to initialize app:", err);
-  process.exit(1);
 });
 var index_default = app;
 export {
