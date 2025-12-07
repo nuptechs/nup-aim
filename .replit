@@ -65,5 +65,5 @@ outputType = "webview"
 
 [deployment]
 deploymentTarget = "vm"
-run = ["node", "dist/index.js"]
+run = ["bash", "-c", "NODE_ENV=production node dist/index.js"]
 build = ["npm", "run", "build"]
