@@ -1,4 +1,4 @@
-import { N as NuPIdentityConfig, O as OIDCDiscoveryDocument, J as JWKS, T as TokenPayload, b as TokenSet, U as UserInfo, S as SystemManifest, a as SystemRegistrationResult, c as UserSystemPermissions } from './index-B_NFA8jC.js';
+import { N as NuPIdentityConfig, O as OIDCDiscoveryDocument, J as JWKS, T as TokenPayload, b as TokenSet, U as UserInfo, S as SystemManifest, a as SystemRegistrationResult, c as UserSystemPermissions } from './index-B_NFA8jC.mjs';
 import { Request, Response, RequestHandler } from 'express';
 
 declare class NuPIdentityClient {
@@ -8,7 +8,7 @@ declare class NuPIdentityClient {
     private jwksLastFetch;
     private readonly JWKS_CACHE_TTL;
     constructor(config: NuPIdentityConfig);
-    discover(): Promise<OIDCDiscoveryDocument>;
+    discover(retries?: number): Promise<OIDCDiscoveryDocument>;
     getJWKS(): Promise<JWKS>;
     private getPublicKey;
     verifyToken(token: string): Promise<TokenPayload>;
