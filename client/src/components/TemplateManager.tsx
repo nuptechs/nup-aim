@@ -57,10 +57,8 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({ onClose: _onCl
   const fetchTemplates = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get('/api/templates');
-      if (response.success) {
-        setTemplates(response.templates);
-      }
+      const response = await apiClient.get<{ templates: Template[] }>('/api/templates');
+      setTemplates(response.templates || []);
     } catch (error) {
       console.error('Error fetching templates:', error);
       showToast('Erro ao carregar templates', 'error');
@@ -75,11 +73,9 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({ onClose: _onCl
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await apiClient.delete(`/api/templates/${id}`);
-      if (response.success) {
-        setTemplates(templates.filter(t => t.id !== id));
-        showToast('Template excluído com sucesso', 'success');
-      }
+      await apiClient.delete(`/api/templates/${id}`);
+      setTemplates(templates.filter(t => t.id !== id));
+      showToast('Template excluído com sucesso', 'success');
     } catch (error) {
       showToast('Erro ao excluir template', 'error');
     }
@@ -88,13 +84,11 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({ onClose: _onCl
 
   const handleDuplicate = async (template: Template) => {
     try {
-      const response = await apiClient.post(`/api/templates/${template.id}/duplicate`, {
+      const response = await apiClient.post<{ template: Template }>(`/api/templates/${template.id}/duplicate`, {
         name: `${template.name} (Cópia)`
       });
-      if (response.success) {
-        setTemplates([response.template, ...templates]);
-        showToast('Template duplicado com sucesso', 'success');
-      }
+      setTemplates([response.template, ...templates]);
+      showToast('Template duplicado com sucesso', 'success');
     } catch (error) {
       showToast('Erro ao duplicar template', 'error');
     }
@@ -102,19 +96,17 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({ onClose: _onCl
 
   const handleSetDefault = async (template: Template) => {
     try {
-      const response = await apiClient.put(`/api/templates/${template.id}`, {
+      await apiClient.put(`/api/templates/${template.id}`, {
         isDefault: !template.isDefault
       });
-      if (response.success) {
-        setTemplates(templates.map(t => ({
-          ...t,
-          isDefault: t.id === template.id ? !t.isDefault : false
-        })));
-        showToast(
-          template.isDefault ? 'Template removido como padrão' : 'Template definido como padrão',
-          'success'
-        );
-      }
+      setTemplates(templates.map(t => ({
+        ...t,
+        isDefault: t.id === template.id ? !t.isDefault : false
+      })));
+      showToast(
+        template.isDefault ? 'Template removido como padrão' : 'Template definido como padrão',
+        'success'
+      );
     } catch (error) {
       showToast('Erro ao atualizar template', 'error');
     }
@@ -122,18 +114,16 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({ onClose: _onCl
 
   const handleToggleActive = async (template: Template) => {
     try {
-      const response = await apiClient.put(`/api/templates/${template.id}`, {
+      await apiClient.put(`/api/templates/${template.id}`, {
         isActive: !template.isActive
       });
-      if (response.success) {
-        setTemplates(templates.map(t => 
-          t.id === template.id ? { ...t, isActive: !t.isActive } : t
-        ));
-        showToast(
-          template.isActive ? 'Template desativado' : 'Template ativado',
-          'success'
-        );
-      }
+      setTemplates(templates.map(t => 
+        t.id === template.id ? { ...t, isActive: !t.isActive } : t
+      ));
+      showToast(
+        template.isActive ? 'Template desativado' : 'Template ativado',
+        'success'
+      );
     } catch (error) {
       showToast('Erro ao atualizar template', 'error');
     }

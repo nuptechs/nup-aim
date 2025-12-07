@@ -83,11 +83,10 @@ export const TemplateFieldMapper: React.FC<TemplateFieldMapperProps> = ({
   useEffect(() => {
     const fetchFields = async () => {
       try {
-        const response = await apiClient.get('/api/templates/available-fields');
-        if (response.success) {
-          setAvailableFields(response.fields);
-          setExpandedCategories(new Set(response.fields.map((c: FieldCategory) => c.id)));
-        }
+        const response = await apiClient.get<{ fields: FieldCategory[] }>('/api/templates/available-fields');
+        const fields = response.fields || [];
+        setAvailableFields(fields);
+        setExpandedCategories(new Set(fields.map((c: FieldCategory) => c.id)));
       } catch (err) {
         console.error('Error fetching fields:', err);
         setError('Erro ao carregar campos disponíveis');
@@ -137,19 +136,15 @@ export const TemplateFieldMapper: React.FC<TemplateFieldMapperProps> = ({
     setError(null);
 
     try {
-      const response = await apiClient.put(`/api/templates/${template.id}`, {
+      await apiClient.put(`/api/templates/${template.id}`, {
         fieldMappings
       });
 
-      if (response.success) {
-        onSave({
-          ...template,
-          fieldMappings,
-          updatedAt: new Date().toISOString()
-        });
-      } else {
-        setError(response.error || 'Erro ao salvar mapeamento');
-      }
+      onSave({
+        ...template,
+        fieldMappings,
+        updatedAt: new Date().toISOString()
+      });
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar mapeamento');
     } finally {
