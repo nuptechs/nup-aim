@@ -50,6 +50,13 @@ export const LoginForm: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setAuthMode(data);
+        
+        // Auto-redirect to SSO if mode is SSO
+        if (data.mode === 'sso' && data.ssoLoginUrl) {
+          console.log('🔐 SSO mode detected, redirecting to NuPIdentity...');
+          window.location.href = data.ssoLoginUrl;
+          return; // Don't set checkingAuthMode to false, keep loading state
+        }
       }
     } catch (error) {
       console.error('Failed to check auth mode:', error);
@@ -468,11 +475,12 @@ export const LoginForm: React.FC = () => {
             </div>
           </div>
         ) : checkingAuthMode ? (
-          // Loading state while checking auth mode
+          // Loading state while checking auth mode / redirecting to SSO
           <div className="mt-8 space-y-6">
-            <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Verificando modo de autenticação...</span>
+            <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+              <span className="text-gray-600 text-center">Redirecionando para autenticação...</span>
+              <span className="text-gray-400 text-sm mt-1">Aguarde um momento</span>
             </div>
           </div>
         ) : authMode.mode === 'sso' ? (
