@@ -1,12 +1,19 @@
 import { Express } from 'express';
 import express from 'express';
 import { db } from './db';
-import { users, profiles, projects, analyses, processes, impacts, risks, mitigations, conclusions } from './schema';
-import { eq, and, or } from 'drizzle-orm';
+import { users, profiles, projects, analyses, processes, impacts, risks, mitigations, conclusions, documentTemplates } from './schema';
+import { eq, and, or, desc } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { corsMiddleware } from './middleware/cors.middleware';
 import { authenticateToken } from './middleware/auth.middleware';
+import { 
+  parseMarkersFromDocx, 
+  getAvailableFields, 
+  generateDocumentFromTemplate,
+  validateFieldMappings,
+  getAnalysisData 
+} from './templateService';
 
 const JWT_SECRET: string = process.env.JWT_SECRET || '';
 
@@ -829,6 +836,336 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
     } catch (error: any) {
       console.error('Dashboard stats error:', error);
       res.status(500).json({ error: 'Failed to get dashboard stats', message: error.message });
+    }
+  });
+
+  // ============================================
+  // DOCUMENT TEMPLATES ROUTES
+  // ============================================
+
+  // Get available fields for template mapping
+  app.get('/api/templates/available-fields', authenticateToken, async (req, res) => {
+    try {
+      const fields = getAvailableFields();
+      res.json({ success: true, fields });
+    } catch (error: any) {
+      console.error('Get available fields error:', error);
+      res.status(500).json({ error: 'Falha ao obter campos disponíveis', message: error.message });
+    }
+  });
+
+  // List all templates
+  app.get('/api/templates', authenticateToken, async (req, res) => {
+    try {
+      const templates = await db.select({
+        id: documentTemplates.id,
+        name: documentTemplates.name,
+        description: documentTemplates.description,
+        originalFileName: documentTemplates.originalFileName,
+        parsedMarkers: documentTemplates.parsedMarkers,
+        fieldMappings: documentTemplates.fieldMappings,
+        isActive: documentTemplates.isActive,
+        isDefault: documentTemplates.isDefault,
+        usageCount: documentTemplates.usageCount,
+        createdAt: documentTemplates.createdAt,
+        updatedAt: documentTemplates.updatedAt
+      })
+      .from(documentTemplates)
+      .orderBy(desc(documentTemplates.createdAt));
+      
+      res.json({ success: true, templates });
+    } catch (error: any) {
+      console.error('List templates error:', error);
+      res.status(500).json({ error: 'Falha ao listar templates', message: error.message });
+    }
+  });
+
+  // Get single template by ID
+  app.get('/api/templates/:id', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const [template] = await db.select()
+        .from(documentTemplates)
+        .where(eq(documentTemplates.id, id));
+      
+      if (!template) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      res.json({ success: true, template });
+    } catch (error: any) {
+      console.error('Get template error:', error);
+      res.status(500).json({ error: 'Falha ao obter template', message: error.message });
+    }
+  });
+
+  // Upload and parse new template
+  app.post('/api/templates', authenticateToken, async (req: any, res) => {
+    try {
+      const { name, description, fileName, fileContent } = req.body;
+      
+      if (!name || !fileName || !fileContent) {
+        return res.status(400).json({ 
+          error: 'Nome, arquivo e conteúdo são obrigatórios' 
+        });
+      }
+
+      // Decode base64 content
+      const fileBuffer = Buffer.from(fileContent, 'base64');
+      
+      // Parse markers from document
+      const parsedMarkers = parseMarkersFromDocx(fileBuffer);
+      
+      // Create template record
+      const [newTemplate] = await db.insert(documentTemplates)
+        .values({
+          name,
+          description: description || '',
+          originalFileName: fileName,
+          fileContent: fileContent,
+          parsedMarkers: parsedMarkers,
+          fieldMappings: {},
+          isActive: true,
+          isDefault: false,
+          usageCount: '0',
+          createdBy: req.user?.userId || null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      res.status(201).json({ 
+        success: true, 
+        template: newTemplate,
+        markersFound: parsedMarkers.length,
+        message: `Template criado com sucesso. ${parsedMarkers.length} marcadores encontrados.`
+      });
+    } catch (error: any) {
+      console.error('Upload template error:', error);
+      res.status(500).json({ error: 'Falha ao fazer upload do template', message: error.message });
+    }
+  });
+
+  // Update template (name, description, mappings)
+  app.put('/api/templates/:id', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, description, fieldMappings, isActive, isDefault } = req.body;
+      
+      const updateData: any = { updatedAt: new Date() };
+      
+      if (name !== undefined) updateData.name = name;
+      if (description !== undefined) updateData.description = description;
+      if (fieldMappings !== undefined) updateData.fieldMappings = fieldMappings;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      if (isDefault !== undefined) {
+        // If setting as default, unset other defaults first
+        if (isDefault) {
+          await db.update(documentTemplates)
+            .set({ isDefault: false })
+            .where(eq(documentTemplates.isDefault, true));
+        }
+        updateData.isDefault = isDefault;
+      }
+      
+      const [updatedTemplate] = await db.update(documentTemplates)
+        .set(updateData)
+        .where(eq(documentTemplates.id, id))
+        .returning();
+      
+      if (!updatedTemplate) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      res.json({ success: true, template: updatedTemplate });
+    } catch (error: any) {
+      console.error('Update template error:', error);
+      res.status(500).json({ error: 'Falha ao atualizar template', message: error.message });
+    }
+  });
+
+  // Delete template
+  app.delete('/api/templates/:id', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const [deletedTemplate] = await db.delete(documentTemplates)
+        .where(eq(documentTemplates.id, id))
+        .returning();
+      
+      if (!deletedTemplate) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      res.json({ success: true, message: 'Template excluído com sucesso' });
+    } catch (error: any) {
+      console.error('Delete template error:', error);
+      res.status(500).json({ error: 'Falha ao excluir template', message: error.message });
+    }
+  });
+
+  // Re-parse template markers (when user uploads a new file version)
+  app.post('/api/templates/:id/reparse', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { fileContent, fileName } = req.body;
+      
+      if (!fileContent) {
+        return res.status(400).json({ error: 'Conteúdo do arquivo é obrigatório' });
+      }
+
+      const fileBuffer = Buffer.from(fileContent, 'base64');
+      const parsedMarkers = parseMarkersFromDocx(fileBuffer);
+      
+      const updateData: any = {
+        fileContent,
+        parsedMarkers,
+        updatedAt: new Date()
+      };
+      
+      if (fileName) {
+        updateData.originalFileName = fileName;
+      }
+      
+      const [updatedTemplate] = await db.update(documentTemplates)
+        .set(updateData)
+        .where(eq(documentTemplates.id, id))
+        .returning();
+      
+      if (!updatedTemplate) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      res.json({ 
+        success: true, 
+        template: updatedTemplate,
+        markersFound: parsedMarkers.length,
+        message: `Documento reanalisado. ${parsedMarkers.length} marcadores encontrados.`
+      });
+    } catch (error: any) {
+      console.error('Reparse template error:', error);
+      res.status(500).json({ error: 'Falha ao reanalisar template', message: error.message });
+    }
+  });
+
+  // Validate template mappings
+  app.post('/api/templates/:id/validate', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const [template] = await db.select()
+        .from(documentTemplates)
+        .where(eq(documentTemplates.id, id));
+      
+      if (!template) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      const parsedMarkers = template.parsedMarkers as any[];
+      const fieldMappings = template.fieldMappings as Record<string, string>;
+      
+      const validation = await validateFieldMappings(parsedMarkers, fieldMappings);
+      
+      res.json({ 
+        success: true, 
+        validation,
+        message: validation.valid 
+          ? 'Todos os marcadores estão mapeados corretamente'
+          : `${validation.unmappedMarkers.length} marcadores não mapeados`
+      });
+    } catch (error: any) {
+      console.error('Validate template error:', error);
+      res.status(500).json({ error: 'Falha ao validar template', message: error.message });
+    }
+  });
+
+  // Generate document from template
+  app.post('/api/templates/:id/generate', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { analysisId } = req.body;
+      
+      if (!analysisId) {
+        return res.status(400).json({ error: 'ID da análise é obrigatório' });
+      }
+      
+      const documentBuffer = await generateDocumentFromTemplate(id, analysisId);
+      
+      // Get template name for filename
+      const [template] = await db.select({ name: documentTemplates.name })
+        .from(documentTemplates)
+        .where(eq(documentTemplates.id, id));
+      
+      const [analysis] = await db.select({ title: analyses.title })
+        .from(analyses)
+        .where(eq(analyses.id, analysisId));
+      
+      const filename = `${analysis?.title || 'documento'}_${template?.name || 'template'}.docx`
+        .replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+      
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(documentBuffer);
+    } catch (error: any) {
+      console.error('Generate document error:', error);
+      res.status(500).json({ error: 'Falha ao gerar documento', message: error.message });
+    }
+  });
+
+  // Preview analysis data for template
+  app.get('/api/templates/preview-data/:analysisId', authenticateToken, async (req, res) => {
+    try {
+      const { analysisId } = req.params;
+      
+      const data = await getAnalysisData(analysisId);
+      
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.error('Preview data error:', error);
+      res.status(500).json({ error: 'Falha ao obter dados da análise', message: error.message });
+    }
+  });
+
+  // Duplicate template
+  app.post('/api/templates/:id/duplicate', authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { name } = req.body;
+      
+      const [original] = await db.select()
+        .from(documentTemplates)
+        .where(eq(documentTemplates.id, id));
+      
+      if (!original) {
+        return res.status(404).json({ error: 'Template não encontrado' });
+      }
+      
+      const [duplicated] = await db.insert(documentTemplates)
+        .values({
+          name: name || `${original.name} (Cópia)`,
+          description: original.description,
+          originalFileName: original.originalFileName,
+          fileContent: original.fileContent,
+          parsedMarkers: original.parsedMarkers,
+          fieldMappings: original.fieldMappings,
+          isActive: true,
+          isDefault: false,
+          usageCount: '0',
+          createdBy: req.user?.userId || null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      res.status(201).json({ 
+        success: true, 
+        template: duplicated,
+        message: 'Template duplicado com sucesso'
+      });
+    } catch (error: any) {
+      console.error('Duplicate template error:', error);
+      res.status(500).json({ error: 'Falha ao duplicar template', message: error.message });
     }
   });
 }
