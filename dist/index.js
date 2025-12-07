@@ -935,6 +935,13 @@ function registerRoutes(app2, options = {}) {
       authMode: ssoEnabled ? "sso" : "local"
     });
   });
+  app2.get("/api/auth/mode", (req, res) => {
+    res.json({
+      mode: ssoEnabled ? "sso" : "local",
+      ssoLoginUrl: ssoEnabled ? "/auth/sso/login" : null,
+      ssoLogoutUrl: ssoEnabled ? "/auth/sso/logout" : null
+    });
+  });
   if (ssoEnabled) {
     console.log("\u2139\uFE0F  [Routes] Local auth routes disabled - using SSO");
   } else {

@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogIn, User, Lock, AlertCircle, Mail, RefreshCw, FileText, UserPlus, ArrowLeft } from 'lucide-react';
+import { LogIn, User, Lock, AlertCircle, Mail, RefreshCw, FileText, UserPlus, ArrowLeft, ExternalLink } from 'lucide-react';
 import { useAuth } from '../contexts/ApiAuthContext';
+
+interface AuthMode {
+  mode: 'sso' | 'local';
+  ssoLoginUrl: string | null;
+  ssoLogoutUrl: string | null;
+}
 
 export const LoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -17,6 +23,10 @@ export const LoginForm: React.FC = () => {
   const captchaCanvasRef = useRef<HTMLCanvasElement>(null);
   const { login, resendVerificationEmail } = useAuth();
   
+  // Auth mode state
+  const [authMode, setAuthMode] = useState<AuthMode>({ mode: 'local', ssoLoginUrl: null, ssoLogoutUrl: null });
+  const [checkingAuthMode, setCheckingAuthMode] = useState(true);
+  
   // New state for registration
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerData, setRegisterData] = useState({
@@ -30,8 +40,29 @@ export const LoginForm: React.FC = () => {
   const [registerSuccess, setRegisterSuccess] = useState(false);
 
   useEffect(() => {
+    checkAuthMode();
     generateCaptcha();
   }, []);
+
+  const checkAuthMode = async () => {
+    try {
+      const response = await fetch('/api/auth/mode');
+      if (response.ok) {
+        const data = await response.json();
+        setAuthMode(data);
+      }
+    } catch (error) {
+      console.error('Failed to check auth mode:', error);
+    } finally {
+      setCheckingAuthMode(false);
+    }
+  };
+
+  const handleSSOLogin = () => {
+    if (authMode.ssoLoginUrl) {
+      window.location.href = authMode.ssoLoginUrl;
+    }
+  };
 
   const generateCaptcha = () => {
     const canvas = captchaCanvasRef.current;
@@ -436,8 +467,41 @@ export const LoginForm: React.FC = () => {
               )}
             </div>
           </div>
+        ) : checkingAuthMode ? (
+          // Loading state while checking auth mode
+          <div className="mt-8 space-y-6">
+            <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Verificando modo de autenticação...</span>
+            </div>
+          </div>
+        ) : authMode.mode === 'sso' ? (
+          // SSO Login
+          <div className="mt-8 space-y-6">
+            <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Login via NuPIdentity</h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Use sua conta NuPIdentity para acessar o sistema de forma segura.
+                </p>
+              </div>
+              
+              <button
+                type="button"
+                onClick={handleSSOLogin}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <ExternalLink className="w-5 h-5" />
+                Entrar com NuPIdentity
+              </button>
+              
+              <div className="text-center text-xs text-gray-500 mt-4">
+                <p>Você será redirecionado para o servidor de autenticação</p>
+              </div>
+            </div>
+          </div>
         ) : (
-          // Login Form
+          // Local Login Form
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
               <div>
