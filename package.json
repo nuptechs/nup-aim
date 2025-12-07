@@ -7,6 +7,7 @@
     "doc": "docs"
   },
   "dependencies": {
+    "@google/genai": "^1.31.0",
     "@nupidentity/sdk": "file:./sdk",
     "@vitejs/plugin-react": "^5.1.1",
     "abort-controller": "^3.0.0",
