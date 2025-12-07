@@ -46,7 +46,26 @@ The application incorporates a custom design system with CSS variables for consi
 
 ### Document Export System
 
-The system uses the `docx` library for client-side generation of professional Microsoft Word documents. Exports dynamically include analysis data, formatted sections (cover page, scope, impacts, risks, mitigations, conclusions), embedded images, and function point analysis tables, without requiring server processing.
+The system supports two document export approaches:
+
+1. **Standard Export**: Uses the `docx` library for client-side generation of professional Microsoft Word documents. Exports dynamically include analysis data, formatted sections (cover page, scope, impacts, risks, mitigations, conclusions), embedded images, and function point analysis tables.
+
+2. **Template-Based Export**: Uses `docx-templates` library for server-side document generation with customizable templates. Key features:
+   - **Custom Templates**: Users can upload DOCX templates with `#$marker#$` placeholders
+   - **Dynamic Field Discovery**: Automatic detection of all available database fields (profiles, users, projects, analyses, processes, impacts, risks, mitigations, conclusions, customFieldValues)
+   - **Visual Field Mapper**: Premium UX component for mapping template markers to database fields with categorized selection and progress tracking
+   - **Template Management**: Full CRUD operations (create, read, update, delete, duplicate) for templates
+   - **Marker Parsing**: Automatic extraction and validation of placeholders from uploaded documents
+
+### Document Templates Table
+
+The `documentTemplates` table stores:
+- Template metadata (name, description, original filename)
+- Base64-encoded file content
+- Parsed markers array with context and position
+- Field mappings (marker → database field)
+- Status flags (isActive, isDefault)
+- Usage statistics
 
 ## External Dependencies
 
@@ -58,7 +77,8 @@ The system uses the `docx` library for client-side generation of professional Mi
 - **Drizzle ORM**: Type-safe database queries for PostgreSQL.
 - **Lucide React**: Icon library.
 - **Tailwind CSS**: Utility-first CSS framework.
-- **docx**: Library for Word document generation.
+- **docx**: Library for standard Word document generation.
+- **docx-templates**: Library for template-based Word document generation with placeholder replacement.
 - **file-saver**: Client-side file downloads.
 - **bcryptjs**: Password hashing.
 - **jsonwebtoken**: JWT token generation/validation.
