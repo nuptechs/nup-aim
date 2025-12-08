@@ -252,9 +252,15 @@ export async function createAuthRoutes(options: AuthRoutesOptions, expressApp: {
   const OAUTH_VERIFIER_COOKIE = 'nupidentity_code_verifier';
   const OAUTH_NONCE_COOKIE = 'nupidentity_nonce';
   
+  // In Replit and cloud environments, we're always behind HTTPS
+  const isSecure = process.env.NODE_ENV === 'production' || 
+                   !!process.env.REPL_ID || 
+                   !!process.env.REPLIT_DEV_DOMAIN ||
+                   (process.env.APP_URL?.startsWith('https://') ?? false);
+  
   const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isSecure,
     sameSite: 'lax' as const,
     maxAge: 10 * 60 * 1000,
     path: '/',
@@ -353,7 +359,7 @@ export async function createAuthRoutes(options: AuthRoutesOptions, expressApp: {
 
       res.cookie('access_token', tokens.access_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isSecure,
         sameSite: 'lax',
         maxAge: (tokens.expires_in ?? 3600) * 1000,
       });
@@ -361,7 +367,7 @@ export async function createAuthRoutes(options: AuthRoutesOptions, expressApp: {
       if (tokens.refresh_token) {
         res.cookie('refresh_token', tokens.refresh_token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
+          secure: isSecure,
           sameSite: 'lax',
           maxAge: 7 * 24 * 60 * 60 * 1000,
         });
@@ -370,7 +376,7 @@ export async function createAuthRoutes(options: AuthRoutesOptions, expressApp: {
       if (tokens.id_token) {
         res.cookie('id_token', tokens.id_token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
+          secure: isSecure,
           sameSite: 'lax',
           maxAge: (tokens.expires_in ?? 3600) * 1000,
         });
@@ -421,7 +427,7 @@ export async function createAuthRoutes(options: AuthRoutesOptions, expressApp: {
 
       res.cookie('access_token', tokens.access_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isSecure,
         sameSite: 'lax',
         maxAge: (tokens.expires_in ?? 3600) * 1000,
       });
