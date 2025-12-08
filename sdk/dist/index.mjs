@@ -453,9 +453,10 @@ async function createAuthRoutes(options, expressApp) {
   const OAUTH_STATE_COOKIE = "nupidentity_oauth_state";
   const OAUTH_VERIFIER_COOKIE = "nupidentity_code_verifier";
   const OAUTH_NONCE_COOKIE = "nupidentity_nonce";
+  const isSecure = process.env.NODE_ENV === "production" || !!process.env.REPL_ID || !!process.env.REPLIT_DEV_DOMAIN || (process.env.APP_URL?.startsWith("https://") ?? false);
   const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecure,
     sameSite: "lax",
     maxAge: 10 * 60 * 1e3,
     path: "/"
@@ -538,14 +539,14 @@ async function createAuthRoutes(options, expressApp) {
       }
       res.cookie("access_token", tokens.access_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: isSecure,
         sameSite: "lax",
         maxAge: (tokens.expires_in ?? 3600) * 1e3
       });
       if (tokens.refresh_token) {
         res.cookie("refresh_token", tokens.refresh_token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: isSecure,
           sameSite: "lax",
           maxAge: 7 * 24 * 60 * 60 * 1e3
         });
@@ -553,7 +554,7 @@ async function createAuthRoutes(options, expressApp) {
       if (tokens.id_token) {
         res.cookie("id_token", tokens.id_token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: isSecure,
           sameSite: "lax",
           maxAge: (tokens.expires_in ?? 3600) * 1e3
         });
@@ -596,7 +597,7 @@ async function createAuthRoutes(options, expressApp) {
       const tokens = await client.refreshToken(refreshToken);
       res.cookie("access_token", tokens.access_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: isSecure,
         sameSite: "lax",
         maxAge: (tokens.expires_in ?? 3600) * 1e3
       });
