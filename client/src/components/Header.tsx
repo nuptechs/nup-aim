@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Download, LogOut, User, Users, Shield, Database, Clock, Image, Sliders } from 'lucide-react';
-import { useAuth } from '../contexts/ApiAuthContext';
+import { useAuth } from '../contexts/UnifiedAuthContext';
 import { UserManagement } from './UserManagement';
 import { ProfileManagement } from './ProfileManagement';
 import { DataManager } from './DataManager';
