@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Mail, ArrowLeft, RefreshCw } from 'lucide-react';
-import { useAuth } from '../contexts/ApiAuthContext';
+import { useAuth } from '../contexts/UnifiedAuthContext';
 
 interface EmailVerificationProps {
   token?: string;

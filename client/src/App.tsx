@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AuthProvider, useAuth } from './contexts/ApiAuthContext';
+import { AuthProvider, useAuth } from './contexts/UnifiedAuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { LoginForm } from './components/LoginForm';

@@ -3,7 +3,7 @@ import {
   FileText, Users, FolderOpen, AlertTriangle, Shield,
   TrendingUp, Clock, ArrowRight, Plus, Activity
 } from 'lucide-react';
-import { useAuth } from '../contexts/ApiAuthContext';
+import { useAuth } from '../contexts/UnifiedAuthContext';
 import { apiClient } from '../lib/apiClient';
 import { Card, CardHeader, CardTitle, CardContent, StatCard } from './ui/Card';
 import { Badge } from './ui/Badge';

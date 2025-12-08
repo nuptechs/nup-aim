@@ -4,7 +4,7 @@ import { ImpactAnalysis, Project } from '../types';
 import { getStoredProjects, getDefaultProject } from '../utils/projectStorage';
 import { BasicDataManager } from './BasicDataManager';
 import { CustomFieldsSection } from './CustomFieldsSection';
-import { useAuth } from '../contexts/ApiAuthContext';
+import { useAuth } from '../contexts/UnifiedAuthContext';
 
 interface BasicInfoFormProps {
   data: ImpactAnalysis;

@@ -3,7 +3,7 @@ import { FileText, Edit, Trash2, Plus, Search, Calendar, User, Copy, Database, H
 import { ImpactAnalysis } from '../types';
 import { getStoredAnalyses, deleteAnalysis } from '../utils/storage';
 import { CopyAnalysisModal } from './CopyAnalysisModal';
-import { useAuth } from '../contexts/ApiAuthContext';
+import { useAuth } from '../contexts/UnifiedAuthContext';
 import apiClient from '../lib/apiClient';
 
 interface AnalysisManagerProps {

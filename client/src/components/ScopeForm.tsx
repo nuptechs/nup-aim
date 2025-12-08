@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Plus, Trash2, Edit2, Check, X, Database, Calculator } from 'lucide-react';
 import { ImpactAnalysis, ProcessItem } from '../types';
 import { ImagePasteField } from './ImagePasteField';
-import { useAuth } from '../contexts/ApiAuthContext';
+import { useAuth } from '../contexts/UnifiedAuthContext';
 import { FieldExtractorModal } from './FieldExtractorModal';
 import { ExtractedField } from '../utils/fieldExtractor';
 import { CustomFieldsSection } from './CustomFieldsSection';
