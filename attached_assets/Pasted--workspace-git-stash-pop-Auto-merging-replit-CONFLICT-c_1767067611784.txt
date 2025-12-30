@@ -1,0 +1,75 @@
+/workspace$ git stash pop
+Auto-merging .replit
+CONFLICT (content): Merge conflict in .replit
+Auto-merging client/src/App.tsx
+CONFLICT (content): Merge conflict in client/src/App.tsx
+Auto-merging client/src/components/AnalysisManager.tsx
+CONFLICT (content): Merge conflict in client/src/components/AnalysisManager.tsx
+Auto-merging client/src/components/BasicInfoForm.tsx
+CONFLICT (content): Merge conflict in client/src/components/BasicInfoForm.tsx
+Auto-merging client/src/components/Header.tsx
+CONFLICT (content): Merge conflict in client/src/components/Header.tsx
+Auto-merging client/src/components/LoginForm.tsx
+Auto-merging client/src/components/ScopeForm.tsx
+CONFLICT (modify/delete): dist/index.js deleted in Stashed changes and modified in Updated upstream.  Version Updated upstream of dist/index.js left in tree.
+CONFLICT (modify/delete): dist/public/index.html deleted in Stashed changes and modified in Updated upstream.  Version Updated upstream of dist/public/index.html left in tree.
+Auto-merging package-lock.json
+CONFLICT (content): Merge conflict in package-lock.json
+Auto-merging package.json
+CONFLICT (content): Merge conflict in package.json
+Auto-merging server/index.ts
+CONFLICT (content): Merge conflict in server/index.ts
+Auto-merging server/routes.ts
+CONFLICT (content): Merge conflict in server/routes.ts
+Auto-merging server/schema.ts
+CONFLICT (content): Merge conflict in server/schema.ts
+Auto-merging tailwind.config.ts
+CONFLICT (content): Merge conflict in tailwind.config.ts
+On branch main
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+    modified:   client/src/components/AIAssistant.tsx
+    modified:   client/src/components/BasicDataManager.tsx
+    modified:   client/src/components/ConclusionsForm.tsx
+    modified:   client/src/components/CustomFieldsManager.jsx
+    modified:   client/src/components/CustomFieldsSection.tsx
+    modified:   client/src/components/DataManager.tsx
+    modified:   client/src/components/FormSection.tsx
+    modified:   client/src/components/ImpactsForm.tsx
+    modified:   client/src/components/LoginForm.tsx
+    modified:   client/src/components/MitigationsForm.tsx
+    modified:   client/src/components/RisksForm.tsx
+    modified:   client/src/components/ScopeForm.tsx
+    modified:   client/src/components/SupabaseDataInitializer.tsx
+    modified:   client/src/components/SupabaseSetup.tsx
+    modified:   client/src/components/UserManagement.tsx
+    modified:   client/src/contexts/ApiAuthContext.tsx
+    modified:   client/src/main.tsx
+    modified:   client/src/styles/design-system.css
+    modified:   client/src/types/index.ts
+    modified:   client/src/utils/authStorage.ts
+    modified:   client/src/utils/projectStorage.ts
+    modified:   client/src/utils/storage.ts
+    deleted:    dist/public/assets/supabaseAuth-BHSNIvez.js
+    deleted:    dist/public/vite.svg
+    modified:   vite.config.ts
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add/rm <file>..." as appropriate to mark resolution)
+    both modified:   .replit
+    both modified:   client/src/App.tsx
+    both modified:   client/src/components/AnalysisManager.tsx
+    both modified:   client/src/components/BasicInfoForm.tsx
+    both modified:   client/src/components/Header.tsx
+    deleted by them: dist/index.js
+    deleted by them: dist/public/index.html
+    both modified:   package-lock.json
+    both modified:   package.json
+    both modified:   server/index.ts
+    both modified:   server/routes.ts
+    both modified:   server/schema.ts
+    both modified:   tailwind.config.ts
+
+The stash entry is kept in case you need it again.
+~/workspace$ BBBB

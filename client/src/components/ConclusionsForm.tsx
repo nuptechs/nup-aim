@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, X, CheckCircle } from 'lucide-react';
 import { ImpactAnalysis } from '../types';
 import { CustomFieldsSection } from './CustomFieldsSection';
+import { getSystemSettings } from '../utils/systemSettings';
 
 interface ConclusionsFormProps {
   data: ImpactAnalysis;
@@ -106,15 +107,17 @@ export const ConclusionsForm: React.FC<ConclusionsFormProps> = ({
       </div>
       
       {/* Custom Fields Section */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <h3 className="text-sm font-medium text-gray-700 mb-4">Campos Personalizados</h3>
-        <CustomFieldsSection 
-          sectionName="conclusions" 
-          analysisId={data.id}
-          initialValues={customFieldsValues}
-          onValuesChange={onCustomFieldsChange}
-        />
-      </div>
+      {getSystemSettings().showCustomFieldsToAll && (
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Campos Personalizados</h3>
+          <CustomFieldsSection 
+            sectionName="conclusions" 
+            analysisId={data.id}
+            initialValues={customFieldsValues}
+            onValuesChange={onCustomFieldsChange}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Edit2, Trash2, Check, X, Star, StarOff } from 'lucide-react';
+import { Settings, Plus, Edit2, Trash2, Check, X, StarOff } from 'lucide-react';
 import { Project } from '../types';
 import { getStoredProjects, saveProject, deleteProject, generateProjectId } from '../utils/projectStorage';
 
@@ -22,8 +22,8 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
     loadProjects();
   }, []);
 
-  const loadProjects = () => {
-    const stored = getStoredProjects();
+  const loadProjects = async () => {
+    const stored = await getStoredProjects();
     setProjects(stored);
   };
 
@@ -64,7 +64,7 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) return;
     
     const project: Project = {
@@ -77,8 +77,8 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
         new Date().toISOString()
     };
     
-    saveProject(project);
-    loadProjects();
+    await saveProject(project);
+    await loadProjects();
     handleCancel();
   };
 
@@ -93,7 +93,7 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
     setErrors({});
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const project = projects.find(p => p.id === id);
     if (!project) return;
     
@@ -103,21 +103,21 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
     }
     
     if (window.confirm(`Tem certeza que deseja excluir o projeto "${project.name}"?`)) {
-      const success = deleteProject(id);
+      const success = await deleteProject(id);
       if (success) {
-        loadProjects();
+        await loadProjects();
       } else {
         alert('Não foi possível excluir o projeto.');
       }
     }
   };
 
-  const handleSetDefault = (id: string) => {
+  const handleSetDefault = async (id: string) => {
     const project = projects.find(p => p.id === id);
     if (project) {
       const updatedProject = { ...project, isDefault: true };
-      saveProject(updatedProject);
-      loadProjects();
+      await saveProject(updatedProject);
+      await loadProjects();
     }
   };
 
@@ -137,11 +137,11 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <Settings className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Dados Básicos - Projetos</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Dados Básicos - Projetos</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -154,7 +154,7 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
             </button>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -164,22 +164,22 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           {/* Form */}
           {showForm && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                 {editingProject ? 'Editar Projeto' : 'Novo Projeto'}
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nome do Projeto *
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                      errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
+                      errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
                     }`}
                     placeholder="Ex: Sistema de Gestão de Contratos"
                   />
@@ -189,15 +189,15 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Sigla *
                   </label>
                   <input
                     type="text"
                     value={formData.acronym}
                     onChange={(e) => setFormData({ ...formData, acronym: e.target.value.toUpperCase() })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                      errors.acronym ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
+                      errors.acronym ? 'border-red-300 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
                     }`}
                     placeholder="Ex: SGC"
                     maxLength={10}
@@ -216,9 +216,9 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
                     onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
                     className="mr-2 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Definir como projeto padrão</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Definir como projeto padrão</span>
                 </label>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   O projeto padrão será selecionado automaticamente ao criar novas análises
                 </p>
               </div>
@@ -244,14 +244,14 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
 
           {/* Projects List */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
               Projetos Cadastrados ({projects.length})
             </h3>
             
             {projects.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <Settings className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">Nenhum projeto cadastrado</p>
+                <p className="text-gray-500 dark:text-gray-400">Nenhum projeto cadastrado</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -260,27 +260,26 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
                     key={project.id}
                     className={`border rounded-lg p-4 transition-colors ${
                       project.isDefault 
-                        ? 'border-blue-200 bg-blue-50' 
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                        ? 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20' 
+                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3">
-                          <h4 className="font-medium text-gray-900 truncate">
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100 truncate">
                             {project.name}
                           </h4>
-                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
+                          <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">
                             {project.acronym}
                           </span>
                           {project.isDefault && (
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                              <Star className="w-3 h-3 mr-1" />
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
                               Padrão
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                           Criado em {new Date(project.createdAt).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
@@ -319,16 +318,6 @@ export const BasicDataManager: React.FC<BasicDataManagerProps> = ({ onClose }) =
             )}
           </div>
           
-          {/* Info Box */}
-          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h4 className="font-medium text-yellow-900 mb-2">Informações Importantes</h4>
-            <ul className="text-sm text-yellow-800 space-y-1">
-              <li>• Deve haver pelo menos um projeto cadastrado no sistema</li>
-              <li>• O projeto padrão será selecionado automaticamente em novas análises</li>
-              <li>• Apenas um projeto pode ser definido como padrão por vez</li>
-              <li>• Nomes e siglas devem ser únicos</li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>

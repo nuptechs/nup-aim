@@ -44,6 +44,30 @@ export interface ProcessItem {
   workDetails?: string;
   screenshots?: string;
   websisCreated?: boolean;
+  functionType?: 'ALI' | 'AIE' | 'EE' | 'SE' | 'CE';
+  complexity?: 'baixa' | 'media' | 'alta';
+  aiGenerated?: boolean;
+  aiConfidence?: number;
+  aiRationale?: string;
+  citationVerified?: boolean; // True if citation was found in source document
+  citationText?: string; // Extracted citation text
+  evidences?: Evidence[];
+}
+
+export interface Evidence {
+  id: string;
+  type: 'image' | 'text' | 'document';
+  content: string;
+  description?: string;
+}
+
+export interface WorkspaceInput {
+  id: string;
+  type: 'text' | 'image' | 'document';
+  content: string;
+  fileName?: string;
+  mimeType?: string;
+  timestamp: string;
 }
 
 export interface ImpactItem {

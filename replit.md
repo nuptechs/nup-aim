@@ -2,7 +2,7 @@
 
 ## Overview
 
-NuP_AIM (Núcleo de Projetos - Análise de Impacto de Mudanças) is a comprehensive web-based system designed for creating, managing, and exporting impact analysis documents for business projects. It enables authenticated users to document project changes, assess impacts across multiple dimensions (business, technical, operational, financial), identify risks, define mitigation strategies, and generate professional Word documents. The system integrates AI for field extraction from images, supports custom field management, features role-based access control, and includes email verification workflows. The primary goal is to streamline impact analysis, enhance project transparency, and provide robust documentation capabilities.
+NuP_AIM is a comprehensive impact analysis management system designed for enterprise use. The application enables authenticated users to create, edit, manage, and export structured impact analysis documents. Key features include user authentication with email verification, role-based permissions, AI-powered document import, field extraction using OCR, and Word document export capabilities.
 
 ## User Preferences
 
@@ -11,77 +11,74 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend Architecture
-
-The frontend is a React 18 + TypeScript + Vite + Tailwind CSS Single Page Application (SPA) using a component-based architecture. State management is handled by React Context API for global state and `useState`/`useEffect` for local component state. It uses a state-driven navigation strategy without an explicit routing library, focusing on form-centric and modal-based interactions. Styling is utility-first with Tailwind CSS, supporting dark mode and custom theming via CSS variables.
+- **Framework**: React 18 with TypeScript, bundled with Vite
+- **Styling**: Tailwind CSS with custom design system variables
+- **State Management**: React Context API for authentication and global state, local component hooks for UI state
+- **UI Components**: Custom component library with Lucide React icons
+- **Routing**: Single-page application with state-based navigation (no router library)
 
 ### Backend Architecture
+- **Runtime**: Node.js with Express.js
+- **Language**: TypeScript compiled with tsx/esbuild
+- **API Design**: RESTful endpoints with JWT authentication
+- **Middleware**: CORS protection, JSON body parsing, authentication middleware
+- **Development**: Hot reload via Vite middleware integration
 
-The backend employs a hybrid microservices + monolith approach. The primary backend is an Express.js server on port 5000, using Drizzle ORM for type-safe PostgreSQL queries and a RESTful API design. It includes JWT authentication and CORS middleware. Serverless Netlify Functions are used for email services (SendGrid) and OCR (Google Cloud Vision API) to offload intensive operations. A separate Custom Fields Microservice runs on port 3002 with SQLite, providing an independent, reusable custom field management system via an SDK. A composed development mode allows the Express API and Vite dev server to run seamlessly together.
+### Database Layer
+- **ORM**: Drizzle ORM with PostgreSQL dialect
+- **Schema Location**: `server/schema.ts` defines all tables in a dedicated `nup_aim` PostgreSQL schema
+- **Connection**: Uses `postgres` package with connection URL from `DATABASE_URL` environment variable
+- **Tables**: profiles, users, projects, analyses, processes, impacts, risks, mitigations, conclusions
 
-### Authentication & Authorization
+### Authentication & Security
+- **Method**: JWT-based authentication with bcrypt password hashing
+- **Session**: 30-minute timeout with activity monitoring
+- **Permissions**: Granular role-based access control tied to user profiles
+- **Email Verification**: Token-based email verification system
 
-The system uses a hybrid authentication strategy, primarily with local JWT authentication (bcrypt for passwords, localStorage for tokens, 30-minute session timeout). Optionally, it integrates with NuPIdentity SDK for SSO via OIDC/OAuth2. Role-based access control with granular permissions (`{RESOURCE}_{ACTION}`) is implemented, with permissions stored as JSONB in PostgreSQL and validated on both frontend and backend. Security features include CAPTCHA, password confirmation, and CORS.
+### Auto-Save System
+- **Session Persistence**: Analysis data is saved to sessionStorage immediately on any change
+- **Database Auto-Save**: Data is automatically saved to the database as a draft after 3 seconds of inactivity (debounced)
+- **Permission-Aware**: Auto-save respects role-based permissions (requires ANALYSIS CREATE or EDIT permission)
+- **Recovery**: When returning to the app, any in-progress analysis is automatically restored from sessionStorage
+- **Visual Indicator**: Shows "Salvando automaticamente..." when saving to database
 
-### Data Storage Solutions
-
-A multi-tier storage architecture is used:
-- **Primary Database**: PostgreSQL via Supabase, using a custom `nup_aim` schema, UUID primary keys, and Row-Level Security (RLS).
-- **Fallback Storage**: Browser localStorage, used when Supabase is not configured or available, mirroring the PostgreSQL data structure.
-- **Custom Fields Storage**: SQLite, managed independently by the Custom Fields Microservice.
-- **File Storage**: Images are stored as Base64-encoded strings within the database; document exports are generated client-side.
-- **Data Migration**: Drizzle Kit is used for PostgreSQL schema migrations.
-
-### AI Integration
-
-The system integrates AI for enhanced analysis and data extraction:
-- **Google Gemini AI**: Used for generating intelligent suggestions for impact analysis, including impacts, risks, mitigation actions, and executive summaries.
-- **Field Extraction System**: Offers two options:
-    1. **Google Cloud Vision API (OCR)**: Serverless function for extracting text from document images.
-    2. **Regex-based Extraction**: Local, regex-based pattern matching for common field types as a fallback.
-- An AI Assistant component provides an interactive chat interface for suggestions.
-
-### Premium UX Features
-
-The application incorporates a custom design system with CSS variables for consistent theming (dark/light mode), smooth animations, and responsive design. It includes a comprehensive set of UI components, toast notifications, a dashboard for quick overviews, and an onboarding process for new users. Form UX utilities like auto-save, real-time validation, and keyboard shortcuts enhance usability.
-
-### Document Export System
-
-The system supports two document export approaches:
-
-1. **Standard Export**: Uses the `docx` library for client-side generation of professional Microsoft Word documents. Exports dynamically include analysis data, formatted sections (cover page, scope, impacts, risks, mitigations, conclusions), embedded images, and function point analysis tables.
-
-2. **Template-Based Export**: Uses `docx-templates` library for server-side document generation with customizable templates. Key features:
-   - **Custom Templates**: Users can upload DOCX templates with `#$marker#$` placeholders
-   - **Dynamic Field Discovery**: Automatic detection of all available database fields (profiles, users, projects, analyses, processes, impacts, risks, mitigations, conclusions, customFieldValues)
-   - **Visual Field Mapper**: Premium UX component for mapping template markers to database fields with categorized selection and progress tracking
-   - **Template Management**: Full CRUD operations (create, read, update, delete, duplicate) for templates
-   - **Marker Parsing**: Automatic extraction and validation of placeholders from uploaded documents
-
-### Document Templates Table
-
-The `documentTemplates` table stores:
-- Template metadata (name, description, original filename)
-- Base64-encoded file content
-- Parsed markers array with context and position
-- Field mappings (marker → database field)
-- Status flags (isActive, isDefault)
-- Usage statistics
+### AI/ML Integrations
+- **Document Analysis**: Google Gemini AI for generating analysis suggestions
+- **OCR**: Google Cloud Vision API for field extraction from images
+- **Field Extraction**: Regex-based fallback when AI services unavailable
+- **Function Point Analysis**: Multi-agent pipeline for IFPUG CPM 4.3.1 compliant extraction (v3.2.0)
+  - **Stage 1 (Scan Agent)**: Comprehensive document scan to identify functionality candidates
+  - **Stage 2 (Expansion Agent)**: Review, separate combined entities, and expand candidates with few-shot examples
+  - **Stage 3 (Classification Agent)**: Apply IFPUG type (ALI, AIE, EE, SE, CE) and complexity classification
+  - **Stage 4 (Citation Validation)**: Verify quoted citations exist in source document using fuzzy matching
+  - **Stage 5 (Discovery Agent)**: Second-pass to find implicit/hidden functionalities (CRUD derivations, integrations mentioned in passing)
+  - **Features**: Dynamic context sizing, 3-state confidence indicators, hallucination detection via citation verification
+- **WorkspaceCapture**: Multimodal input component accepting text, images, and documents for AI analysis
+- **FPA Guidelines System**: Persistent domain knowledge rules that are automatically injected into AI prompts based on trigger phrases and business domains. Managed via admin UI at "Gerenciar Diretrizes de APF"
 
 ## External Dependencies
 
-- **Supabase**: PostgreSQL database hosting, authentication, and Row Level Security.
-- **SendGrid**: Transactional email delivery for verification.
-- **Google Cloud Vision API**: OCR and document text extraction.
-- **Google Gemini AI**: Generative AI for analysis suggestions.
-- **Netlify**: Serverless function hosting for email and OCR.
-- **Drizzle ORM**: Type-safe database queries for PostgreSQL.
-- **Lucide React**: Icon library.
-- **Tailwind CSS**: Utility-first CSS framework.
-- **docx**: Library for standard Word document generation.
-- **docx-templates**: Library for template-based Word document generation with placeholder replacement.
-- **file-saver**: Client-side file downloads.
-- **bcryptjs**: Password hashing.
-- **jsonwebtoken**: JWT token generation/validation.
-- **Vite**: Build tool and dev server.
-- **TypeScript**: For type safety.
-- **ESLint**: Code quality.
+### Required Environment Variables
+- `DATABASE_URL` - PostgreSQL connection string (required)
+- `JWT_SECRET` - Secret key for JWT signing (minimum 32 characters, required in production)
+- `AI_INTEGRATIONS_GEMINI_API_KEY` - Google Gemini API key for AI features
+- `AI_INTEGRATIONS_GEMINI_BASE_URL` - Gemini API base URL
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON` - Google Cloud Vision credentials (JSON format)
+- `SENDGRID_API_KEY` - SendGrid API key for email delivery
+- `VERIFIED_SENDER_EMAIL` - Verified sender email for SendGrid
+
+### Third-Party Services
+- **PostgreSQL**: Primary database (provision via Replit Database or external provider)
+- **SendGrid**: Email delivery for verification emails
+- **Google Cloud Vision**: OCR and document text extraction
+- **Google Gemini AI**: Intelligent analysis suggestions and document processing
+
+### Key NPM Packages
+- `drizzle-orm` / `drizzle-kit` - Database ORM and migrations
+- `express` - Web server framework
+- `jsonwebtoken` / `bcryptjs` - Authentication
+- `docx` - Word document generation
+- `@google-cloud/vision` - OCR integration
+- `@google/genai` - Gemini AI integration
+- `@sendgrid/mail` - Email delivery

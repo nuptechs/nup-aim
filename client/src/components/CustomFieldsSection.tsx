@@ -137,16 +137,12 @@ export const CustomFieldsSection: React.FC<CustomFieldsSectionProps> = ({
     );
   }
 
-  if (error) {
+  if (error || fields.length === 0) {
     return (
-      <div className="text-sm text-gray-400 py-2" data-testid="custom-fields-error">
-        Não foi possível carregar campos personalizados.
+      <div className="text-sm text-gray-400 dark:text-gray-500 py-2" data-testid="custom-fields-empty">
+        Nenhum campo personalizado configurado para esta seção.
       </div>
     );
-  }
-
-  if (fields.length === 0) {
-    return null;
   }
 
   const renderField = (field: any) => {

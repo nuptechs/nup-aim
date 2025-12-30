@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AuthProvider, useAuth } from './contexts/UnifiedAuthContext';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { AuthProvider, useAuth } from './contexts/ApiAuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { LoginForm } from './components/LoginForm';
@@ -20,16 +20,15 @@ import { AIAssistant } from './components/AIAssistant';
 import { Onboarding } from './components/Onboarding';
 import { exportToWord } from './utils/documentExporter';
 import { saveAnalysis, generateNewId } from './utils/storage';
-import { getDefaultProject } from './utils/projectStorage';
-import apiClient from './lib/apiClient';
 import { registerNuPAIMSections } from './hooks/useCustomFields';
+import { getSystemSettings, SystemSettings } from './utils/systemSettings';
 import { ImpactAnalysis } from './types';
-import { Save, FolderOpen, LayoutDashboard, FileText, FileSpreadsheet } from 'lucide-react';
-import { TemplateManager } from './components/TemplateManager';
+import { Save, FolderOpen, LayoutDashboard, FileText } from 'lucide-react';
 
-const createInitialData = (): ImpactAnalysis => {
-  const defaultProject = getDefaultProject();
-  
+const CURRENT_ANALYSIS_KEY = 'nup_aim_current_analysis';
+const CUSTOM_FIELDS_KEY = 'nup_aim_custom_fields';
+
+const createInitialData = (projectName: string = ''): ImpactAnalysis => {
   return {
     id: generateNewId(),
     title: `PA`,
@@ -37,7 +36,7 @@ const createInitialData = (): ImpactAnalysis => {
     author: '',
     date: new Date().toISOString().split('T')[0],
     version: '1.0',
-    project: defaultProject?.name || '',
+    project: projectName,
     scope: {
       processes: []
     },
@@ -61,19 +60,53 @@ const createInitialData = (): ImpactAnalysis => {
 const AppContent: React.FC = () => {
   const { isAuthenticated, hasPermission, logout } = useAuth();
   const toast = useToast();
-  const [data, setData] = useState<ImpactAnalysis>(createInitialData());
-  const [customFieldsValues, setCustomFieldsValues] = useState<Record<string, Record<string, any>>>({});
+  const [data, setData] = useState<ImpactAnalysis>(() => {
+    const saved = sessionStorage.getItem(CURRENT_ANALYSIS_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return createInitialData();
+      }
+    }
+    return createInitialData();
+  });
+  const [customFieldsValues, setCustomFieldsValues] = useState<Record<string, Record<string, any>>>(() => {
+    const saved = sessionStorage.getItem(CUSTOM_FIELDS_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  });
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'preview' | 'templates'>('dashboard');
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'preview'>('dashboard');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [showAnalysisManager, setShowAnalysisManager] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>(getSystemSettings());
   const [currentView, setCurrentView] = useState<'login' | 'verify-email' | 'app'>('login');
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [showSessionWarning, setShowSessionWarning] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedDataRef = useRef<string>('');
+
+  useEffect(() => {
+    const handleSettingsChanged = (event: CustomEvent<SystemSettings>) => {
+      setSystemSettings(event.detail);
+    };
+    
+    window.addEventListener('systemSettingsChanged', handleSettingsChanged as EventListener);
+    return () => {
+      window.removeEventListener('systemSettingsChanged', handleSettingsChanged as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const onboardingComplete = localStorage.getItem('nup-aim-onboarding-complete');
@@ -106,6 +139,69 @@ const AppContent: React.FC = () => {
     }
   }, [isAuthenticated]);
 
+  // Initialize lastSavedDataRef with current data to prevent redundant saves on load
+  useEffect(() => {
+    lastSavedDataRef.current = JSON.stringify({ data, customFieldsValues });
+  }, []); // Only run once on mount
+
+  // Auto-save: Persist to sessionStorage immediately when data changes
+  useEffect(() => {
+    sessionStorage.setItem(CURRENT_ANALYSIS_KEY, JSON.stringify(data));
+  }, [data]);
+
+  useEffect(() => {
+    sessionStorage.setItem(CUSTOM_FIELDS_KEY, JSON.stringify(customFieldsValues));
+  }, [customFieldsValues]);
+
+  // Auto-save: Save to database as draft after 3 seconds of inactivity
+  const autoSaveToDatabase = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    // Check permissions before auto-saving
+    if (!hasPermission('ANALYSIS', 'CREATE') && !hasPermission('ANALYSIS', 'EDIT')) {
+      return;
+    }
+    
+    const currentDataString = JSON.stringify({ data, customFieldsValues });
+    if (currentDataString === lastSavedDataRef.current) return;
+    
+    setIsAutoSaving(true);
+    try {
+      const analysisWithCustomFields = {
+        ...data,
+        customFieldsValues
+      };
+      await saveAnalysis(analysisWithCustomFields);
+      lastSavedDataRef.current = currentDataString;
+      setLastSaved(new Date());
+      console.log('[AutoSave] Análise salva como rascunho:', data.id);
+    } catch (error) {
+      console.error('[AutoSave] Erro ao salvar automaticamente:', error);
+    } finally {
+      setIsAutoSaving(false);
+    }
+  }, [data, customFieldsValues, isAuthenticated, hasPermission]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    // Clear any existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    // Set new timeout for auto-save (3 seconds after last change)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSaveToDatabase();
+    }, 3000);
+    
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [data, customFieldsValues, isAuthenticated, autoSaveToDatabase]);
+
   // Função para estender a sessão
   const handleExtendSession = () => {
     localStorage.setItem('nup_aim_last_activity', Date.now().toString());
@@ -137,7 +233,29 @@ const AppContent: React.FC = () => {
   }
 
   const updateData = (updates: Partial<ImpactAnalysis>) => {
-    setData(prev => ({ ...prev, ...updates }));
+    setData(prev => {
+      const merged = { ...prev };
+      
+      // Deep merge for nested objects to preserve existing data
+      if (updates.scope) {
+        merged.scope = { ...prev.scope, ...updates.scope };
+      }
+      if (updates.impacts) {
+        merged.impacts = { ...prev.impacts, ...updates.impacts };
+      }
+      if (updates.conclusions) {
+        merged.conclusions = { ...prev.conclusions, ...updates.conclusions };
+      }
+      
+      // Apply all updates, but use the deep-merged nested objects
+      return { 
+        ...prev, 
+        ...updates,
+        scope: updates.scope ? merged.scope : prev.scope,
+        impacts: updates.impacts ? merged.impacts : prev.impacts,
+        conclusions: updates.conclusions ? merged.conclusions : prev.conclusions
+      };
+    });
   };
 
   const handleExport = async () => {
@@ -166,7 +284,6 @@ const AppContent: React.FC = () => {
     setIsSaving(true);
     let customFieldsSaved = true;
     let customFieldsErrors: string[] = [];
-    let databaseSaved = false;
     
     try {
       // Save the main analysis data with custom fields values
@@ -174,67 +291,7 @@ const AppContent: React.FC = () => {
         ...data,
         customFieldsValues
       };
-      
-      // First, save to localStorage as fallback
-      saveAnalysis(analysisWithCustomFields);
-      
-      // Try to save to database via API
-      try {
-        const dbId = (data as any).dbId;
-        const isNewAnalysis = !dbId;
-        
-        // Prepare complete analysis data for database
-        const analysisDataForDb = {
-          scope: data.scope,
-          impacts: data.impacts,
-          risks: data.risks,
-          mitigations: data.mitigations,
-          conclusions: data.conclusions,
-          customFieldsValues: customFieldsValues,
-          date: data.date,
-          version: data.version,
-          project: data.project
-        };
-        
-        if (isNewAnalysis) {
-          // Create new analysis in database
-          const response = await apiClient.createAnalysis({
-            title: data.title,
-            description: data.description,
-            author: data.author,
-            projectId: null,
-            data: analysisDataForDb
-          });
-          
-          if (response.success && response.data) {
-            console.log('✅ Análise criada no banco de dados:', response.data.id);
-            databaseSaved = true;
-            // Update local data with database ID and persist to localStorage
-            const updatedData = { ...data, dbId: response.data.id };
-            setData(updatedData);
-            saveAnalysis({ ...updatedData, customFieldsValues });
-          } else {
-            console.warn('⚠️ Falha ao salvar no banco:', response.error);
-          }
-        } else {
-          // Update existing analysis
-          const response = await apiClient.updateAnalysis(dbId, {
-            title: data.title,
-            description: data.description,
-            author: data.author,
-            data: analysisDataForDb
-          });
-          
-          if (response.success) {
-            console.log('✅ Análise atualizada no banco de dados');
-            databaseSaved = true;
-          } else {
-            console.warn('⚠️ Falha ao atualizar no banco:', response.error);
-          }
-        }
-      } catch (dbError) {
-        console.warn('⚠️ Erro ao salvar no banco de dados:', dbError);
-      }
+      await saveAnalysis(analysisWithCustomFields);
       
       // Save custom fields values to the microservice
       const { getCustomFieldsSDK } = await import('./hooks/useCustomFields');
@@ -256,24 +313,19 @@ const AppContent: React.FC = () => {
       
       // Show success/warning message based on results
       const msgDiv = document.createElement('div');
-      let bgColor = 'bg-green-500';
-      let message = '';
+      msgDiv.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${
+        customFieldsSaved ? 'bg-green-500' : 'bg-yellow-500'
+      } text-white`;
       
-      if (databaseSaved && customFieldsSaved) {
-        message = 'Análise salva no banco de dados com sucesso!';
-      } else if (databaseSaved && !customFieldsSaved) {
-        bgColor = 'bg-yellow-500';
-        message = `Análise salva no banco. Campos personalizados com erro: ${customFieldsErrors.join(', ')}`;
-      } else if (!databaseSaved && customFieldsSaved) {
-        bgColor = 'bg-yellow-500';
-        message = 'Análise salva localmente. Falha ao salvar no banco de dados.';
+      if (customFieldsSaved) {
+        msgDiv.textContent = 'Análise salva com sucesso!';
       } else {
-        bgColor = 'bg-yellow-500';
-        message = 'Análise salva localmente apenas.';
+        msgDiv.innerHTML = `
+          <div><strong>Análise salva localmente</strong></div>
+          <div class="text-sm">Alguns campos personalizados não foram salvos no servidor.</div>
+          <div class="text-xs mt-1">Seções afetadas: ${customFieldsErrors.join(', ')}</div>
+        `;
       }
-      
-      msgDiv.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${bgColor} text-white`;
-      msgDiv.textContent = message;
       
       document.body.appendChild(msgDiv);
       
@@ -281,7 +333,7 @@ const AppContent: React.FC = () => {
         if (document.body.contains(msgDiv)) {
           document.body.removeChild(msgDiv);
         }
-      }, databaseSaved ? 3000 : 5000);
+      }, customFieldsSaved ? 3000 : 5000);
     } catch (error) {
       console.error('Erro ao salvar análise:', error);
       alert('Erro ao salvar a análise. Tente novamente.');
@@ -313,7 +365,6 @@ const AppContent: React.FC = () => {
     setActiveTab('form');
     setCollapsedSections({});
     setLastSaved(null);
-    setShowAdditionalInfo(false);
   };
 
   const toggleSection = (sectionId: string) => {
@@ -339,7 +390,7 @@ const AppContent: React.FC = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-8 max-w-2xl mx-auto shadow-soft">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-8 max-w-lg mx-auto shadow-soft">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -372,17 +423,6 @@ const AppContent: React.FC = () => {
           >
             Visualização
           </button>
-          <button
-            onClick={() => setActiveTab('templates')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
-              activeTab === 'templates'
-                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            Templates
-          </button>
         </div>
 
         {activeTab === 'dashboard' ? (
@@ -397,8 +437,6 @@ const AppContent: React.FC = () => {
               }
             }}
           />
-        ) : activeTab === 'templates' ? (
-          <TemplateManager onClose={() => setActiveTab('dashboard')} />
         ) : activeTab === 'form' ? (
           <div className="max-w-4xl mx-auto space-y-6">
             <FormSection
@@ -421,7 +459,7 @@ const AppContent: React.FC = () => {
             </FormSection>
 
             <FormSection
-              title="Escopo"
+              title="Escopo - O que foi realizado?"
               isCollapsed={collapsedSections['scope']}
               onToggle={() => toggleSection('scope')}
             >
@@ -438,26 +476,8 @@ const AppContent: React.FC = () => {
               />
             </FormSection>
 
-            {/* Additional Information Toggle */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">Informações Adicionais</h3>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={showAdditionalInfo}
-                    onChange={(e) => setShowAdditionalInfo(e.target.checked)}
-                    className="mr-2 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">Incluir seções adicionais</span>
-                </label>
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Marque esta opção para incluir as seções de Análise de Impactos, Matriz de Riscos, Plano de Mitigação e Conclusões.
-              </p>
-            </div>
-
-            {showAdditionalInfo && (
+            {/* Additional Information Section - Only show when enabled by admin */}
+            {systemSettings.showAdditionalSectionsToAll && (
               <>
                 <FormSection
                   title="Análise de Impactos"
@@ -534,7 +554,7 @@ const AppContent: React.FC = () => {
             )}
 
             {/* Action Buttons */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div className="flex items-center gap-4">
                   {(hasPermission('ANALYSIS', 'CREATE') || hasPermission('ANALYSIS', 'EDIT')) && (
@@ -559,20 +579,18 @@ const AppContent: React.FC = () => {
                   )}
                 </div>
 
-                {lastSaved && (
+                {isAutoSaving ? (
+                  <div className="text-sm text-blue-500 flex items-center gap-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    Salvando automaticamente...
+                  </div>
+                ) : lastSaved ? (
                   <div className="text-sm text-gray-500">
                     Última alteração salva: {lastSaved.toLocaleTimeString('pt-BR')}
                   </div>
-                )}
+                ) : null}
               </div>
 
-              {!isFormValid() && (hasPermission('ANALYSIS', 'CREATE') || hasPermission('ANALYSIS', 'EDIT')) && (
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Atenção:</strong> Preencha os campos obrigatórios (Número da PA, Projeto, Autor e Descrição) para salvar a análise.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         ) : (

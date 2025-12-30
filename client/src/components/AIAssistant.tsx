@@ -120,7 +120,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-secondary-500 to-primary-500 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group"
       >
         <Sparkles className="w-5 h-5 animate-pulse" />
-        <span className="font-medium">Assistente IA</span>
+        <span className="font-medium">Assistente</span>
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-success-500 rounded-full animate-ping" />
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-success-500 rounded-full" />
       </button>
@@ -150,9 +150,9 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-success-400 rounded-full" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Assistente IA</h3>
+            <h3 className="font-semibold text-sm">Assistente</h3>
             {!isMinimized && (
-              <p className="text-xs opacity-80">Powered by Gemini</p>
+              <p className="text-xs opacity-80">NuPtechs</p>
             )}
           </div>
         </div>

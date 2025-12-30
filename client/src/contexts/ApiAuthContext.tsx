@@ -123,10 +123,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               { id: '2', module: 'ANALYSIS', action: 'EDIT', allowed: true },
               { id: '3', module: 'ANALYSIS', action: 'DELETE', allowed: true },
               { id: '4', module: 'ANALYSIS', action: 'VIEW', allowed: true },
-              { id: '5', module: 'PROJECT', action: 'CREATE', allowed: true },
-              { id: '6', module: 'PROJECT', action: 'EDIT', allowed: true },
-              { id: '7', module: 'PROJECT', action: 'DELETE', allowed: true },
-              { id: '8', module: 'PROJECT', action: 'VIEW', allowed: true },
+              { id: '5', module: 'PROJECTS', action: 'CREATE', allowed: true },
+              { id: '6', module: 'PROJECTS', action: 'EDIT', allowed: true },
+              { id: '7', module: 'PROJECTS', action: 'DELETE', allowed: true },
+              { id: '8', module: 'PROJECTS', action: 'VIEW', allowed: true },
+              { id: '9', module: 'PROJECTS', action: 'MANAGE', allowed: true },
+              { id: '10', module: 'USERS', action: 'MANAGE', allowed: true },
+              { id: '11', module: 'PROFILES', action: 'MANAGE', allowed: true },
             ]
           };
           setProfile(userProfile);
@@ -170,10 +173,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             { id: '2', module: 'ANALYSIS', action: 'EDIT', allowed: true },
             { id: '3', module: 'ANALYSIS', action: 'DELETE', allowed: true },
             { id: '4', module: 'ANALYSIS', action: 'VIEW', allowed: true },
-            { id: '5', module: 'PROJECT', action: 'CREATE', allowed: true },
-            { id: '6', module: 'PROJECT', action: 'EDIT', allowed: true },
-            { id: '7', module: 'PROJECT', action: 'DELETE', allowed: true },
-            { id: '8', module: 'PROJECT', action: 'VIEW', allowed: true },
+            { id: '5', module: 'PROJECTS', action: 'CREATE', allowed: true },
+            { id: '6', module: 'PROJECTS', action: 'EDIT', allowed: true },
+            { id: '7', module: 'PROJECTS', action: 'DELETE', allowed: true },
+            { id: '8', module: 'PROJECTS', action: 'VIEW', allowed: true },
+            { id: '9', module: 'PROJECTS', action: 'MANAGE', allowed: true },
+            { id: '10', module: 'USERS', action: 'MANAGE', allowed: true },
+            { id: '11', module: 'PROFILES', action: 'MANAGE', allowed: true },
           ]
         };
         setProfile(userProfile);
