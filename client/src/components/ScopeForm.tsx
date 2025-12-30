@@ -1,11 +1,13 @@
-import React, { useState, useRef } from 'react';
-import { Plus, Trash2, Edit2, Check, X, Database, Calculator } from 'lucide-react';
-import { ImpactAnalysis, ProcessItem } from '../types';
+import React, { useState } from 'react';
+import { Plus, Edit2, Check, X, Calculator, Info, AlertTriangle } from 'lucide-react';
+import { ImpactAnalysis, ProcessItem, WorkspaceInput } from '../types';
 import { ImagePasteField } from './ImagePasteField';
 import { useAuth } from '../contexts/UnifiedAuthContext';
 import { FieldExtractorModal } from './FieldExtractorModal';
 import { ExtractedField } from '../utils/fieldExtractor';
 import { CustomFieldsSection } from './CustomFieldsSection';
+import { getSystemSettings } from '../utils/systemSettings';
+import { WorkspaceCapture } from './WorkspaceCapture';
 
 interface ScopeFormProps {
   data: ImpactAnalysis;
@@ -20,14 +22,83 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
   customFieldsValues = {},
   onCustomFieldsChange 
 }) => {
-  const { hasPermission } = useAuth();
+  useAuth();
   const [editingProcess, setEditingProcess] = useState<string | null>(null);
+  const [originalProcessData, setOriginalProcessData] = useState<ProcessItem | null>(null);
+  const [isEditingExistingProcess, setIsEditingExistingProcess] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showFieldExtractor, setShowFieldExtractor] = useState(false);
   const [selectedScreenshotData, setSelectedScreenshotData] = useState<string>('');
-  const [extractedFieldsMap, setExtractedFieldsMap] = useState<Record<string, ExtractedField[]>>({});
+  const [, setExtractedFieldsMap] = useState<Record<string, ExtractedField[]>>({});
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [autoExtractEnabled, setAutoExtractEnabled] = useState(true);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<{ summary?: string; totalPoints?: number } | null>(null);
+  const [showRationaleProcess, setShowRationaleProcess] = useState<ProcessItem | null>(null);
+
+  const handleAIAnalyze = async (inputs: WorkspaceInput[]) => {
+    const token = localStorage.getItem('nup_aim_auth_token');
+    if (!token) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch('/api/ai/analyze-function-points', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ inputs })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        if (result.functionalities && result.functionalities.length > 0) {
+          const newProcesses: ProcessItem[] = result.functionalities.map((f: any) => ({
+            id: Date.now().toString() + Math.random(),
+            name: f.name,
+            status: f.status,
+            workDetails: f.workDetails,
+            screenshots: '',
+            functionType: f.functionType,
+            complexity: f.complexity,
+            aiGenerated: true,
+            aiConfidence: f.confidence,
+            aiRationale: f.rationale,
+            citationVerified: f.citationVerified,
+            citationText: f.citationText
+          }));
+
+          onChange({
+            scope: {
+              processes: [...data.scope.processes, ...newProcesses]
+            }
+          });
+
+          setAiAnalysisResult({
+            summary: result.summary,
+            totalPoints: result.totalPoints
+          });
+        } else {
+          setAiAnalysisResult({
+            summary: result.summary || 'Nenhuma funcionalidade identificada. Tente fornecer mais detalhes.'
+          });
+        }
+      } else {
+        setAiAnalysisResult({
+          summary: result.message || 'Erro ao processar análise. Tente novamente.'
+        });
+      }
+    } catch (error) {
+      console.error('Erro na análise AI:', error);
+      setAiAnalysisResult({
+        summary: 'Erro de conexão ao analisar. Verifique sua conexão e tente novamente.'
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const addProcess = () => {
     const newProcess: ProcessItem = {
@@ -45,6 +116,8 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
       }
     });
 
+    setOriginalProcessData({ ...newProcess }); // Save original (empty) state
+    setIsEditingExistingProcess(false); // This is a NEW process
     setEditingProcess(newProcess.id);
     setShowForm(true);
   };
@@ -70,10 +143,10 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'nova': return 'bg-green-100 text-green-800 border-green-200';
-      case 'alterada': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'excluida': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'nova': return 'bg-white dark:bg-gray-800 border-emerald-300 dark:border-emerald-700';
+      case 'alterada': return 'bg-white dark:bg-gray-800 border-amber-300 dark:border-amber-700';
+      case 'excluida': return 'bg-white dark:bg-gray-800 border-rose-300 dark:border-rose-700';
+      default: return 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -87,7 +160,7 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
   };
 
   const shouldShowAdditionalFields = (process: ProcessItem) => {
-    return process.status !== '';
+    return process.status !== undefined && process.status !== null;
   };
 
   const shouldShowWebsisQuestion = (process: ProcessItem) => {
@@ -119,24 +192,39 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
   };
 
   const handleEditProcess = (processId: string) => {
+    // Save original data before editing so we can restore on cancel
+    const processToEdit = data.scope.processes.find(p => p.id === processId);
+    if (processToEdit) {
+      setOriginalProcessData({ ...processToEdit });
+    }
+    setIsEditingExistingProcess(true); // This is an EXISTING process
     setEditingProcess(processId);
     setShowForm(true);
   };
 
   const handleCancelEdit = () => {
-    // Remove incomplete processes when canceling
-    const incompleteProcesses = data.scope.processes.filter(p => 
-      p.id === editingProcess && !isProcessComplete(p)
-    );
-    
-    if (incompleteProcesses.length > 0) {
-      onChange({
-        scope: {
-          processes: data.scope.processes.filter(p => p.id !== editingProcess)
-        }
-      });
+    if (editingProcess) {
+      if (isEditingExistingProcess && originalProcessData) {
+        // This was an existing process - restore original data
+        onChange({
+          scope: {
+            processes: data.scope.processes.map(p => 
+              p.id === editingProcess ? originalProcessData : p
+            )
+          }
+        });
+      } else {
+        // This was a new incomplete process - remove it
+        onChange({
+          scope: {
+            processes: data.scope.processes.filter(p => p.id !== editingProcess)
+          }
+        });
+      }
     }
     
+    setOriginalProcessData(null);
+    setIsEditingExistingProcess(false);
     setEditingProcess(null);
     setShowForm(false);
   };
@@ -195,10 +283,43 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* AI Workspace Capture Section */}
+      <div className="space-y-3">
+        <WorkspaceCapture onAnalyze={handleAIAnalyze} isAnalyzing={isAnalyzing} />
+
+        {aiAnalysisResult && (
+          <div className={`p-4 rounded-lg border ${
+            aiAnalysisResult.totalPoints 
+              ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
+              : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+          }`}>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className={`text-sm ${aiAnalysisResult.totalPoints ? 'text-gray-700 dark:text-gray-300' : 'text-yellow-800 dark:text-yellow-300'}`}>
+                  {aiAnalysisResult.summary}
+                </p>
+                {aiAnalysisResult.totalPoints && (
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-2">
+                    Total estimado: {aiAnalysisResult.totalPoints} Pontos de Função
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setAiAnalysisResult(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-3"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Sticky Header with Add Button */}
-      <div className="sticky top-0 bg-white z-20 py-4 border-b border-gray-200 -mx-6 px-6">
+      <div className="sticky top-0 bg-white dark:bg-gray-800 z-20 py-4 border-b border-gray-200 dark:border-gray-700 -mx-6 px-6">
         <div className="flex items-center justify-between">
-          <h4 className="text-lg font-medium text-gray-900">Funcionalidades Impactadas</h4>
+          <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">Funcionalidades Impactadas</h4>
           <button
             type="button"
             onClick={addProcess}
@@ -214,54 +335,110 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
       {/* Functionality Tags */}
       {data.scope.processes.length > 0 && (
         <div className="space-y-4">
-          <h5 className="text-sm font-medium text-gray-700">Funcionalidades Cadastradas:</h5>
-          <div className="flex flex-wrap gap-2">
-            {data.scope.processes.map((process, index) => (
-              <div
-                key={process.id}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium ${getStatusColor(process.status)} min-w-[200px]`}
-              >
-                <span 
-                  className="font-mono text-xs flex-1 truncate" 
-                  title={process.name}
-                  style={{ minWidth: '140px' }}
+          <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Funcionalidades Cadastradas ({data.scope.processes.length}):
+          </h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {data.scope.processes.map((process, index) => {
+              // Format display name: remove type prefix if present
+              const displayName = (() => {
+                let name = process.name;
+                if (process.functionType && name.startsWith(process.functionType + ' - ')) {
+                  name = name.substring(process.functionType.length + 3);
+                } else if (process.functionType && name.startsWith(process.functionType + ' ')) {
+                  name = name.substring(process.functionType.length + 1);
+                }
+                return name;
+              })();
+              
+              // Determine if item needs review
+              const needsReview = process.aiGenerated && (
+                (process.aiConfidence !== undefined && process.aiConfidence < 0.8) ||
+                (process.citationVerified === false) ||
+                (process.aiConfidence === undefined || process.aiConfidence === null)
+              );
+              
+              return (
+                <div
+                  key={process.id}
+                  className={`flex flex-col px-4 py-3 rounded-lg border ${getStatusColor(process.status)} transition-all hover:shadow-sm`}
                 >
-                  {process.name}
-                </span>
-                <span className="text-xs opacity-75 font-mono w-8 text-center">
-                  {getStatusLabel(process.status)}
-                </span>
-                <div className="flex items-center gap-1 ml-1">
-                  <button
-                    type="button"
-                    onClick={() => handleEditProcess(process.id)}
-                    disabled={editingProcess !== null}
-                    className="text-current hover:opacity-70 transition-opacity disabled:opacity-30"
-                    title="Editar funcionalidade"
-                  >
-                    <Edit2 className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeProcess(index)}
-                    disabled={editingProcess !== null}
-                    className="text-current hover:opacity-70 transition-opacity disabled:opacity-30"
-                    title="Remover funcionalidade"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+                  {/* Row 1: Type badge + Name (single line, no wrap) */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    {process.functionType && (
+                      <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-slate-700 dark:bg-slate-600 text-white text-xs font-semibold rounded">
+                        {process.functionType}
+                      </span>
+                    )}
+                    <span 
+                      className="flex-1 font-medium text-sm text-gray-900 dark:text-gray-100 truncate" 
+                      title={process.name}
+                    >
+                      {displayName}
+                    </span>
+                    {needsReview && (
+                      <span 
+                        title="Requer revisão"
+                        className="flex-shrink-0 text-amber-500 dark:text-amber-400"
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Row 2: Complexity | Status | Actions - evenly spaced */}
+                  <div className="flex items-center mt-2 ml-11 text-xs text-gray-500 dark:text-gray-400">
+                    {process.complexity && (
+                      <>
+                        <span>{process.complexity}</span>
+                        <span className="mx-2">•</span>
+                      </>
+                    )}
+                    <span>{getStatusLabel(process.status)}</span>
+                    <span className="flex-1" />
+                    <div className="flex items-center">
+                      {process.aiGenerated && process.aiRationale && (
+                        <button
+                          type="button"
+                          onClick={() => setShowRationaleProcess(process)}
+                          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
+                          title="Ver justificativa da IA"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleEditProcess(process.id)}
+                        disabled={editingProcess !== null}
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors disabled:opacity-30"
+                        title="Editar"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeProcess(index)}
+                        disabled={editingProcess !== null}
+                        className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors disabled:opacity-30"
+                        title="Remover"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* Form for editing/adding functionality */}
       {showForm && editingProcess && (
-        <div className="border-2 border-blue-200 rounded-lg p-6 bg-blue-50">
+        <div className="border-2 border-blue-200 dark:border-blue-800 rounded-lg p-6 bg-blue-50 dark:bg-gray-800">
           <div className="flex items-center justify-between mb-4">
-            <h5 className="text-lg font-medium text-gray-900">
+            <h5 className="text-lg font-medium text-gray-900 dark:text-gray-100">
               {data.scope.processes.find(p => p.id === editingProcess)?.name ? 'Editar' : 'Nova'} Funcionalidade
             </h5>
             <div className="flex items-center gap-2">
@@ -292,9 +469,9 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
             if (!process) return null;
 
             return (
-              <div className="space-y-4 bg-white rounded-lg p-4">
+              <div className="space-y-4 bg-white dark:bg-gray-700 rounded-lg p-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nome da Funcionalidade *
                   </label>
                   <input
@@ -302,12 +479,12 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                     value={process.name}
                     onChange={(e) => updateProcess(processIndex, { name: e.target.value })}
                     placeholder="Ex: Funcionalidade de Aprovação de Documentos"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Status da Funcionalidade *
                   </label>
                   <div className="flex gap-4">
@@ -328,17 +505,17 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                           })}
                           className="mr-2 text-blue-600 focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-700">{option.label}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{option.label}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
                 {shouldShowAdditionalFields(process) && (
-                  <div className="space-y-4 border-t border-gray-200 pt-4">
+                  <div className="space-y-4 border-t border-gray-200 dark:border-gray-600 pt-4">
                     {shouldShowWebsisQuestion(process) && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           A Websis criou/alterou essa funcionalidade antes? *
                         </label>
                         <div className="flex gap-4">
@@ -351,7 +528,7 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                               onChange={() => updateProcess(processIndex, { websisCreated: true })}
                               className="mr-2 text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="text-sm text-gray-700">SIM</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">SIM</span>
                           </label>
                           <label className="flex items-center">
                             <input
@@ -362,16 +539,16 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                               onChange={() => updateProcess(processIndex, { websisCreated: false })}
                               className="mr-2 text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="text-sm text-gray-700">NÃO</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">NÃO</span>
                           </label>
                         </div>
                       </div>
                     )}
 
                     {shouldShowWorkDetailsAndScreenshots(process) && (
-                      <div className="space-y-4 border-t border-gray-100 pt-4">
+                      <div className="space-y-4 border-t border-gray-100 dark:border-gray-600 pt-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Detalhamento do Trabalho Realizado
                           </label>
                           <textarea
@@ -379,13 +556,13 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                             onChange={(e) => updateProcess(processIndex, { workDetails: e.target.value })}
                             placeholder="Descreva detalhadamente o trabalho realizado nesta funcionalidade..."
                             rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                           />
                         </div>
 
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                               Prints das Telas Impactadas
                             </label>
                             <div className="flex items-center gap-2">
@@ -431,9 +608,9 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
       )}
 
       {data.scope.processes.length === 0 && !showForm && (
-        <div className="text-center py-8 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">Nenhuma funcionalidade adicionada</p>
-          <p className="text-sm text-gray-400">Clique em "Adicionar Funcionalidade" para começar</p>
+        <div className="text-center py-8 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <p className="text-gray-500 dark:text-gray-400">Nenhuma funcionalidade adicionada</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Clique em "Adicionar Funcionalidade" para começar</p>
         </div>
       )}
 
@@ -460,15 +637,153 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
       )}
       
       {/* Custom Fields Section */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <h3 className="text-sm font-medium text-gray-700 mb-4">Campos Personalizados</h3>
-        <CustomFieldsSection 
-          sectionName="scope" 
-          analysisId={data.id}
-          initialValues={customFieldsValues}
-          onValuesChange={onCustomFieldsChange}
-        />
-      </div>
+      {getSystemSettings().showCustomFieldsToAll && (
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Campos Personalizados</h3>
+          <CustomFieldsSection 
+            sectionName="scope" 
+            analysisId={data.id}
+            initialValues={customFieldsValues}
+            onValuesChange={onCustomFieldsChange}
+          />
+        </div>
+      )}
+
+      {/* AI Rationale Modal */}
+      {showRationaleProcess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            {/* Header - Compact */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Justificativa da Classificação</h3>
+              <button
+                onClick={() => setShowRationaleProcess(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 rounded transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {/* Functionality Header */}
+              <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-3">
+                  <span className={`px-2.5 py-1 text-sm font-semibold rounded ${
+                    showRationaleProcess.functionType === 'SE' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                    showRationaleProcess.functionType === 'EE' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                    showRationaleProcess.functionType === 'CE' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                    showRationaleProcess.functionType === 'ALI' ? 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' :
+                    'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                  }`}>
+                    {showRationaleProcess.functionType}
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                    {showRationaleProcess.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded">
+                    {showRationaleProcess.status === 'nova' ? 'Nova' : showRationaleProcess.status === 'alterada' ? 'Alterada' : 'Excluída'}
+                  </span>
+                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded capitalize">
+                    {showRationaleProcess.complexity}
+                  </span>
+                  {showRationaleProcess.aiConfidence && (
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded">
+                      {Math.round(showRationaleProcess.aiConfidence * 100)}%
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Clean Sections */}
+              <div className="space-y-5">
+                {/* Source Text */}
+                <div>
+                  <h5 className="text-xs font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wide mb-2">
+                    Trecho de Origem
+                  </h5>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 border-l-2 border-teal-400 dark:border-teal-600">
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      {showRationaleProcess.aiRationale?.match(/['"]([^'"]+)['"]/)?.[1] || 
+                       showRationaleProcess.aiRationale?.split('.')[0] || 
+                       'Trecho não disponível'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Classification */}
+                <div>
+                  <h5 className={`text-xs font-medium uppercase tracking-wide mb-2 ${
+                    showRationaleProcess.functionType === 'SE' ? 'text-emerald-600 dark:text-emerald-400' :
+                    showRationaleProcess.functionType === 'EE' ? 'text-blue-600 dark:text-blue-400' :
+                    showRationaleProcess.functionType === 'CE' ? 'text-amber-600 dark:text-amber-400' :
+                    showRationaleProcess.functionType === 'ALI' ? 'text-violet-600 dark:text-violet-400' :
+                    'text-rose-600 dark:text-rose-400'
+                  }`}>
+                    Classificação: {showRationaleProcess.functionType}
+                  </h5>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                    {showRationaleProcess.functionType === 'EE' && 'Entrada Externa - Processo que recebe dados de fora do sistema e os armazena/atualiza internamente.'}
+                    {showRationaleProcess.functionType === 'SE' && 'Saída Externa - Processo que envia dados para fora do sistema com processamento lógico.'}
+                    {showRationaleProcess.functionType === 'CE' && 'Consulta Externa - Processo de recuperação de dados sem processamento complexo.'}
+                    {showRationaleProcess.functionType === 'ALI' && 'Arquivo Lógico Interno - Grupo de dados mantido dentro do sistema.'}
+                    {showRationaleProcess.functionType === 'AIE' && 'Arquivo de Interface Externa - Grupo de dados referenciado mas mantido por outro sistema.'}
+                  </p>
+                </div>
+
+                {/* Complexity */}
+                <div>
+                  <h5 className="text-xs font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wide mb-2">
+                    Complexidade: {showRationaleProcess.complexity?.charAt(0).toUpperCase()}{showRationaleProcess.complexity?.slice(1)}
+                  </h5>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                    {(() => {
+                      const rationale = showRationaleProcess.aiRationale || '';
+                      if (rationale.includes('Não foi possível extrair') || rationale.includes('não foi possível identificar')) {
+                        return 'Não foi possível extrair do texto os campos/elementos específicos para determinar DERs/ALRs conforme o padrão IFPUG, portanto a complexidade foi considerada média.';
+                      }
+                      const derMatch = rationale.match(/(\d+)\s*DERs?/i);
+                      const alrMatch = rationale.match(/(\d+)\s*(?:ALRs?|TRs?|ARs?)/i);
+                      if (derMatch || alrMatch) {
+                        const ders = derMatch ? derMatch[1] : '?';
+                        const alrs = alrMatch ? alrMatch[1] : '?';
+                        const comp = showRationaleProcess.complexity || 'média';
+                        return `${ders} DERs, ${alrs} ALRs/TRs → Complexidade ${comp.charAt(0).toUpperCase()}${comp.slice(1)} (IFPUG CPM 4.3.1)`;
+                      }
+                      return 'Complexidade estimada conforme padrões IFPUG.';
+                    })()}
+                  </p>
+                </div>
+
+                {/* Full Justification - Collapsible */}
+                <details className="group">
+                  <summary className="text-xs font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wide cursor-pointer hover:text-teal-700 dark:hover:text-teal-300">
+                    Justificativa Completa
+                  </summary>
+                  <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed whitespace-pre-wrap">
+                      {showRationaleProcess.aiRationale}
+                    </p>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setShowRationaleProcess(null)}
+                className="w-full px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-sm font-medium transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

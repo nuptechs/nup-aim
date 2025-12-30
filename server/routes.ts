@@ -1,53 +1,34 @@
 import { Express } from 'express';
 import express from 'express';
 import { db } from './db';
-import { users, profiles, projects, analyses, processes, impacts, risks, mitigations, conclusions, documentTemplates } from './schema';
-import { eq, and, or, desc } from 'drizzle-orm';
+import { users, profiles, projects, analyses, processes, impacts, risks, mitigations, conclusions, fpaGuidelines } from './schema';
+import { eq, and, or } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { corsMiddleware } from './middleware/cors.middleware';
 import { authenticateToken } from './middleware/auth.middleware';
-import { 
-  parseMarkersFromDocx, 
-  getAvailableFields, 
-  generateDocumentFromTemplate,
-  validateFieldMappings,
-  getAnalysisData 
-} from './templateService';
 
-// JWT_SECRET is validated lazily inside registerRoutes to allow
-// Replit to inject secrets during the deploy promote stage
-let JWT_SECRET: string = '';
+const JWT_SECRET: string = process.env.JWT_SECRET || '';
 
-interface RouteOptions {
-  ssoEnabled?: boolean;
+if (!JWT_SECRET) {
+  console.error('🔴 [FATAL] JWT_SECRET environment variable is required');
+  console.error('🔴 [FATAL] NuP-AIM cannot start without a secure JWT_SECRET');
+  console.error('💡 Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+  throw new Error('JWT_SECRET is required. Set it in Secrets tab.');
 }
 
-export function registerRoutes(app: Express, options: RouteOptions = {}) {
-  const { ssoEnabled = false } = options;
-  
-  // Validate JWT_SECRET at runtime, not at module load time
-  // This allows Replit to inject secrets during deploy before validation runs
-  JWT_SECRET = process.env.JWT_SECRET || '';
-  
-  if (!JWT_SECRET) {
-    console.error('🔴 [FATAL] JWT_SECRET environment variable is required');
-    console.error('🔴 [FATAL] NuP-AIM cannot start without a secure JWT_SECRET');
-    console.error('💡 Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
-    throw new Error('JWT_SECRET is required. Set it in Secrets tab.');
-  }
+if (JWT_SECRET.length < 32) {
+  console.error('🔴 [FATAL] JWT_SECRET is too short (min 32 chars)');
+  throw new Error('JWT_SECRET must be at least 32 characters long');
+}
 
-  if (JWT_SECRET.length < 32) {
-    console.error('🔴 [FATAL] JWT_SECRET is too short (min 32 chars)');
-    throw new Error('JWT_SECRET must be at least 32 characters long');
-  }
+console.log('✅ [Security] JWT_SECRET configured (' + JWT_SECRET.length + ' chars)');
 
-  console.log('✅ [Security] JWT_SECRET configured (' + JWT_SECRET.length + ' chars)');
-  
+export function registerRoutes(app: Express) {
   // Apply middleware
   app.use(corsMiddleware);
-  app.use(express.json({ limit: '5mb' }));
-  app.use(express.urlencoded({ limit: '5mb', extended: true }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
   // ============================================
   // HEALTH CHECK
@@ -57,8 +38,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
       status: 'healthy',
       service: 'NuP-AIM', 
       version: '1.0.0',
-      timestamp: new Date().toISOString(),
-      authMode: ssoEnabled ? 'sso' : 'local'
+      timestamp: new Date().toISOString()
     });
   });
 
@@ -67,47 +47,28 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
       status: 'healthy',
       service: 'NuP-AIM', 
       version: '1.0.0',
-      timestamp: new Date().toISOString(),
-      authMode: ssoEnabled ? 'sso' : 'local'
+      timestamp: new Date().toISOString()
     });
   });
 
   // ============================================
-  // AUTH MODE ENDPOINT (always available)
+  // AUTH ROUTES
   // ============================================
-  app.get('/api/auth/mode', (req, res) => {
-    res.json({
-      mode: ssoEnabled ? 'sso' : 'local',
-      ssoLoginUrl: ssoEnabled ? '/auth/sso/login' : null,
-      ssoLogoutUrl: ssoEnabled ? '/auth/sso/logout' : null,
-    });
-  });
 
-  // ============================================
-  // AUTH ROUTES (only when SSO is disabled)
-  // ============================================
-  
-  if (ssoEnabled) {
-    console.log('ℹ️  [Routes] Local auth routes disabled - using SSO');
-  } else {
-    console.log('ℹ️  [Routes] Local auth routes enabled');
-  }
-
-  // Auth routes - only register when SSO is NOT enabled
-  if (!ssoEnabled) {
+  // Auth routes
   app.post('/api/auth/login', async (req, res) => {
     try {
       let { email, password } = req.body;
   
       // Trim spaces from inputs
-      email = email?.trim();
+      const usernameOrEmail = email?.trim();
       password = password?.trim();
   
-      if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+      if (!usernameOrEmail || !password) {
+        return res.status(400).json({ error: 'Email/username and password are required' });
       }
   
-      // Find user by email
+      // Find user by email OR username
       const userResult = await db.select({
         id: users.id,
         username: users.username,
@@ -116,7 +77,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
         profileId: users.profileId,
         isActive: users.isActive,
         isEmailVerified: users.isEmailVerified
-      }).from(users).where(eq(users.email, email));
+      }).from(users).where(or(eq(users.email, usernameOrEmail), eq(users.username, usernameOrEmail)));
   
       if (userResult.length === 0) {
         return res.status(401).json({ error: 'Invalid credentials' });
@@ -415,105 +376,75 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
-  } // End of if (!ssoEnabled) block for local auth routes
   
-  // Custom Fields Microservice Proxy
-  const CUSTOM_FIELDS_SERVICE_URL = 'http://localhost:3002';
+  // Custom Fields API - Local implementation (no external microservice required)
+  // Returns empty data gracefully since custom fields are optional
   
-  // Proxy for API endpoints
+  // Get custom fields for a section
+  app.get('/api/custom-fields-proxy/custom-fields', async (req, res) => {
+    try {
+      const section = req.query.section as string;
+      // Return empty fields array - custom fields feature not configured
+      res.json({ fields: [], section: section || 'default' });
+    } catch (error) {
+      console.error('Custom Fields API error:', error);
+      res.json({ fields: [], error: 'Custom fields not available' });
+    }
+  });
+  
+  // Get form values
+  app.get('/api/custom-fields-proxy/forms/:formType/:formId/values', async (req, res) => {
+    try {
+      res.json({ values: {}, formId: req.params.formId });
+    } catch (error) {
+      console.error('Custom Fields values error:', error);
+      res.json({ values: {} });
+    }
+  });
+  
+  // Save form values
+  app.post('/api/custom-fields-proxy/forms/:formType/:formId/values', async (req, res) => {
+    try {
+      res.json({ success: true, message: 'Custom fields not configured' });
+    } catch (error) {
+      console.error('Custom Fields save error:', error);
+      res.json({ success: false });
+    }
+  });
+  
+  // Register sections
+  app.post('/api/custom-fields-proxy/sections/register', async (req, res) => {
+    try {
+      res.json({ success: true, message: 'Sections registered (local mode)' });
+    } catch (error) {
+      console.error('Custom Fields register error:', error);
+      res.json({ success: true });
+    }
+  });
+  
+  // Catch-all for other custom fields endpoints
   app.use('/api/custom-fields-proxy', async (req, res) => {
-    try {
-      const targetPath = req.originalUrl.replace('/api/custom-fields-proxy', '/api');
-      const targetUrl = `${CUSTOM_FIELDS_SERVICE_URL}${targetPath}`;
-      
-      const proxyOptions: RequestInit = {
-        method: req.method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
-  
-      if (req.method !== 'GET' && req.method !== 'HEAD') {
-        proxyOptions.body = JSON.stringify(req.body);
-      }
-  
-      const response = await fetch(targetUrl, proxyOptions);
-      const data = await response.json();
-  
-      res.status(response.status).json(data);
-    } catch (error) {
-      console.error('Custom Fields API proxy error:', error);
-      res.status(500).json({ 
-        error: 'Failed to communicate with Custom Fields service',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
+    res.json({ success: true, message: 'Custom fields service not configured' });
   });
   
-  // Proxy for Widget assets (CSS, JS, etc) - Direct /widgets/* path
+  // Widgets endpoint - returns empty response (no external service required)
   app.use('/widgets', async (req, res) => {
-    try {
-      const targetUrl = `${CUSTOM_FIELDS_SERVICE_URL}${req.originalUrl}`;
-      
-      const response = await fetch(targetUrl);
-      const contentType = response.headers.get('content-type');
-      
-      // Forward the content with appropriate headers
-      if (contentType) {
-        res.set('Content-Type', contentType);
-      }
-      
-      if (contentType?.includes('application/json')) {
-        const data = await response.json();
-        res.status(response.status).json(data);
-      } else if (contentType?.includes('text/html') || contentType?.includes('javascript') || contentType?.includes('css')) {
-        // Text-based content (HTML/JS/CSS) - microservice handles dynamic config injection
-        const text = await response.text();
-        res.status(response.status).send(text);
-      } else {
-        const buffer = await response.arrayBuffer();
-        res.status(response.status).send(Buffer.from(buffer));
-      }
-    } catch (error) {
-      console.error('Custom Fields widgets proxy error:', error);
-      res.status(500).send('Failed to load Custom Fields widgets');
-    }
+    res.status(200).send('<!-- Custom fields widgets not configured -->');
   });
   
-  // Proxy for Widget pages via /custom-fields-admin/* (redirects to /widgets/*)
+  // Custom fields admin endpoint - returns info message
   app.use('/custom-fields-admin', async (req, res) => {
-    try {
-      const targetPath = req.originalUrl.replace('/custom-fields-admin', '/widgets');
-      const targetUrl = `${CUSTOM_FIELDS_SERVICE_URL}${targetPath}`;
-      
-      const response = await fetch(targetUrl);
-      const contentType = response.headers.get('content-type');
-      
-      // Forward the content with appropriate headers
-      if (contentType) {
-        res.set('Content-Type', contentType);
-      }
-      
-      if (contentType?.includes('application/json')) {
-        const data = await response.json();
-        res.status(response.status).json(data);
-      } else if (contentType?.includes('text/html')) {
-        const html = await response.text();
-        res.status(response.status).send(html);
-      } else if (contentType?.includes('javascript')) {
-        const js = await response.text();
-        res.status(response.status).send(js);
-      } else if (contentType?.includes('css')) {
-        const css = await response.text();
-        res.status(response.status).send(css);
-      } else {
-        const buffer = await response.arrayBuffer();
-        res.status(response.status).send(Buffer.from(buffer));
-      }
-    } catch (error) {
-      console.error('Custom Fields admin proxy error:', error);
-      res.status(500).send('Failed to load Custom Fields admin panel');
-    }
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+        <head><title>Campos Personalizados</title></head>
+        <body style="font-family: system-ui; padding: 40px; text-align: center;">
+          <h2>Campos Personalizados</h2>
+          <p>O gerenciador de campos personalizados não está configurado neste ambiente.</p>
+          <p>Os campos personalizados podem ser adicionados via configuração do sistema.</p>
+        </body>
+      </html>
+    `);
   });
   
   // Projects routes
@@ -526,28 +457,138 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
-  
-  // Helper function to normalize analysis response to camelCase
-  const normalizeAnalysis = (row: any) => ({
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    author: row.author,
-    version: row.version,
-    projectId: row.project_id || row.projectId,
-    createdBy: row.created_by || row.createdBy,
-    data: row.data,
-    createdAt: row.created_at || row.createdAt,
-    updatedAt: row.updated_at || row.updatedAt
+
+  app.post('/api/projects', authenticateToken, async (req: any, res) => {
+    try {
+      const { name, acronym, isDefault } = req.body;
+
+      if (!name || !acronym) {
+        return res.status(400).json({ error: 'Name and acronym are required' });
+      }
+
+      // If setting as default, remove default from others
+      if (isDefault) {
+        await db.update(projects).set({ isDefault: false });
+      }
+
+      const newProject = await db.insert(projects)
+        .values({
+          name,
+          acronym,
+          isDefault: isDefault || false,
+          createdBy: req.user.userId
+        })
+        .returning();
+
+      res.status(201).json(newProject[0]);
+    } catch (error) {
+      console.error('Project creation error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/projects/:id', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, acronym, isDefault } = req.body;
+
+      // If setting as default, remove default from others first
+      if (isDefault) {
+        await db.update(projects).set({ isDefault: false });
+      }
+
+      const updated = await db.update(projects)
+        .set({
+          name,
+          acronym,
+          isDefault,
+          updatedAt: new Date()
+        })
+        .where(eq(projects.id, id))
+        .returning();
+
+      if (updated.length === 0) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+
+      res.json(updated[0]);
+    } catch (error) {
+      console.error('Project update error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/projects/:id', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Check if project is used by any analysis
+      const usedByAnalysis = await db.select({ id: analyses.id })
+        .from(analyses)
+        .where(eq(analyses.projectId, id))
+        .limit(1);
+
+      if (usedByAnalysis.length > 0) {
+        return res.status(400).json({ 
+          error: 'Cannot delete project that is used by analyses' 
+        });
+      }
+
+      // Check how many projects exist
+      const allProjects = await db.select().from(projects);
+      if (allProjects.length <= 1) {
+        return res.status(400).json({ 
+          error: 'Cannot delete the last project' 
+        });
+      }
+
+      await db.delete(projects).where(eq(projects.id, id));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Project delete error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
   });
   
   // Analyses routes
+  
+  // Get all analyses for current user (with summary info) - MUST be before /:id route
+  app.get('/api/analyses/list/all', authenticateToken, async (req: any, res) => {
+    try {
+      const analysesResult = await db.select({
+        id: analyses.id,
+        title: analyses.title,
+        description: analyses.description,
+        author: analyses.author,
+        version: analyses.version,
+        projectId: analyses.projectId,
+        createdAt: analyses.createdAt,
+        updatedAt: analyses.updatedAt
+      }).from(analyses);
+      
+      // Transform for frontend
+      const result = analysesResult.map(a => ({
+        id: a.id,
+        title: a.title,
+        description: a.description || '',
+        author: a.author,
+        date: a.createdAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+        version: a.version || '1.0',
+        project: a.projectId || ''
+      }));
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Analyses list error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
   app.get('/api/analyses', authenticateToken, async (req, res) => {
     try {
       const analysesResult = await db.select().from(analyses);
-      // Normalize to camelCase for frontend
-      const normalizedResults = analysesResult.map(normalizeAnalysis);
-      res.json(normalizedResults);
+      res.json(analysesResult);
     } catch (error) {
       console.error('Analyses fetch error:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -556,7 +597,7 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
   
   app.post('/api/analyses', authenticateToken, async (req: any, res) => {
     try {
-      const { title, description, author, projectId, data } = req.body;
+      const { title, description, author, projectId } = req.body;
   
       if (!title || !author) {
         return res.status(400).json({ error: 'Title and author are required' });
@@ -568,61 +609,234 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
           description,
           author,
           projectId,
-          data: data || {},
           createdBy: req.user.userId
         })
         .returning();
   
-      // Normalize to camelCase for frontend
-      res.status(201).json(normalizeAnalysis(newAnalysis[0]));
+      res.status(201).json(newAnalysis[0]);
     } catch (error) {
       console.error('Analysis creation error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
   
-  app.put('/api/analyses/:id', authenticateToken, async (req: any, res) => {
+  // Get single analysis with all related data
+  app.get('/api/analyses/:id', authenticateToken, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const { title, description, author, projectId, data } = req.body;
-  
-      const updateData: any = { updatedAt: new Date() };
-      if (title !== undefined) updateData.title = title;
-      if (description !== undefined) updateData.description = description;
-      if (author !== undefined) updateData.author = author;
-      if (projectId !== undefined) updateData.projectId = projectId;
-      if (data !== undefined) updateData.data = data;
-  
-      const updatedAnalysis = await db.update(analyses)
-        .set(updateData)
-        .where(eq(analyses.id, id))
-        .returning();
-  
-      if (updatedAnalysis.length === 0) {
+      
+      // Get analysis
+      const [analysis] = await db.select().from(analyses).where(eq(analyses.id, id));
+      if (!analysis) {
         return res.status(404).json({ error: 'Analysis not found' });
       }
-  
-      // Normalize to camelCase for frontend
-      res.json(normalizeAnalysis(updatedAnalysis[0]));
+      
+      // Get related data in parallel
+      const [processesData, impactsData, risksData, mitigationsData, conclusionsData] = await Promise.all([
+        db.select().from(processes).where(eq(processes.analysisId, id)),
+        db.select().from(impacts).where(eq(impacts.analysisId, id)),
+        db.select().from(risks).where(eq(risks.analysisId, id)),
+        db.select().from(mitigations).where(eq(mitigations.analysisId, id)),
+        db.select().from(conclusions).where(eq(conclusions.analysisId, id))
+      ]);
+      
+      // Transform to frontend format
+      const result = {
+        id: analysis.id,
+        title: analysis.title,
+        description: analysis.description || '',
+        author: analysis.author,
+        date: analysis.createdAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+        version: analysis.version || '1.0',
+        project: analysis.projectId || '',
+        scope: {
+          processes: processesData.map(p => ({
+            id: p.id,
+            name: p.name,
+            status: p.status,
+            workDetails: p.workDetails || '',
+            screenshots: p.screenshots || '',
+            websisCreated: p.websisCreated || false
+          }))
+        },
+        impacts: {
+          business: impactsData.filter(i => i.category === 'business').map(i => ({
+            id: i.id, description: i.description, severity: i.severity, probability: i.probability, category: i.category
+          })),
+          technical: impactsData.filter(i => i.category === 'technical').map(i => ({
+            id: i.id, description: i.description, severity: i.severity, probability: i.probability, category: i.category
+          })),
+          operational: impactsData.filter(i => i.category === 'operational').map(i => ({
+            id: i.id, description: i.description, severity: i.severity, probability: i.probability, category: i.category
+          })),
+          financial: impactsData.filter(i => i.category === 'financial').map(i => ({
+            id: i.id, description: i.description, severity: i.severity, probability: i.probability, category: i.category
+          }))
+        },
+        risks: risksData.map(r => ({
+          id: r.id, description: r.description, impact: r.impact, probability: r.probability, mitigation: r.mitigation || ''
+        })),
+        mitigations: mitigationsData.map(m => ({
+          id: m.id, action: m.action, responsible: m.responsible, deadline: m.deadline ? (typeof m.deadline === 'string' ? m.deadline : (m.deadline as Date).toISOString().split('T')[0]) : '', priority: m.priority
+        })),
+        conclusions: conclusionsData[0] ? {
+          summary: conclusionsData[0].summary || '',
+          recommendations: (conclusionsData[0].recommendations as string[]) || [],
+          nextSteps: (conclusionsData[0].nextSteps as string[]) || []
+        } : { summary: '', recommendations: [], nextSteps: [] }
+      };
+      
+      res.json(result);
     } catch (error) {
-      console.error('Analysis update error:', error);
+      console.error('Analysis fetch error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
   
+  // Save complete analysis (create or update)
+  app.put('/api/analyses/:id', authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const analysisData = req.body;
+      
+      // Check if analysis exists
+      const [existing] = await db.select().from(analyses).where(eq(analyses.id, id));
+      
+      let analysisId = id;
+      
+      if (existing) {
+        // Update existing analysis
+        await db.update(analyses)
+          .set({
+            title: analysisData.title,
+            description: analysisData.description,
+            author: analysisData.author,
+            version: analysisData.version,
+            projectId: analysisData.project || null,
+            updatedAt: new Date()
+          })
+          .where(eq(analyses.id, id));
+          
+        // Delete existing related data
+        await Promise.all([
+          db.delete(processes).where(eq(processes.analysisId, id)),
+          db.delete(impacts).where(eq(impacts.analysisId, id)),
+          db.delete(risks).where(eq(risks.analysisId, id)),
+          db.delete(mitigations).where(eq(mitigations.analysisId, id)),
+          db.delete(conclusions).where(eq(conclusions.analysisId, id))
+        ]);
+      } else {
+        // Create new analysis
+        const [newAnalysis] = await db.insert(analyses)
+          .values({
+            id,
+            title: analysisData.title,
+            description: analysisData.description,
+            author: analysisData.author,
+            version: analysisData.version,
+            projectId: analysisData.project || null,
+            createdBy: req.user.userId
+          })
+          .returning();
+        analysisId = newAnalysis.id;
+      }
+      
+      // Insert processes
+      if (analysisData.scope?.processes?.length > 0) {
+        await db.insert(processes).values(
+          analysisData.scope.processes.map((p: any) => ({
+            id: p.id.includes('-') ? p.id : undefined, // Use provided UUID or let DB generate
+            analysisId,
+            name: p.name,
+            status: p.status,
+            workDetails: p.workDetails || null,
+            screenshots: p.screenshots || null,
+            websisCreated: p.websisCreated || false
+          }))
+        );
+      }
+      
+      // Insert impacts (flatten all categories)
+      const allImpacts = [
+        ...(analysisData.impacts?.business || []).map((i: any) => ({ ...i, category: 'business' })),
+        ...(analysisData.impacts?.technical || []).map((i: any) => ({ ...i, category: 'technical' })),
+        ...(analysisData.impacts?.operational || []).map((i: any) => ({ ...i, category: 'operational' })),
+        ...(analysisData.impacts?.financial || []).map((i: any) => ({ ...i, category: 'financial' }))
+      ];
+      
+      if (allImpacts.length > 0) {
+        await db.insert(impacts).values(
+          allImpacts.map((i: any) => ({
+            analysisId,
+            description: i.description,
+            severity: i.severity,
+            probability: i.probability,
+            category: i.category
+          }))
+        );
+      }
+      
+      // Insert risks
+      if (analysisData.risks?.length > 0) {
+        await db.insert(risks).values(
+          analysisData.risks.map((r: any) => ({
+            analysisId,
+            description: r.description,
+            impact: r.impact,
+            probability: r.probability,
+            mitigation: r.mitigation || null
+          }))
+        );
+      }
+      
+      // Insert mitigations
+      if (analysisData.mitigations?.length > 0) {
+        await db.insert(mitigations).values(
+          analysisData.mitigations.map((m: any) => ({
+            analysisId,
+            action: m.action,
+            responsible: m.responsible,
+            deadline: m.deadline ? new Date(m.deadline) : null,
+            priority: m.priority
+          }))
+        );
+      }
+      
+      // Insert conclusions
+      if (analysisData.conclusions) {
+        await db.insert(conclusions).values({
+          analysisId,
+          summary: analysisData.conclusions.summary || null,
+          recommendations: analysisData.conclusions.recommendations || [],
+          nextSteps: analysisData.conclusions.nextSteps || []
+        });
+      }
+      
+      res.json({ success: true, id: analysisId });
+    } catch (error) {
+      console.error('Analysis save error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Delete analysis and all related data
   app.delete('/api/analyses/:id', authenticateToken, async (req: any, res) => {
     try {
       const { id } = req.params;
-  
-      const deletedAnalysis = await db.delete(analyses)
-        .where(eq(analyses.id, id))
-        .returning();
-  
-      if (deletedAnalysis.length === 0) {
-        return res.status(404).json({ error: 'Analysis not found' });
-      }
-  
-      res.json({ success: true, message: 'Analysis deleted successfully', data: normalizeAnalysis(deletedAnalysis[0]) });
+      
+      // Delete related data first
+      await Promise.all([
+        db.delete(processes).where(eq(processes.analysisId, id)),
+        db.delete(impacts).where(eq(impacts.analysisId, id)),
+        db.delete(risks).where(eq(risks.analysisId, id)),
+        db.delete(mitigations).where(eq(mitigations.analysisId, id)),
+        db.delete(conclusions).where(eq(conclusions.analysisId, id))
+      ]);
+      
+      // Delete analysis
+      await db.delete(analyses).where(eq(analyses.id, id));
+      
+      res.json({ success: true });
     } catch (error) {
       console.error('Analysis delete error:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -724,7 +938,8 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
         return res.status(400).json({ error: 'Image data is required' });
       }
   
-      const { extractFieldsWithGemini } = await import('./geminiFieldExtractor');
+      // Import dynamically to avoid circular dependencies
+      const { extractFieldsWithGemini } = await import('../client/src/utils/geminiFieldExtractor');
       
       console.log('🤖 Processing image with Gemini AI...');
       const fields = await extractFieldsWithGemini(imageBase64);
@@ -826,6 +1041,29 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
     }
   });
 
+  // Analyze content and extract function points
+  app.post('/api/ai/analyze-function-points', authenticateToken, async (req, res) => {
+    try {
+      const { inputs } = req.body;
+      
+      if (!inputs || !Array.isArray(inputs) || inputs.length === 0) {
+        return res.status(400).json({ error: 'Inputs array is required' });
+      }
+
+      const { analyzeWithAI, calculateFunctionPoints } = await import('./services/functionPointAnalyzer');
+      const result = await analyzeWithAI(inputs);
+      
+      if (result.functionalities && result.functionalities.length > 0) {
+        result.totalPoints = calculateFunctionPoints(result.functionalities);
+      }
+      
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      console.error('Function point analysis error:', error);
+      res.status(500).json({ error: 'Failed to analyze function points', message: error.message });
+    }
+  });
+
   // ============================================
   // DASHBOARD ANALYTICS ROUTES
   // ============================================
@@ -856,328 +1094,123 @@ export function registerRoutes(app: Express, options: RouteOptions = {}) {
   });
 
   // ============================================
-  // DOCUMENT TEMPLATES ROUTES
+  // FPA GUIDELINES ROUTES (Diretrizes de APF)
   // ============================================
 
-  // Get available fields for template mapping
-  app.get('/api/templates/available-fields', authenticateToken, async (req, res) => {
+  // Get all FPA guidelines
+  app.get('/api/fpa-guidelines', authenticateToken, async (req, res) => {
     try {
-      const fields = getAvailableFields();
-      res.json({ fields });
+      const guidelines = await db.select().from(fpaGuidelines).where(eq(fpaGuidelines.isActive, true));
+      res.json({ success: true, guidelines });
     } catch (error: any) {
-      console.error('Get available fields error:', error);
-      res.status(500).json({ error: 'Falha ao obter campos disponíveis', message: error.message });
+      console.error('Get FPA guidelines error:', error);
+      res.status(500).json({ error: 'Failed to get FPA guidelines', message: error.message });
     }
   });
 
-  // List all templates
-  app.get('/api/templates', authenticateToken, async (req, res) => {
-    try {
-      const templates = await db.select({
-        id: documentTemplates.id,
-        name: documentTemplates.name,
-        description: documentTemplates.description,
-        originalFileName: documentTemplates.originalFileName,
-        parsedMarkers: documentTemplates.parsedMarkers,
-        fieldMappings: documentTemplates.fieldMappings,
-        isActive: documentTemplates.isActive,
-        isDefault: documentTemplates.isDefault,
-        usageCount: documentTemplates.usageCount,
-        createdAt: documentTemplates.createdAt,
-        updatedAt: documentTemplates.updatedAt
-      })
-      .from(documentTemplates)
-      .orderBy(desc(documentTemplates.createdAt));
-      
-      res.json({ templates });
-    } catch (error: any) {
-      console.error('List templates error:', error);
-      res.status(500).json({ error: 'Falha ao listar templates', message: error.message });
-    }
-  });
-
-  // Get single template by ID
-  app.get('/api/templates/:id', authenticateToken, async (req, res) => {
+  // Get single FPA guideline
+  app.get('/api/fpa-guidelines/:id', authenticateToken, async (req, res) => {
     try {
       const { id } = req.params;
-      
-      const [template] = await db.select()
-        .from(documentTemplates)
-        .where(eq(documentTemplates.id, id));
-      
-      if (!template) {
-        return res.status(404).json({ error: 'Template não encontrado' });
+      const result = await db.select().from(fpaGuidelines).where(eq(fpaGuidelines.id, id));
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'Guideline not found' });
       }
-      
-      res.json({ template });
+      res.json({ success: true, guideline: result[0] });
     } catch (error: any) {
-      console.error('Get template error:', error);
-      res.status(500).json({ error: 'Falha ao obter template', message: error.message });
+      console.error('Get FPA guideline error:', error);
+      res.status(500).json({ error: 'Failed to get FPA guideline', message: error.message });
     }
   });
 
-  // Upload and parse new template
-  app.post('/api/templates', authenticateToken, async (req: any, res) => {
+  // Create FPA guideline (admin only)
+  app.post('/api/fpa-guidelines', authenticateToken, async (req: any, res) => {
     try {
-      const { name, description, fileName, fileContent } = req.body;
+      const { title, triggerPhrases, businessDomains, instruction, examples, negativeExamples, priority } = req.body;
       
-      if (!name || !fileName || !fileContent) {
-        return res.status(400).json({ 
-          error: 'Nome, arquivo e conteúdo são obrigatórios' 
-        });
+      if (!title || !instruction) {
+        return res.status(400).json({ error: 'Title and instruction are required' });
       }
 
-      // Decode base64 content
-      const fileBuffer = Buffer.from(fileContent, 'base64');
-      
-      // Parse markers from document
-      const parsedMarkers = parseMarkersFromDocx(fileBuffer);
-      
-      // Create template record
-      const [newTemplate] = await db.insert(documentTemplates)
-        .values({
-          name,
-          description: description || '',
-          originalFileName: fileName,
-          fileContent: fileContent,
-          parsedMarkers: parsedMarkers,
-          fieldMappings: {},
-          isActive: true,
-          isDefault: false,
-          usageCount: '0',
-          createdBy: req.user?.userId || null,
-          createdAt: new Date(),
+      const newGuideline = await db.insert(fpaGuidelines).values({
+        title,
+        triggerPhrases: triggerPhrases || [],
+        businessDomains: businessDomains || [],
+        instruction,
+        examples: examples || [],
+        negativeExamples: negativeExamples || [],
+        priority: priority || 'normal',
+        createdBy: req.user?.userId,
+      }).returning();
+
+      res.json({ success: true, guideline: newGuideline[0] });
+    } catch (error: any) {
+      console.error('Create FPA guideline error:', error);
+      res.status(500).json({ error: 'Failed to create FPA guideline', message: error.message });
+    }
+  });
+
+  // Update FPA guideline (admin only)
+  app.put('/api/fpa-guidelines/:id', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { title, triggerPhrases, businessDomains, instruction, examples, negativeExamples, priority, isActive } = req.body;
+
+      const updated = await db.update(fpaGuidelines)
+        .set({
+          title,
+          triggerPhrases,
+          businessDomains,
+          instruction,
+          examples,
+          negativeExamples,
+          priority,
+          isActive,
           updatedAt: new Date()
         })
+        .where(eq(fpaGuidelines.id, id))
         .returning();
-      
-      res.status(201).json({ 
-        template: newTemplate,
-        markersFound: parsedMarkers.length,
-        message: `Template criado com sucesso. ${parsedMarkers.length} marcadores encontrados.`
-      });
+
+      if (updated.length === 0) {
+        return res.status(404).json({ error: 'Guideline not found' });
+      }
+
+      res.json({ success: true, guideline: updated[0] });
     } catch (error: any) {
-      console.error('Upload template error:', error);
-      res.status(500).json({ error: 'Falha ao fazer upload do template', message: error.message });
+      console.error('Update FPA guideline error:', error);
+      res.status(500).json({ error: 'Failed to update FPA guideline', message: error.message });
     }
   });
 
-  // Update template (name, description, mappings)
-  app.put('/api/templates/:id', authenticateToken, async (req, res) => {
+  // Delete FPA guideline (soft delete)
+  app.delete('/api/fpa-guidelines/:id', authenticateToken, async (req, res) => {
     try {
       const { id } = req.params;
-      const { name, description, fieldMappings, isActive, isDefault } = req.body;
       
-      const updateData: any = { updatedAt: new Date() };
-      
-      if (name !== undefined) updateData.name = name;
-      if (description !== undefined) updateData.description = description;
-      if (fieldMappings !== undefined) updateData.fieldMappings = fieldMappings;
-      if (isActive !== undefined) updateData.isActive = isActive;
-      if (isDefault !== undefined) {
-        // If setting as default, unset other defaults first
-        if (isDefault) {
-          await db.update(documentTemplates)
-            .set({ isDefault: false })
-            .where(eq(documentTemplates.isDefault, true));
-        }
-        updateData.isDefault = isDefault;
-      }
-      
-      const [updatedTemplate] = await db.update(documentTemplates)
-        .set(updateData)
-        .where(eq(documentTemplates.id, id))
+      const deleted = await db.update(fpaGuidelines)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(fpaGuidelines.id, id))
         .returning();
-      
-      if (!updatedTemplate) {
-        return res.status(404).json({ error: 'Template não encontrado' });
+
+      if (deleted.length === 0) {
+        return res.status(404).json({ error: 'Guideline not found' });
       }
-      
-      res.json({ template: updatedTemplate });
+
+      res.json({ success: true, message: 'Guideline deleted' });
     } catch (error: any) {
-      console.error('Update template error:', error);
-      res.status(500).json({ error: 'Falha ao atualizar template', message: error.message });
+      console.error('Delete FPA guideline error:', error);
+      res.status(500).json({ error: 'Failed to delete FPA guideline', message: error.message });
     }
   });
 
-  // Delete template
-  app.delete('/api/templates/:id', authenticateToken, async (req, res) => {
+  // Get all active guidelines for AI analysis (internal use)
+  app.get('/api/fpa-guidelines/active/all', authenticateToken, async (req, res) => {
     try {
-      const { id } = req.params;
-      
-      const [deletedTemplate] = await db.delete(documentTemplates)
-        .where(eq(documentTemplates.id, id))
-        .returning();
-      
-      if (!deletedTemplate) {
-        return res.status(404).json({ error: 'Template não encontrado' });
-      }
-      
-      res.json({ message: 'Template excluído com sucesso' });
+      const guidelines = await db.select().from(fpaGuidelines).where(eq(fpaGuidelines.isActive, true));
+      res.json({ success: true, guidelines });
     } catch (error: any) {
-      console.error('Delete template error:', error);
-      res.status(500).json({ error: 'Falha ao excluir template', message: error.message });
-    }
-  });
-
-  // Re-parse template markers (when user uploads a new file version)
-  app.post('/api/templates/:id/reparse', authenticateToken, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { fileContent, fileName } = req.body;
-      
-      if (!fileContent) {
-        return res.status(400).json({ error: 'Conteúdo do arquivo é obrigatório' });
-      }
-
-      const fileBuffer = Buffer.from(fileContent, 'base64');
-      const parsedMarkers = parseMarkersFromDocx(fileBuffer);
-      
-      const updateData: any = {
-        fileContent,
-        parsedMarkers,
-        updatedAt: new Date()
-      };
-      
-      if (fileName) {
-        updateData.originalFileName = fileName;
-      }
-      
-      const [updatedTemplate] = await db.update(documentTemplates)
-        .set(updateData)
-        .where(eq(documentTemplates.id, id))
-        .returning();
-      
-      if (!updatedTemplate) {
-        return res.status(404).json({ error: 'Template não encontrado' });
-      }
-      
-      res.json({ 
-        template: updatedTemplate,
-        markersFound: parsedMarkers.length,
-        message: `Documento reanalisado. ${parsedMarkers.length} marcadores encontrados.`
-      });
-    } catch (error: any) {
-      console.error('Reparse template error:', error);
-      res.status(500).json({ error: 'Falha ao reanalisar template', message: error.message });
-    }
-  });
-
-  // Validate template mappings
-  app.post('/api/templates/:id/validate', authenticateToken, async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      const [template] = await db.select()
-        .from(documentTemplates)
-        .where(eq(documentTemplates.id, id));
-      
-      if (!template) {
-        return res.status(404).json({ error: 'Template não encontrado' });
-      }
-      
-      const parsedMarkers = template.parsedMarkers as any[];
-      const fieldMappings = template.fieldMappings as Record<string, string>;
-      
-      const validation = await validateFieldMappings(parsedMarkers, fieldMappings);
-      
-      res.json({ 
-        validation,
-        message: validation.valid 
-          ? 'Todos os marcadores estão mapeados corretamente'
-          : `${validation.unmappedMarkers.length} marcadores não mapeados`
-      });
-    } catch (error: any) {
-      console.error('Validate template error:', error);
-      res.status(500).json({ error: 'Falha ao validar template', message: error.message });
-    }
-  });
-
-  // Generate document from template
-  app.post('/api/templates/:id/generate', authenticateToken, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { analysisId } = req.body;
-      
-      if (!analysisId) {
-        return res.status(400).json({ error: 'ID da análise é obrigatório' });
-      }
-      
-      const documentBuffer = await generateDocumentFromTemplate(id, analysisId);
-      
-      // Get template name for filename
-      const [template] = await db.select({ name: documentTemplates.name })
-        .from(documentTemplates)
-        .where(eq(documentTemplates.id, id));
-      
-      const [analysis] = await db.select({ title: analyses.title })
-        .from(analyses)
-        .where(eq(analyses.id, analysisId));
-      
-      const filename = `${analysis?.title || 'documento'}_${template?.name || 'template'}.docx`
-        .replace(/[^a-zA-Z0-9_\-\.]/g, '_');
-      
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.send(documentBuffer);
-    } catch (error: any) {
-      console.error('Generate document error:', error);
-      res.status(500).json({ error: 'Falha ao gerar documento', message: error.message });
-    }
-  });
-
-  // Preview analysis data for template
-  app.get('/api/templates/preview-data/:analysisId', authenticateToken, async (req, res) => {
-    try {
-      const { analysisId } = req.params;
-      
-      const data = await getAnalysisData(analysisId);
-      
-      res.json({ data });
-    } catch (error: any) {
-      console.error('Preview data error:', error);
-      res.status(500).json({ error: 'Falha ao obter dados da análise', message: error.message });
-    }
-  });
-
-  // Duplicate template
-  app.post('/api/templates/:id/duplicate', authenticateToken, async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const { name } = req.body;
-      
-      const [original] = await db.select()
-        .from(documentTemplates)
-        .where(eq(documentTemplates.id, id));
-      
-      if (!original) {
-        return res.status(404).json({ error: 'Template não encontrado' });
-      }
-      
-      const [duplicated] = await db.insert(documentTemplates)
-        .values({
-          name: name || `${original.name} (Cópia)`,
-          description: original.description,
-          originalFileName: original.originalFileName,
-          fileContent: original.fileContent,
-          parsedMarkers: original.parsedMarkers,
-          fieldMappings: original.fieldMappings,
-          isActive: true,
-          isDefault: false,
-          usageCount: '0',
-          createdBy: req.user?.userId || null,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
-        .returning();
-      
-      res.status(201).json({ 
-        template: duplicated,
-        message: 'Template duplicado com sucesso'
-      });
-    } catch (error: any) {
-      console.error('Duplicate template error:', error);
-      res.status(500).json({ error: 'Falha ao duplicar template', message: error.message });
+      console.error('Get active FPA guidelines error:', error);
+      res.status(500).json({ error: 'Failed to get active FPA guidelines', message: error.message });
     }
   });
 }

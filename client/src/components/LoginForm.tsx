@@ -527,7 +527,7 @@ export const LoginForm: React.FC = () => {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value.trim())}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 bg-white"
                     placeholder="Digite seu usuário ou email"
                     autoComplete="email"
                   />
@@ -549,7 +549,7 @@ export const LoginForm: React.FC = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 bg-white"
                     placeholder="Digite sua senha"
                   />
                 </div>
@@ -574,7 +574,7 @@ export const LoginForm: React.FC = () => {
                       onChange={(e) => setUserCaptcha(e.target.value)}
                       className={`block w-full pl-10 pr-3 py-2 border ${
                         captchaError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                      } rounded-lg transition-colors`}
+                      } rounded-lg transition-colors text-gray-900 bg-white`}
                       placeholder="Digite o código"
                     />
                   </div>

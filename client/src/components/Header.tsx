@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, LogOut, User, Users, Shield, Database, Clock, Image, Sliders } from 'lucide-react';
-import { useAuth } from '../contexts/UnifiedAuthContext';
+import { FileText, Download, LogOut, User, Users, Shield, Database, Clock, Image, Sliders, Settings } from 'lucide-react';
+import { useAuth } from '../contexts/ApiAuthContext';
 import { UserManagement } from './UserManagement';
 import { ProfileManagement } from './ProfileManagement';
 import { DataManager } from './DataManager';
 import { ImageFieldExtractor } from './ImageFieldExtractor';
+import { SystemSettingsModal } from './SystemSettings';
 import { getCustomFieldsSDK } from '../hooks/useCustomFields';
 import { ThemeToggle } from './ui/ThemeToggle';
 
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
   const [showProfileManagement, setShowProfileManagement] = useState(false);
   const [showDataManager, setShowDataManager] = useState(false);
   const [showImageFieldExtractor, setShowImageFieldExtractor] = useState(false);
+  const [showSystemSettings, setShowSystemSettings] = useState(false);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<string>('');
 
   // Calcular tempo restante da sessão
@@ -189,6 +191,18 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
                         <Sliders className="w-4 h-4" />
                         Campos Personalizados
                       </button>
+
+                      {/* System Settings */}
+                      <button
+                        onClick={() => {
+                          setShowSystemSettings(true);
+                          setShowUserDropdown(false);
+                        }}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Configurações
+                      </button>
                       
                       <div className="border-t border-gray-200 my-1"></div>
                       
@@ -226,6 +240,11 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
       {/* Image Field Extractor Modal */}
       {showImageFieldExtractor && (
         <ImageFieldExtractor onClose={() => setShowImageFieldExtractor(false)} />
+      )}
+
+      {/* System Settings Modal */}
+      {showSystemSettings && (
+        <SystemSettingsModal onClose={() => setShowSystemSettings(false)} />
       )}
     </>
   );

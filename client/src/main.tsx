@@ -21,15 +21,15 @@ class ErrorBoundary extends React.Component {
   render() {
     if ((this.state as any).hasError) {
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-red-600 text-2xl">⚠</span>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-red-600 dark:text-red-400 text-2xl">⚠</span>
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               Erro na Aplicação
             </h1>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Ocorreu um erro inesperado. Tente recarregar a página.
             </p>
             <button
@@ -39,10 +39,10 @@ class ErrorBoundary extends React.Component {
               Recarregar Página
             </button>
             <details className="mt-4 text-left">
-              <summary className="text-sm text-gray-500 cursor-pointer">
+              <summary className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
                 Detalhes do erro
               </summary>
-              <pre className="mt-2 text-xs text-gray-600 bg-gray-100 p-2 rounded overflow-auto">
+              <pre className="mt-2 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-2 rounded overflow-auto">
                 {(this.state as any).error?.toString()}
               </pre>
             </details>

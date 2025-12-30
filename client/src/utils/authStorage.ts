@@ -17,7 +17,7 @@ export const generateDefaultPermissions = (isAdmin: boolean = false): Permission
   const permissions: Permission[] = [];
   
   Object.entries(SYSTEM_MODULES).forEach(([moduleKey, module]) => {
-    Object.entries(module.actions).forEach(([actionKey, actionName]) => {
+    Object.entries(module.actions).forEach(([actionKey]) => {
       permissions.push({
         id: `${moduleKey}_${actionKey}`,
         module: moduleKey,

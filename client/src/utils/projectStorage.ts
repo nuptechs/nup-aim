@@ -1,87 +1,119 @@
 import { Project } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
-const PROJECTS_STORAGE_KEY = 'nup_aim_projects';
+const getAuthToken = (): string | null => {
+  return localStorage.getItem('nup_aim_auth_token');
+};
 
-export const getStoredProjects = (): Project[] => {
+export const getStoredProjects = async (): Promise<Project[]> => {
+  const token = getAuthToken();
+  if (!token) {
+    return [];
+  }
+  
   try {
-    const stored = localStorage.getItem(PROJECTS_STORAGE_KEY);
-    const projects = stored ? JSON.parse(stored) : [];
+    const response = await fetch('/api/projects', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     
-    // Ensure at least one project exists
-    if (projects.length === 0) {
-      const defaultProject: Project = {
-        id: generateProjectId(),
-        name: 'Exemplo',
-        acronym: 'Ex',
-        isDefault: true,
-        createdAt: new Date().toISOString()
-      };
-      projects.push(defaultProject);
-      localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
+    if (!response.ok) {
+      throw new Error('Failed to fetch projects');
     }
     
-    return projects;
+    const projects = await response.json();
+    
+    // Transform from DB format to frontend format
+    const result = projects.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      acronym: p.acronym,
+      isDefault: p.isDefault,
+      createdAt: p.createdAt
+    }));
+    
+    console.log('[ProjectStorage] Loaded', result.length, 'projects from database');
+    return result;
   } catch (error) {
-    console.error('Erro ao carregar projetos:', error);
-    // Return default project if error
-    const defaultProject: Project = {
-      id: generateProjectId(),
-      name: 'Exemplo',
-      acronym: 'Ex',
-      isDefault: true,
-      createdAt: new Date().toISOString()
-    };
-    return [defaultProject];
+    console.error('[ProjectStorage] Error loading projects:', error);
+    return [];
   }
 };
 
-export const saveProject = (project: Project): void => {
-  const projects = getStoredProjects();
-  const existingIndex = projects.findIndex(p => p.id === project.id);
-  
-  // If setting as default, remove default from others
-  if (project.isDefault) {
-    projects.forEach(p => p.isDefault = false);
+export const saveProject = async (project: Project): Promise<void> => {
+  const token = getAuthToken();
+  if (!token) {
+    console.error('No auth token available');
+    return;
   }
   
-  if (existingIndex >= 0) {
-    projects[existingIndex] = project;
-  } else {
-    projects.push(project);
+  try {
+    // Check if project exists
+    const existingProjects = await getStoredProjects();
+    const exists = existingProjects.some(p => p.id === project.id);
+    
+    const url = exists ? `/api/projects/${project.id}` : '/api/projects';
+    const method = exists ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name: project.name,
+        acronym: project.acronym,
+        isDefault: project.isDefault
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to save project');
+    }
+    
+    console.log('[ProjectStorage] Project saved to database:', project.id);
+  } catch (error) {
+    console.error('[ProjectStorage] Error saving project:', error);
+    throw error;
   }
-  
-  localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
 };
 
-export const deleteProject = (id: string): boolean => {
-  const projects = getStoredProjects();
-  const projectToDelete = projects.find(p => p.id === id);
-  
-  // Don't allow deletion if it's the only project
-  if (projects.length <= 1) {
+export const deleteProject = async (id: string): Promise<boolean> => {
+  const token = getAuthToken();
+  if (!token) {
+    console.error('No auth token available');
     return false;
   }
   
-  // Don't allow deletion of default project if it's the only default
-  const defaultProjects = projects.filter(p => p.isDefault);
-  if (projectToDelete?.isDefault && defaultProjects.length === 1) {
-    // Set another project as default before deleting
-    const otherProject = projects.find(p => p.id !== id);
-    if (otherProject) {
-      otherProject.isDefault = true;
+  try {
+    const response = await fetch(`/api/projects/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[ProjectStorage] Delete failed:', error.error);
+      return false;
     }
+    
+    console.log('[ProjectStorage] Project deleted from database:', id);
+    return true;
+  } catch (error) {
+    console.error('[ProjectStorage] Error deleting project:', error);
+    return false;
   }
-  
-  const filtered = projects.filter(p => p.id !== id);
-  localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(filtered));
-  return true;
 };
 
-export const getDefaultProject = (): Project | null => {
-  const projects = getStoredProjects();
+export const getDefaultProject = async (): Promise<Project | null> => {
+  const projects = await getStoredProjects();
   return projects.find(p => p.isDefault) || projects[0] || null;
 };
 
 export const generateProjectId = (): string => {
-  return `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return uuidv4();
 };

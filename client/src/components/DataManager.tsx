@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Download, Upload, Database, AlertTriangle, CheckCircle, X, Settings } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, Upload, Database, AlertTriangle, CheckCircle, X } from 'lucide-react';
 import { getStoredUsers, getStoredProfiles } from '../utils/authStorage';
 import { getStoredProjects } from '../utils/projectStorage';
 import { getStoredAnalyses } from '../utils/storage';
@@ -25,17 +25,33 @@ export const DataManager: React.FC<DataManagerProps> = ({ onClose }) => {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'status' | 'test' | 'backup'>('status');
+  const [summary, setSummary] = useState({ users: 0, profiles: 0, projects: 0, analyses: 0 });
+  
+  const loadSummary = async () => {
+    const analyses = await getStoredAnalyses();
+    setSummary({
+      users: getStoredUsers().length,
+      profiles: getStoredProfiles().length,
+      projects: getStoredProjects().length,
+      analyses: analyses.length
+    });
+  };
+  
+  useEffect(() => {
+    loadSummary();
+  }, []);
 
   const exportData = async () => {
     setIsExporting(true);
     setMessage(null);
 
     try {
+      const analysesData = await getStoredAnalyses();
       const systemData: SystemData = {
         users: getStoredUsers(),
         profiles: getStoredProfiles(),
         projects: getStoredProjects(),
-        analyses: getStoredAnalyses(),
+        analyses: analysesData,
         exportDate: new Date().toISOString(),
         version: '1.0'
       };
@@ -123,22 +139,6 @@ export const DataManager: React.FC<DataManagerProps> = ({ onClose }) => {
       setIsImporting(false);
     }
   };
-
-  const getDataSummary = () => {
-    const users = getStoredUsers();
-    const profiles = getStoredProfiles();
-    const projects = getStoredProjects();
-    const analyses = getStoredAnalyses();
-
-    return {
-      users: users.length,
-      profiles: profiles.length,
-      projects: projects.length,
-      analyses: analyses.length
-    };
-  };
-
-  const summary = getDataSummary();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

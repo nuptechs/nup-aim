@@ -51,7 +51,6 @@ export const analyses = aimSchema.table('analyses', {
   version: text('version').default('1.0'),
   projectId: uuid('project_id').references(() => projects.id),
   createdBy: uuid('created_by').references(() => users.id),
-  data: jsonb('data').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`)
 });
@@ -127,18 +126,17 @@ export const customFieldValues = aimSchema.table('custom_field_values', {
   updatedAt: timestamp('updated_at').default(sql`now()`)
 });
 
-// Document Templates table (modelos de documentos para exportação)
-export const documentTemplates = aimSchema.table('document_templates', {
+// FPA Guidelines table (diretrizes de Análise de Pontos de Função)
+export const fpaGuidelines = aimSchema.table('fpa_guidelines', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  name: text('name').notNull(),
-  description: text('description'),
-  originalFileName: text('original_file_name').notNull(),
-  fileContent: text('file_content').notNull(),
-  parsedMarkers: jsonb('parsed_markers').default(sql`'[]'::jsonb`),
-  fieldMappings: jsonb('field_mappings').default(sql`'{}'::jsonb`),
+  title: text('title').notNull(),
+  triggerPhrases: jsonb('trigger_phrases').notNull().default(sql`'[]'::jsonb`),
+  businessDomains: jsonb('business_domains').notNull().default(sql`'[]'::jsonb`),
+  instruction: text('instruction').notNull(),
+  examples: jsonb('examples').notNull().default(sql`'[]'::jsonb`),
+  negativeExamples: jsonb('negative_examples').notNull().default(sql`'[]'::jsonb`),
+  priority: text('priority').notNull().default('normal'),
   isActive: boolean('is_active').default(true),
-  isDefault: boolean('is_default').default(false),
-  usageCount: text('usage_count').default('0'),
   createdBy: uuid('created_by').references(() => users.id),
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`)

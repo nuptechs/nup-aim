@@ -4,7 +4,8 @@ import { ImpactAnalysis, Project } from '../types';
 import { getStoredProjects, getDefaultProject } from '../utils/projectStorage';
 import { BasicDataManager } from './BasicDataManager';
 import { CustomFieldsSection } from './CustomFieldsSection';
-import { useAuth } from '../contexts/UnifiedAuthContext';
+import { useAuth } from '../contexts/ApiAuthContext';
+import { getSystemSettings } from '../utils/systemSettings';
 
 interface BasicInfoFormProps {
   data: ImpactAnalysis;
@@ -29,16 +30,19 @@ export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
 
   useEffect(() => {
     // Set default project if no project is selected
-    if (!data.project && projects.length > 0) {
-      const defaultProject = getDefaultProject();
-      if (defaultProject) {
-        onChange({ project: defaultProject.name });
+    const setDefaultProject = async () => {
+      if (!data.project && projects.length > 0) {
+        const defaultProject = await getDefaultProject();
+        if (defaultProject) {
+          onChange({ project: defaultProject.name });
+        }
       }
-    }
+    };
+    setDefaultProject();
   }, [projects, data.project, onChange]);
 
-  const loadProjects = () => {
-    const stored = getStoredProjects();
+  const loadProjects = async () => {
+    const stored = await getStoredProjects();
     setProjects(stored);
   };
 
@@ -89,109 +93,110 @@ export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Número da PA *
           </label>
           <input
             type="text"
             value={data.title}
             onChange={(e) => handlePANumberChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="PA"
             maxLength={11}
             title="Formato: PANNNN-AAAA (4 números seguidos do ano com 4 dígitos)"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Formato: PANNNN-AAAA (Ex: PA0001-2024)
           </p>
         </div>
         
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Projeto *
-            </label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Projeto *
+          </label>
+          <div className="flex gap-2">
+            <select
+              value={data.project}
+              onChange={(e) => onChange({ project: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">Selecione um projeto</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.name}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
             {hasPermission('PROJECTS', 'MANAGE') && (
               <button
                 type="button"
                 onClick={handleDataManagerOpen}
-                className="inline-flex items-center px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                 title="Gerenciar projetos"
               >
-                <Settings className="w-3 h-3 mr-1" />
-                Gerenciar
+                <Settings className="w-4 h-4" />
               </button>
             )}
           </div>
-          <select
-            value={data.project}
-            onChange={(e) => onChange({ project: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
-            <option value="">Selecione um projeto</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.name}>
-                {project.name}
-              </option>
-            ))}
-          </select>
           {projects.length === 0 && (
             <p className="text-xs text-red-500 mt-1">
-              Nenhum projeto cadastrado. {hasPermission('PROJECTS', 'MANAGE') ? 'Clique em "Gerenciar" para adicionar.' : 'Entre em contato com o administrador.'}
+              Nenhum projeto cadastrado. {hasPermission('PROJECTS', 'MANAGE') ? 'Clique no ícone de configurações para adicionar.' : 'Entre em contato com o administrador.'}
             </p>
           )}
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Autor *
           </label>
           <input
             type="text"
             value={data.author}
             onChange={(e) => onChange({ author: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="Seu nome"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Versão
           </label>
           <input
             type="text"
             value={data.version}
             onChange={(e) => onChange({ version: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="1.0"
           />
         </div>
         
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Descrição *
           </label>
           <textarea
             value={data.description}
             onChange={(e) => onChange({ description: e.target.value })}
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="Descreva o contexto e objetivo desta análise de impacto..."
           />
         </div>
       </div>
 
       {/* Custom Fields Section */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <h3 className="text-sm font-medium text-gray-700 mb-4">Campos Personalizados</h3>
-        <CustomFieldsSection 
-          sectionName="basic_info" 
-          analysisId={data.id}
-          initialValues={customFieldsValues}
-          onValuesChange={onCustomFieldsChange}
-        />
-      </div>
+      {getSystemSettings().showCustomFieldsToAll && (
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Campos Personalizados</h3>
+          <CustomFieldsSection 
+            sectionName="basic_info" 
+            analysisId={data.id}
+            initialValues={customFieldsValues}
+            onValuesChange={onCustomFieldsChange}
+          />
+        </div>
+      )}
 
       {/* Basic Data Manager Modal */}
       {showDataManager && (
