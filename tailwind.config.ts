@@ -3,12 +3,10 @@ import type { Config } from "tailwindcss";
 export default {
   darkMode: 'class',
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         primary: {
-<<<<<<< Updated upstream
           50: 'var(--primary-50)',
           100: 'var(--primary-100)',
           200: 'var(--primary-200)',
@@ -102,30 +100,6 @@ export default {
         progressStripes: {
           '0%': { backgroundPosition: '1rem 0' },
           '100%': { backgroundPosition: '0 0' },
-=======
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-        },
-        gray: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
->>>>>>> Stashed changes
         },
       },
     },
