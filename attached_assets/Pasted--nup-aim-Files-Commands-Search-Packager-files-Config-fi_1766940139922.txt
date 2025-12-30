@@ -1,0 +1,185 @@
+
+
+
+nup-aim
+Files
+Commands
+Search
+Packager files
+Config files
+/
+
+Enable "Accessible Terminal" in Workspace Settings to use a screen reader with the shell.
+Secrets
+SESSION_SECRET
+••••••••
+DATABASE_URL
+••••••••
+PGDATABASE
+••••••••
+PGHOST
+••••••••
+PGPORT
+••••••••
+PGUSER
+••••••••
+PGPASSWORD
+••••••••
+AI_INTEGRATIONS_GEMINI_BASE_URL
+••••••••
+AI_INTEGRATIONS_GEMINI_API_KEY
+••••••••
+NUPIDENTITY_CLIENT_ID
+••••••••
+APP_URL
+••••••••
+JWT_SECRET
+••••••••
+NUPIDENTITY_API_KEY
+••••••••
+NUPIDENTITY_CLIENT_SECRET
+••••••••
+NUPIDENTITY_ISSUER
+••••••••
+Configurations
+Configurations are similar to secrets, but should only be used for non-sensitive information. They're useful for having a variable that's different between your published app and when testing on Replit.
+JWT_SECRET
+58717dcddfd478603eeb4bbc0848ce3f963170a63b74f2fa11fcf304335d73e8ae2ddb07d5bae8d877182aca48903d85f9bb253f7d23c40fd3217096fbc36108
+Publishing
+Started 1 minute ago by Yuri
+Provision
+Security Scan
+Build
+Bundle
+Promote
+Production
+Status
+Yuri published about 16 hours ago
+Visibility
+Public
+Domain
+https://nupaim.replit.app
+Type
+Autoscale
+(4 vCPU / 8 GiB RAM / 3 Max)
+See all usage
+c24647c2
+YF
+
+yfaf01
+Yuri
+published about 20 hours ago
+ff3c491e
+YF
+
+yfaf01
+Yuri
+published about 23 hours ago
+02383360
+YF
+
+yfaf01
+Yuri
+published 20 days ago
+609300b8
+YF
+
+yfaf01
+Yuri
+published 20 days ago
+67c0d10c
+YF
+
+yfaf01
+Yuri
+published 20 days ago
+e250793d
+YF
+
+yfaf01
+Yuri
+published 20 days ago
+2c1ea20a
+YF
+
+yfaf01
+Yuri
+published 21 days ago
+b67f6eb6
+YF
+
+yfaf01
+Yuri
+published 21 days ago
+b16e6ba0
+YF
+
+yfaf01
+Yuri
+published 21 days ago
+38d027ce
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+172b5db7
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+add56157
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+bbb4005b
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+a56894c3
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+a79aa4a1
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+1a981baa
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+1c97c07f
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+700ef818
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+c4d361f3
+YF
+
+yfaf01
+Yuri
+failed to publish 21 days ago
+NODE_ENV=development PORT=5000 tsx server/index.ts
+1m
+ • 
+2 minutes ago
+Unsupported state: you are in the middle of a rebase.
+Please finish the rebase manually.
