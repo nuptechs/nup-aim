@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LogIn, User, Lock, AlertCircle, Mail, RefreshCw, FileText, UserPlus, ArrowLeft, ExternalLink } from 'lucide-react';
-import { useAuth } from '../contexts/UnifiedAuthContext';
+import { useAuth } from '../contexts/ApiAuthContext';
 
 interface AuthMode {
   mode: 'sso' | 'local';
