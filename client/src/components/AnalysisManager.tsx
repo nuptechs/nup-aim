@@ -253,10 +253,10 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>
-                            {analysis.scope.processes.length} processo(s)
+                            {analysis.scope?.processes?.length || 0} processo(s)
                           </span>
                           <span>
-                            {analysis.risks.length} risco(s)
+                            {analysis.risks?.length || 0} risco(s)
                           </span>
                         </div>
                       </div>

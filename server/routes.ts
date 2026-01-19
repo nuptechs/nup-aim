@@ -2,7 +2,7 @@ import { Express } from 'express';
 import express from 'express';
 import { db } from './db';
 import { users, profiles, projects, analyses, processes, impacts, risks, mitigations, conclusions, fpaGuidelines } from './schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { corsMiddleware } from './middleware/cors.middleware';
@@ -567,15 +567,44 @@ export function registerRoutes(app: Express) {
         updatedAt: analyses.updatedAt
       }).from(analyses);
       
-      // Transform for frontend
+      // Get processes for each analysis to include in the response
+      const analysisIds = analysesResult.map(a => a.id);
+      const allProcesses = analysisIds.length > 0 
+        ? await db.select().from(processes).where(inArray(processes.analysisId, analysisIds))
+        : [];
+      
+      // Group processes by analysis ID
+      const processesByAnalysis: Record<string, any[]> = {};
+      for (const p of allProcesses) {
+        if (!processesByAnalysis[p.analysisId!]) {
+          processesByAnalysis[p.analysisId!] = [];
+        }
+        processesByAnalysis[p.analysisId!].push({
+          id: p.id,
+          name: p.name,
+          status: p.status,
+          workDetails: p.workDetails || '',
+          screenshots: p.screenshots || '',
+          websisCreated: p.websisCreated || false
+        });
+      }
+      
+      // Transform for frontend with complete structure
       const result = analysesResult.map(a => ({
         id: a.id,
         title: a.title,
         description: a.description || '',
-        author: a.author,
+        author: a.author || '',
         date: a.createdAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
         version: a.version || '1.0',
-        project: a.projectId || ''
+        project: a.projectId || '',
+        scope: {
+          processes: processesByAnalysis[a.id] || []
+        },
+        impacts: { business: [], technical: [], operational: [], financial: [] },
+        risks: [],
+        mitigations: [],
+        conclusions: { summary: '', recommendations: [], nextSteps: [] }
       }));
       
       res.json(result);
@@ -699,8 +728,49 @@ export function registerRoutes(app: Express) {
       const { id } = req.params;
       const analysisData = req.body;
       
-      // Check if analysis exists
+      // Check if analysis exists first (needed to preserve projectId if lookup fails)
       const [existing] = await db.select().from(analyses).where(eq(analyses.id, id));
+      
+      // Resolve projectId - could be UUID, name, or acronym
+      // Default to existing projectId to preserve association if lookup fails
+      let resolvedProjectId: string | null = existing?.projectId ?? null;
+      let projectLookupFailed = false;
+      
+      if (analysisData.project) {
+        const projectValue = analysisData.project;
+        // Check if it's already a valid UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(projectValue)) {
+          // Verify project exists
+          const [existingProject] = await db.select({ id: projects.id })
+            .from(projects)
+            .where(eq(projects.id, projectValue))
+            .limit(1);
+          if (existingProject) {
+            resolvedProjectId = projectValue;
+          } else {
+            projectLookupFailed = true;
+          }
+        } else {
+          // Try to find project by name or acronym
+          const [foundProject] = await db.select({ id: projects.id })
+            .from(projects)
+            .where(or(
+              eq(projects.name, projectValue),
+              eq(projects.acronym, projectValue)
+            ))
+            .limit(1);
+          if (foundProject) {
+            resolvedProjectId = foundProject.id;
+          } else {
+            projectLookupFailed = true;
+          }
+        }
+        // If project lookup failed, keep existing projectId (already set as default)
+      } else if (analysisData.project === null || analysisData.project === '') {
+        // Explicitly clear project association only if null/empty was intentionally sent
+        resolvedProjectId = null;
+      }
       
       let analysisId = id;
       
@@ -710,9 +780,9 @@ export function registerRoutes(app: Express) {
           .set({
             title: analysisData.title,
             description: analysisData.description,
-            author: analysisData.author,
+            author: analysisData.author || '',
             version: analysisData.version,
-            projectId: analysisData.project || null,
+            projectId: resolvedProjectId,
             updatedAt: new Date()
           })
           .where(eq(analyses.id, id));
@@ -732,9 +802,9 @@ export function registerRoutes(app: Express) {
             id,
             title: analysisData.title,
             description: analysisData.description,
-            author: analysisData.author,
+            author: analysisData.author || '',
             version: analysisData.version,
-            projectId: analysisData.project || null,
+            projectId: resolvedProjectId,
             createdBy: req.user.userId
           })
           .returning();
