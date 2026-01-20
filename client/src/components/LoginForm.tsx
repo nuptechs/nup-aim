@@ -42,7 +42,15 @@ export const LoginForm: React.FC = () => {
 
   useEffect(() => {
     checkAuthMode();
-    generateCaptcha();
+  }, []);
+
+  // Generate captcha after component mounts and canvas is ready
+  useEffect(() => {
+    // Small delay to ensure canvas is rendered
+    const timer = setTimeout(() => {
+      generateCaptcha();
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const checkAuthMode = async () => {
