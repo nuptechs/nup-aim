@@ -887,7 +887,7 @@ export function registerRoutes(app: Express) {
   // Get all analyses for current user (with summary info) - MUST be before /:id route
   app.get('/api/analyses/list/all', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
       
       // Filter analyses by the logged-in user
       const analysesResult = await db.select({
