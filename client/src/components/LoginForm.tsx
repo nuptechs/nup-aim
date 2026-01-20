@@ -357,8 +357,8 @@ export const LoginForm: React.FC = () => {
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold">Permissões Granulares</h4>
-                  <p className="text-sm text-white/70">Controle preciso de acesso por perfil e função</p>
+                  <h4 className="font-semibold">Relatórios Parametrizáveis</h4>
+                  <p className="text-sm text-white/70">Exportação flexível com filtros personalizados</p>
                 </div>
               </div>
             </div>
@@ -366,7 +366,7 @@ export const LoginForm: React.FC = () => {
 
           {/* Footer */}
           <div className="flex items-center gap-4 text-sm text-white/60">
-            <span>&copy; 2024 NuPTechs</span>
+            <span>&copy; 2021 NuPTechs</span>
             <span>•</span>
             <span>Termos</span>
             <span>•</span>
