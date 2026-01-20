@@ -486,7 +486,7 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
             
             if (!process) return null;
 
-            const handleSmartPaste = async (e: React.ClipboardEvent<HTMLInputElement>, fieldProcessIndex: number) => {
+            const handleSmartPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>, fieldProcessIndex: number) => {
               const text = e.clipboardData.getData('text');
               const hasImages = Array.from(e.clipboardData.items).some(item => item.type.startsWith('image/'));
               
@@ -548,24 +548,17 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                   updateProcess(fieldProcessIndex, {
                     name: func.name || '',
                     functionType: func.type || 'EE',
-                    description: func.description || '',
-                    complexity: func.complexity || 'Baixa',
-                    screenshots: text // Store original text as reference
+                    workDetails: text,
+                    complexity: func.complexity || 'Baixa'
                   });
                 } else {
-                  // AI couldn't extract - just use the text as description
-                  updateProcess(fieldProcessIndex, { 
-                    name: text.substring(0, 80).split('\n')[0],
-                    description: text 
-                  });
+                  // AI couldn't extract - just keep the pasted text in workDetails
+                  updateProcess(fieldProcessIndex, { workDetails: text });
                 }
               } catch (error) {
                 console.error('Smart paste extraction failed:', error);
-                // Fallback: use pasted text as description
-                updateProcess(fieldProcessIndex, { 
-                  name: text.substring(0, 80).split('\n')[0],
-                  description: text 
-                });
+                // Fallback: just paste the text normally
+                updateProcess(fieldProcessIndex, { workDetails: text });
               } finally {
                 setIsExtractingSingle(false);
               }
@@ -576,18 +569,11 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nome da Funcionalidade *
-                    {isExtractingSingle && (
-                      <span className="ml-2 text-xs text-purple-600 dark:text-purple-400 inline-flex items-center">
-                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                        Analisando...
-                      </span>
-                    )}
                   </label>
                   <input
                     type="text"
                     value={process.name}
                     onChange={(e) => updateProcess(processIndex, { name: e.target.value })}
-                    onPaste={(e) => handleSmartPaste(e, processIndex)}
                     placeholder="Ex: Funcionalidade de Aprovação de Documentos"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
@@ -660,10 +646,17 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Detalhamento do Trabalho Realizado
+                            {isExtractingSingle && (
+                              <span className="ml-2 text-xs text-purple-600 dark:text-purple-400 inline-flex items-center">
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Analisando...
+                              </span>
+                            )}
                           </label>
                           <textarea
                             value={process.workDetails || ''}
                             onChange={(e) => updateProcess(processIndex, { workDetails: e.target.value })}
+                            onPaste={(e) => handleSmartPaste(e, processIndex)}
                             placeholder="Descreva detalhadamente o trabalho realizado nesta funcionalidade..."
                             rows={4}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
