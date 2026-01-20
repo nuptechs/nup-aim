@@ -199,6 +199,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             permissions: permissionsList
           };
           console.log('📋 Profile loaded from API:', apiProfile.name);
+          console.log('📋 Permissions loaded:', permissionsList.map(p => `${p.module}_${p.action}`));
         } else {
           // Fallback to basic user profile if no profile returned
           userProfile = {
