@@ -89,10 +89,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
     {
       icon: FolderOpen,
       label: 'Projetos',
-      description: 'Ver todos os projetos',
+      description: 'Gerenciar projetos',
       color: 'success',
       onClick: () => onNavigate?.('projects'),
-      permission: hasPermission('PROJECTS', 'VIEW'),
+      permission: hasPermission('PROJECTS', 'MANAGE'),
     },
     {
       icon: Users,
@@ -128,7 +128,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 md:grid-cols-2 ${hasPermission('PROJECTS', 'VIEW') ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${hasPermission('PROJECTS', 'MANAGE') ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
         <div className="animate-fade-in-up stagger-1">
           <StatCard
             title="Minhas Análises"
@@ -137,7 +137,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
             color="primary"
           />
         </div>
-        {hasPermission('PROJECTS', 'VIEW') && (
+        {hasPermission('PROJECTS', 'MANAGE') && (
           <div className="animate-fade-in-up stagger-2">
             <StatCard
               title="Projetos Ativos"

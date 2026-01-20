@@ -592,6 +592,16 @@ export function registerRoutes(app: Express) {
 
   app.post('/api/projects', authenticateToken, async (req: any, res) => {
     try {
+      // Check user has PROJECTS_MANAGE permission
+      const profileId = req.user?.profileId;
+      if (profileId) {
+        const [userProfile] = await db.select().from(profiles).where(eq(profiles.id, profileId));
+        const permissions = (userProfile?.permissions as string[]) || [];
+        if (!permissions.includes('PROJECTS_MANAGE') && !permissions.includes('PROJECTS_CREATE')) {
+          return res.status(403).json({ error: 'Permission denied: PROJECTS_MANAGE required' });
+        }
+      }
+      
       const { name, acronym, isDefault } = req.body;
 
       if (!name || !acronym) {
@@ -619,8 +629,18 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.put('/api/projects/:id', authenticateToken, async (req, res) => {
+  app.put('/api/projects/:id', authenticateToken, async (req: any, res) => {
     try {
+      // Check user has PROJECTS_MANAGE permission
+      const profileId = req.user?.profileId;
+      if (profileId) {
+        const [userProfile] = await db.select().from(profiles).where(eq(profiles.id, profileId));
+        const permissions = (userProfile?.permissions as string[]) || [];
+        if (!permissions.includes('PROJECTS_MANAGE') && !permissions.includes('PROJECTS_EDIT')) {
+          return res.status(403).json({ error: 'Permission denied: PROJECTS_MANAGE required' });
+        }
+      }
+      
       const { id } = req.params;
       const { name, acronym, isDefault } = req.body;
 
@@ -650,8 +670,18 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.delete('/api/projects/:id', authenticateToken, async (req, res) => {
+  app.delete('/api/projects/:id', authenticateToken, async (req: any, res) => {
     try {
+      // Check user has PROJECTS_MANAGE permission
+      const profileId = req.user?.profileId;
+      if (profileId) {
+        const [userProfile] = await db.select().from(profiles).where(eq(profiles.id, profileId));
+        const permissions = (userProfile?.permissions as string[]) || [];
+        if (!permissions.includes('PROJECTS_MANAGE') && !permissions.includes('PROJECTS_DELETE')) {
+          return res.status(403).json({ error: 'Permission denied: PROJECTS_MANAGE required' });
+        }
+      }
+      
       const { id } = req.params;
 
       // Check if project is used by any analysis
