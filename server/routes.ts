@@ -7,16 +7,17 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { corsMiddleware } from './middleware/cors.middleware';
 import { authenticateToken } from './middleware/auth.middleware';
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const VERIFIED_SENDER_EMAIL = process.env.VERIFIED_SENDER_EMAIL;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'nuptechs@nuptechs.com';
 
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-  console.log('✅ [Email] SendGrid configured');
+let resend: Resend | null = null;
+if (RESEND_API_KEY) {
+  resend = new Resend(RESEND_API_KEY);
+  console.log('✅ [Email] Resend configured');
 } else {
-  console.log('⚠️  [Email] SendGrid not configured - emails will be simulated');
+  console.log('⚠️  [Email] Resend not configured - emails will be simulated');
 }
 
 async function sendVerificationEmail(email: string, verificationToken: string): Promise<boolean> {
@@ -28,16 +29,16 @@ async function sendVerificationEmail(email: string, verificationToken: string): 
   
   const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
   
-  if (!SENDGRID_API_KEY || !VERIFIED_SENDER_EMAIL) {
+  if (!resend) {
     console.log(`📧 [Email] Simulating email to ${email}`);
     console.log(`   Verification URL: ${verificationUrl}`);
     return true;
   }
   
   try {
-    await sgMail.send({
+    const { data, error } = await resend.emails.send({
+      from: `NuP_AIM <${SENDER_EMAIL}>`,
       to: email,
-      from: VERIFIED_SENDER_EMAIL,
       subject: 'NuP_AIM - Verifique seu email',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -82,13 +83,16 @@ async function sendVerificationEmail(email: string, verificationToken: string): 
         </div>
       `
     });
-    console.log(`✅ [Email] Verification email sent to ${email}`);
+    
+    if (error) {
+      console.error(`❌ [Email] Failed to send to ${email}:`, error.message);
+      return false;
+    }
+    
+    console.log(`✅ [Email] Verification email sent to ${email} (id: ${data?.id})`);
     return true;
   } catch (error: any) {
     console.error(`❌ [Email] Failed to send to ${email}:`, error.message);
-    if (error.response) {
-      console.error('   SendGrid response:', error.response.body);
-    }
     return false;
   }
 }
