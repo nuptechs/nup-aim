@@ -108,36 +108,73 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Try to get current user data from localStorage
         const currentUser = localStorage.getItem('nup_aim_current_user');
-        const savedProfile = localStorage.getItem('nup_aim_current_profile');
         
         if (currentUser) {
           const userData = JSON.parse(currentUser);
           setUser(userData);
           
-          // Use saved profile or fallback to default
-          let userProfile: Profile;
-          if (savedProfile) {
-            userProfile = JSON.parse(savedProfile);
-            console.log('🔄 Session restored with profile:', userProfile.name);
-          } else {
-            // Fallback to basic user profile
-            userProfile = {
-              id: 'default-user-profile',
-              name: 'Usuário Padrão',
-              description: 'Perfil de usuário com acesso básico',
-              isDefault: true,
-              createdAt: new Date().toISOString(),
-              permissions: [
-                { id: '1', module: 'ANALYSIS', action: 'VIEW', allowed: true },
-                { id: '2', module: 'ANALYSIS', action: 'CREATE', allowed: true },
-                { id: '3', module: 'ANALYSIS', action: 'EDIT', allowed: true },
-                { id: '4', module: 'PROJECTS', action: 'VIEW', allowed: true },
-              ]
-            };
-            console.log('⚠️ No saved profile, using default');
+          // Fetch fresh profile from API to get updated permissions
+          try {
+            const response = await fetch('/api/auth/profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              const apiProfile = data.profile;
+              
+              if (apiProfile) {
+                // Convert API permissions array to Permission objects
+                const permissionsList: Permission[] = [];
+                const apiPermissions = apiProfile.permissions || [];
+                
+                apiPermissions.forEach((perm: string, index: number) => {
+                  const parts = perm.split('_');
+                  if (parts.length >= 2) {
+                    const module = parts[0];
+                    const action = parts.slice(1).join('_');
+                    permissionsList.push({
+                      id: String(index + 1),
+                      module: module,
+                      action: action,
+                      allowed: true
+                    });
+                  }
+                });
+                
+                const userProfile: Profile = {
+                  id: apiProfile.id,
+                  name: apiProfile.name,
+                  description: apiProfile.description || '',
+                  isDefault: apiProfile.isDefault || false,
+                  createdAt: new Date().toISOString(),
+                  permissions: permissionsList
+                };
+                
+                setProfile(userProfile);
+                localStorage.setItem('nup_aim_current_profile', JSON.stringify(userProfile));
+                console.log('🔄 Session restored with fresh profile from API:', apiProfile.name);
+                console.log('📋 Permissions:', permissionsList.map(p => `${p.module}_${p.action}`));
+              }
+            } else {
+              // Fallback to saved profile if API fails
+              const savedProfile = localStorage.getItem('nup_aim_current_profile');
+              if (savedProfile) {
+                setProfile(JSON.parse(savedProfile));
+                console.log('⚠️ Using cached profile (API unavailable)');
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+            // Fallback to saved profile
+            const savedProfile = localStorage.getItem('nup_aim_current_profile');
+            if (savedProfile) {
+              setProfile(JSON.parse(savedProfile));
+            }
           }
           
-          setProfile(userProfile);
           updateLastActivity();
           console.log('🔄 Session restored for:', userData.username);
         }
