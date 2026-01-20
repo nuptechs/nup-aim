@@ -1,6 +1,7 @@
 export interface User {
   id: string;
   username: string;
+  fullName?: string;
   email: string;
   password: string; // In a real app, this would be hashed
   profileId: string;

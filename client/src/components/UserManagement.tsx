@@ -21,6 +21,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -135,6 +136,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
           // Update existing user
           const result = await updateUser(editingUser, {
             username: formData.username.trim(),
+            fullName: formData.fullName.trim() || null,
             email: formData.email.trim(),
             password: formData.password,
             profileId: formData.profileId,
@@ -149,6 +151,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
           // Create new user
           const result = await createUser({
             username: formData.username.trim(),
+            fullName: formData.fullName.trim() || null,
             email: formData.email.trim(),
             password: formData.password,
             profileId: formData.profileId,
@@ -181,6 +184,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
         const user: User = {
           id: editingUser || generateId(),
           username: formData.username.trim(),
+          fullName: formData.fullName.trim() || undefined,
           email: formData.email.trim(),
           password: formData.password,
           profileId: formData.profileId,
@@ -224,6 +228,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
     setEditingUser(user.id);
     setFormData({
       username: user.username,
+      fullName: useSupabase ? (user.full_name || '') : (user.fullName || ''),
       email: user.email,
       password: useSupabase ? '' : user.password,
       confirmPassword: useSupabase ? '' : user.password,
@@ -310,7 +315,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
   const handleCancel = () => {
     setEditingUser(null);
     setShowForm(false);
-    setFormData({ username: '', email: '', password: '', confirmPassword: '', profileId: '', isActive: true });
+    setFormData({ username: '', fullName: '', email: '', password: '', confirmPassword: '', profileId: '', isActive: true });
     setErrors({});
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -321,6 +326,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
     const defaultProfile = profiles.find(p => useSupabase ? p.is_default : p.isDefault);
     setFormData({ 
       username: '', 
+      fullName: '',
       email: '', 
       password: '', 
       confirmPassword: '',
@@ -409,6 +415,21 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onClose }) => {
                   {errors.username && (
                     <p className="text-sm text-red-600 mt-1">{errors.username}</p>
                   )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nome Completo
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    disabled={isProcessing}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:opacity-50"
+                    placeholder="Ex: João da Silva"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Será usado como autor padrão nas análises</p>
                 </div>
                 
                 <div>

@@ -19,6 +19,7 @@ export const profiles = aimSchema.table('profiles', {
 export const users = aimSchema.table('users', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   username: text('username').notNull().unique(),
+  fullName: text('full_name'),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   profileId: uuid('profile_id').references(() => profiles.id),

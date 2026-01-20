@@ -170,6 +170,7 @@ export function registerRoutes(app: Express) {
       const userResult = await db.select({
         id: users.id,
         username: users.username,
+        fullName: users.fullName,
         email: users.email,
         passwordHash: users.passwordHash,
         profileId: users.profileId,
@@ -239,6 +240,7 @@ export function registerRoutes(app: Express) {
         user: {
           id: user.id,
           username: user.username,
+          fullName: user.fullName,
           email: user.email,
           profileId: user.profileId
         },
@@ -259,7 +261,7 @@ export function registerRoutes(app: Express) {
   // Register new user
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { username, email, password, profileId } = req.body;
+      const { username, fullName, email, password, profileId } = req.body;
   
       if (!username || !email || !password) {
         return res.status(400).json({ error: 'Username, email and password are required' });
@@ -326,6 +328,7 @@ export function registerRoutes(app: Express) {
       // Create user
       const [newUser] = await db.insert(users).values({
         username,
+        fullName: fullName || null,
         email,
         passwordHash,
         profileId: userProfileId,
