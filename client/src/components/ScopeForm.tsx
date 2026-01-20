@@ -153,8 +153,8 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'nova': return 'Nova';
-      case 'alterada': return 'Alte';
-      case 'excluida': return 'Excl';
+      case 'alterada': return 'Alterada';
+      case 'excluida': return 'Excluída';
       default: return status;
     }
   };
