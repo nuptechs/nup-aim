@@ -111,7 +111,17 @@ class ApiClient {
 
   // Authentication endpoints
   async login(email: string, password: string) {
-    const response = await this.request<{ token: string; user: any }>('/api/auth/login', {
+    const response = await this.request<{ 
+      token: string; 
+      user: any;
+      profile: {
+        id: string;
+        name: string;
+        description: string | null;
+        permissions: string[];
+        isDefault: boolean | null;
+      } | null;
+    }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
