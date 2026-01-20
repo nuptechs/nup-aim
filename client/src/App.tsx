@@ -121,10 +121,15 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     // Check URL for email verification token
-    const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
-    const token = urlParams.get('token');
+    // Support both path-based (/verify-email?token=xxx) and hash-based (#/?token=xxx) URLs
+    const pathname = window.location.pathname;
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
     
-    if (token) {
+    const token = searchParams.get('token') || hashParams.get('token');
+    const isVerifyEmailPath = pathname === '/verify-email' || pathname.includes('/verify-email');
+    
+    if (token && isVerifyEmailPath) {
       setVerificationToken(token);
       setCurrentView('verify-email');
     } else if (isAuthenticated) {
