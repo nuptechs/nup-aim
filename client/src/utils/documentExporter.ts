@@ -495,11 +495,8 @@ export const exportToWord = async (data: ImpactAnalysis) => {
           
           ...functionalityElements,
 
-          createSectionHeading("3.", "Análise de Impactos"),
-          ...generateImpactSections(data),
-
           ...(data.risks.length > 0 ? [
-            createSectionHeading("4.", "Matriz de Riscos"),
+            createSectionHeading("3.", "Matriz de Riscos"),
             
             new Table({
               width: { size: 100, type: WidthType.PERCENTAGE },
@@ -530,7 +527,7 @@ export const exportToWord = async (data: ImpactAnalysis) => {
           ] : []),
 
           ...(data.mitigations.length > 0 ? [
-            createSectionHeading("5.", "Plano de Mitigação"),
+            createSectionHeading("4.", "Plano de Mitigação"),
             
             new Table({
               width: { size: 100, type: WidthType.PERCENTAGE },
@@ -560,42 +557,6 @@ export const exportToWord = async (data: ImpactAnalysis) => {
             new Paragraph({ text: "", spacing: { after: SPACING.sectionGap } }),
           ] : []),
 
-          ...(data.conclusions.summary || data.conclusions.recommendations.length > 0 || data.conclusions.nextSteps.length > 0 ? [
-            createSectionHeading("6.", "Conclusões e Recomendações"),
-
-            ...(data.conclusions.summary ? [
-              createSectionHeading("6.1", "Resumo Executivo", 2),
-              ...splitTextIntoParagraphs(data.conclusions.summary),
-            ] : []),
-
-            ...(data.conclusions.recommendations.length > 0 ? [
-              createSectionHeading("6.2", "Recomendações", 2),
-              ...data.conclusions.recommendations.map(rec => 
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: "• ", size: FONT_SIZES.body, color: COLORS.primary }),
-                    new TextRun({ text: rec, size: FONT_SIZES.body, color: COLORS.bodyText }),
-                  ],
-                  spacing: { after: SPACING.listItem },
-                  indent: { left: convertInchesToTwip(0.25) },
-                })
-              ),
-            ] : []),
-
-            ...(data.conclusions.nextSteps.length > 0 ? [
-              createSectionHeading("6.3", "Próximos Passos", 2),
-              ...data.conclusions.nextSteps.map((step, i) => 
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: `${i + 1}. `, bold: true, size: FONT_SIZES.body, color: COLORS.primary }),
-                    new TextRun({ text: step, size: FONT_SIZES.body, color: COLORS.bodyText }),
-                  ],
-                  spacing: { after: SPACING.listItem },
-                  indent: { left: convertInchesToTwip(0.25) },
-                })
-              ),
-            ] : []),
-          ] : []),
         ],
       },
     ],
@@ -620,70 +581,3 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function generateImpactSections(data: ImpactAnalysis): Paragraph[] {
-  const sections: Paragraph[] = [];
-  const categories = {
-    business: 'Impactos de Negócio',
-    technical: 'Impactos Técnicos',
-    operational: 'Impactos Operacionais',
-    financial: 'Impactos Financeiros'
-  };
-
-  let sectionNumber = 1;
-  let hasAnyImpact = false;
-
-  Object.entries(categories).forEach(([category, title]) => {
-    const impacts = data.impacts[category as keyof typeof data.impacts];
-    
-    if (impacts.length > 0) {
-      hasAnyImpact = true;
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: `3.${sectionNumber} `, bold: true, size: FONT_SIZES.heading2, color: COLORS.primaryLight }),
-            new TextRun({ text: title, bold: true, size: FONT_SIZES.heading2, color: COLORS.headerText }),
-          ],
-          spacing: { before: 240, after: 120 },
-        })
-      );
-
-      impacts.forEach((impact) => {
-        sections.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: "• ", size: FONT_SIZES.body, color: COLORS.primary }),
-              new TextRun({ text: impact.description, size: FONT_SIZES.body, color: COLORS.bodyText }),
-            ],
-            spacing: { after: 60 },
-            indent: { left: convertInchesToTwip(0.25) },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Severidade: ", bold: true, size: FONT_SIZES.small, color: COLORS.mutedText }),
-              new TextRun({ text: capitalize(impact.severity), size: FONT_SIZES.small, color: COLORS.bodyText }),
-              new TextRun({ text: "  |  ", size: FONT_SIZES.small, color: COLORS.mutedText }),
-              new TextRun({ text: "Probabilidade: ", bold: true, size: FONT_SIZES.small, color: COLORS.mutedText }),
-              new TextRun({ text: capitalize(impact.probability), size: FONT_SIZES.small, color: COLORS.bodyText }),
-            ],
-            spacing: { after: SPACING.listItem },
-            indent: { left: convertInchesToTwip(0.5) },
-          })
-        );
-      });
-
-      sections.push(new Paragraph({ text: "", spacing: { after: 160 } }));
-      sectionNumber++;
-    }
-  });
-
-  if (!hasAnyImpact) {
-    sections.push(
-      new Paragraph({
-        children: [new TextRun({ text: "Nenhum impacto identificado.", size: FONT_SIZES.body, color: COLORS.mutedText, italics: true })],
-        spacing: { after: SPACING.sectionGap },
-      })
-    );
-  }
-
-  return sections;
-}

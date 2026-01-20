@@ -9,10 +9,8 @@ import { Header } from './components/Header';
 import { FormSection } from './components/FormSection';
 import { BasicInfoForm } from './components/BasicInfoForm';
 import { ScopeForm } from './components/ScopeForm';
-import { ImpactsForm } from './components/ImpactsForm';
 import { RisksForm } from './components/RisksForm';
 import { MitigationsForm } from './components/MitigationsForm';
-import { ConclusionsForm } from './components/ConclusionsForm';
 import { DocumentPreview } from './components/DocumentPreview';
 import { AnalysisManager } from './components/AnalysisManager';
 import { BasicDataManager } from './components/BasicDataManager';
@@ -515,24 +513,6 @@ const AppContent: React.FC = () => {
             {systemSettings.showAdditionalSectionsToAll && (
               <>
                 <FormSection
-                  title="Análise de Impactos"
-                  isCollapsed={collapsedSections['impacts']}
-                  onToggle={() => toggleSection('impacts')}
-                >
-                  <ImpactsForm 
-                    data={data} 
-                    onChange={updateData}
-                    customFieldsValues={customFieldsValues['impacts'] || {}}
-                    onCustomFieldsChange={(values) => {
-                      setCustomFieldsValues(prev => ({
-                        ...prev,
-                        impacts: values
-                      }));
-                    }}
-                  />
-                </FormSection>
-
-                <FormSection
                   title="Matriz de Riscos"
                   isCollapsed={collapsedSections['risks']}
                   onToggle={() => toggleSection('risks')}
@@ -563,24 +543,6 @@ const AppContent: React.FC = () => {
                       setCustomFieldsValues(prev => ({
                         ...prev,
                         mitigations: values
-                      }));
-                    }}
-                  />
-                </FormSection>
-
-                <FormSection
-                  title="Conclusões e Recomendações"
-                  isCollapsed={collapsedSections['conclusions']}
-                  onToggle={() => toggleSection('conclusions')}
-                >
-                  <ConclusionsForm 
-                    data={data} 
-                    onChange={updateData}
-                    customFieldsValues={customFieldsValues['conclusions'] || {}}
-                    onCustomFieldsChange={(values) => {
-                      setCustomFieldsValues(prev => ({
-                        ...prev,
-                        conclusions: values
                       }));
                     }}
                   />
