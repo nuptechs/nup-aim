@@ -10,7 +10,7 @@ import { authenticateToken } from './middleware/auth.middleware';
 import { Resend } from 'resend';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'onboarding@resend.dev';
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'noreply@mail.nuptechs.com';
 
 let resend: Resend | null = null;
 if (RESEND_API_KEY) {
