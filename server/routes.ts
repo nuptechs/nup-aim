@@ -1486,12 +1486,19 @@ export function registerRoutes(app: Express) {
 
       const { GoogleGenAI } = await import('@google/genai');
       const apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
+      const baseUrl = process.env.AI_INTEGRATIONS_GEMINI_BASE_URL;
       
       if (!apiKey) {
         return res.json({ success: true, additionalFunctionalities: [] });
       }
 
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ 
+        apiKey,
+        httpOptions: {
+          apiVersion: "",
+          baseUrl: baseUrl || '',
+        }
+      });
 
       const prompt = `Você é um analista de sistemas especializado em análise de pontos de função IFPUG.
 
