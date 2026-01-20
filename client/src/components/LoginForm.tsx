@@ -347,8 +347,8 @@ export const LoginForm: React.FC = () => {
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold">Análise Inteligente</h4>
-                  <p className="text-sm text-white/70">Processamento de documentos com Gemini AI</p>
+                  <h4 className="font-semibold">Análise de Impacto Inteligente</h4>
+                  <p className="text-sm text-white/70">Criação de documentos com apoio da NuPTechs AI</p>
                 </div>
               </div>
 
