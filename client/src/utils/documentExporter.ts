@@ -1,4 +1,4 @@
-import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, Packer, ImageRun } from 'docx';
+import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, Packer, ImageRun, PageBreak, Header, Footer, PageNumber, NumberFormat, convertInchesToTwip, SectionType, VerticalAlign, TableLayoutType } from 'docx';
 import { saveAs } from 'file-saver';
 import { ImpactAnalysis } from '../types';
 
@@ -8,8 +8,37 @@ interface ImageData {
   name: string;
 }
 
+const COLORS = {
+  primary: "1E40AF",
+  primaryLight: "3B82F6",
+  headerBg: "F1F5F9",
+  headerText: "1E293B",
+  tableBorder: "CBD5E1",
+  tableHeaderBg: "E2E8F0",
+  mutedText: "64748B",
+  bodyText: "334155",
+  accent: "0EA5E9",
+};
+
+const FONT_SIZES = {
+  title: 36,
+  subtitle: 20,
+  heading1: 26,
+  heading2: 22,
+  heading3: 20,
+  body: 22,
+  small: 18,
+  caption: 16,
+};
+
+const SPACING = {
+  sectionGap: 400,
+  paragraphAfter: 200,
+  listItem: 120,
+  tableRow: 80,
+};
+
 export const exportToWord = async (data: ImpactAnalysis) => {
-  // Function to convert base64 to buffer for images
   const base64ToBuffer = (base64: string): Uint8Array => {
     try {
       const base64Data = base64.split(',')[1];
@@ -25,7 +54,42 @@ export const exportToWord = async (data: ImpactAnalysis) => {
     }
   };
 
-  // Function to parse image data from stored string
+  const getImageDimensions = (base64: string): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({ width: img.width, height: img.height });
+      };
+      img.onerror = () => {
+        resolve({ width: 600, height: 400 });
+      };
+      img.src = base64;
+    });
+  };
+
+  const calculateScaledDimensions = (
+    originalWidth: number,
+    originalHeight: number,
+    maxWidth: number = 500,
+    maxHeight: number = 350
+  ): { width: number; height: number } => {
+    const aspectRatio = originalWidth / originalHeight;
+    let newWidth = originalWidth;
+    let newHeight = originalHeight;
+
+    if (newWidth > maxWidth) {
+      newWidth = maxWidth;
+      newHeight = newWidth / aspectRatio;
+    }
+
+    if (newHeight > maxHeight) {
+      newHeight = maxHeight;
+      newWidth = newHeight * aspectRatio;
+    }
+
+    return { width: Math.round(newWidth), height: Math.round(newHeight) };
+  };
+
   const parseImageData = (data: string): { images: ImageData[], text: string } => {
     if (!data) return { images: [], text: '' };
     
@@ -50,17 +114,14 @@ export const exportToWord = async (data: ImpactAnalysis) => {
     return { images, text: textLines.join('\n') };
   };
 
-  // Parse function point analysis from work details
   const parseFunctionPointAnalysis = (workDetails: string | undefined) => {
     if (!workDetails) return null;
     
-    // Check if there's extracted data
     if (!workDetails.includes('=== DADOS EXTRAÍDOS POR IA ===')) return null;
     
     const extractedDataSection = workDetails.split('=== DADOS EXTRAÍDOS POR IA ===')[1];
     if (!extractedDataSection) return null;
     
-    // Parse the data
     const processTypeMatch = extractedDataSection.match(/Processo Elementar: (\w+) \(([^)]+)\)/);
     const complexityMatch = extractedDataSection.match(/Complexidade: (\w+)/);
     const totalFPMatch = extractedDataSection.match(/Total de Pontos de Função: (\d+)/);
@@ -75,647 +136,489 @@ export const exportToWord = async (data: ImpactAnalysis) => {
     };
   };
 
+  const splitTextIntoParagraphs = (text: string): Paragraph[] => {
+    if (!text) return [];
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => 
+      new Paragraph({
+        children: [new TextRun({ text: line, size: FONT_SIZES.body, color: COLORS.bodyText })],
+        spacing: { after: SPACING.listItem },
+      })
+    );
+  };
+
+  const createTableBorders = () => ({
+    top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.tableBorder },
+    bottom: { style: BorderStyle.SINGLE, size: 1, color: COLORS.tableBorder },
+    left: { style: BorderStyle.SINGLE, size: 1, color: COLORS.tableBorder },
+    right: { style: BorderStyle.SINGLE, size: 1, color: COLORS.tableBorder },
+    insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: COLORS.tableBorder },
+    insideVertical: { style: BorderStyle.SINGLE, size: 1, color: COLORS.tableBorder },
+  });
+
+  const createHeaderCell = (text: string, width: number) => 
+    new TableCell({
+      children: [new Paragraph({
+        children: [new TextRun({ text, bold: true, size: FONT_SIZES.body, color: COLORS.headerText })]
+      })],
+      width: { size: width, type: WidthType.PERCENTAGE },
+      shading: { fill: COLORS.tableHeaderBg },
+      margins: { top: convertInchesToTwip(0.08), bottom: convertInchesToTwip(0.08), left: convertInchesToTwip(0.1), right: convertInchesToTwip(0.1) },
+    });
+
+  const createDataCell = (text: string, width?: number, options?: { bold?: boolean; color?: string }) => 
+    new TableCell({
+      children: [new Paragraph({
+        children: [new TextRun({ 
+          text, 
+          size: FONT_SIZES.body, 
+          color: options?.color || COLORS.bodyText,
+          bold: options?.bold || false 
+        })]
+      })],
+      ...(width ? { width: { size: width, type: WidthType.PERCENTAGE } } : {}),
+      margins: { top: convertInchesToTwip(0.06), bottom: convertInchesToTwip(0.06), left: convertInchesToTwip(0.1), right: convertInchesToTwip(0.1) },
+    });
+
+  const createLabelCell = (text: string, width?: number) =>
+    new TableCell({
+      children: [new Paragraph({
+        children: [new TextRun({ text, bold: true, size: FONT_SIZES.body, color: COLORS.headerText })]
+      })],
+      ...(width ? { width: { size: width, type: WidthType.PERCENTAGE } } : {}),
+      shading: { fill: COLORS.headerBg },
+      margins: { top: convertInchesToTwip(0.06), bottom: convertInchesToTwip(0.06), left: convertInchesToTwip(0.1), right: convertInchesToTwip(0.1) },
+    });
+
+  const createSectionHeading = (number: string, text: string, level: 1 | 2 | 3 = 1) => {
+    const sizes = { 1: FONT_SIZES.heading1, 2: FONT_SIZES.heading2, 3: FONT_SIZES.heading3 };
+    const spacings = { 1: 300, 2: 240, 3: 200 };
+    
+    return new Paragraph({
+      children: [
+        new TextRun({ text: `${number} `, bold: true, size: sizes[level], color: COLORS.primary }),
+        new TextRun({ text, bold: true, size: sizes[level], color: COLORS.headerText }),
+      ],
+      spacing: { before: spacings[level], after: 160 },
+    });
+  };
+
+  const processImages = async (images: ImageData[]): Promise<Paragraph[]> => {
+    const elements: Paragraph[] = [];
+    
+    for (let i = 0; i < images.length; i++) {
+      const imageData = images[i];
+      try {
+        const imageBuffer = base64ToBuffer(imageData.base64);
+        if (imageBuffer.length > 0) {
+          const dimensions = await getImageDimensions(imageData.base64);
+          const scaled = calculateScaledDimensions(dimensions.width, dimensions.height);
+          
+          elements.push(
+            new Paragraph({
+              children: [
+                new ImageRun({
+                  data: imageBuffer,
+                  transformation: {
+                    width: scaled.width,
+                    height: scaled.height,
+                  },
+                }),
+              ],
+              spacing: { before: 120, after: 80 },
+              alignment: AlignmentType.CENTER,
+            })
+          );
+          
+          elements.push(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Figura ${i + 1}: `, bold: true, size: FONT_SIZES.caption, color: COLORS.mutedText }),
+                new TextRun({ text: imageData.name, italics: true, size: FONT_SIZES.caption, color: COLORS.mutedText }),
+              ],
+              spacing: { after: 200 },
+              alignment: AlignmentType.CENTER,
+            })
+          );
+        }
+      } catch (error) {
+        console.error('Error processing image:', error);
+        elements.push(
+          new Paragraph({
+            children: [new TextRun({ text: `[Erro ao processar: ${imageData.name}]`, italics: true, size: FONT_SIZES.small, color: "DC2626" })],
+            spacing: { after: 120 },
+            alignment: AlignmentType.CENTER,
+          })
+        );
+      }
+    }
+    
+    return elements;
+  };
+
+  const buildFunctionalityElements = async (): Promise<(Table | Paragraph)[]> => {
+    const allElements: (Table | Paragraph)[] = [];
+    
+    if (data.scope.processes.length === 0) {
+      allElements.push(
+        new Paragraph({
+          children: [new TextRun({ text: "Nenhuma funcionalidade definida no escopo.", size: FONT_SIZES.body, color: COLORS.mutedText, italics: true })],
+          spacing: { after: SPACING.sectionGap },
+        })
+      );
+      return allElements;
+    }
+
+    for (let index = 0; index < data.scope.processes.length; index++) {
+      const process = data.scope.processes[index];
+      const { images, text } = parseImageData(process.screenshots || '');
+      const fpAnalysis = parseFunctionPointAnalysis(process.workDetails);
+
+      allElements.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `2.1.${index + 1} `, bold: true, size: FONT_SIZES.heading3, color: COLORS.primaryLight }),
+            new TextRun({ text: process.name, bold: true, size: FONT_SIZES.heading3, color: COLORS.headerText }),
+          ],
+          spacing: { before: index > 0 ? 300 : 0, after: 160 },
+        })
+      );
+
+      const tableRows: TableRow[] = [
+        new TableRow({
+          children: [
+            createLabelCell("Status", 25),
+            createDataCell(translateStatus(process.status), 75),
+          ],
+        }),
+      ];
+
+      if (process.status === 'alterada' && process.websisCreated !== undefined) {
+        tableRows.push(
+          new TableRow({
+            children: [
+              createLabelCell("Websis Criou/Alterou Antes"),
+              createDataCell(process.websisCreated ? 'SIM' : 'NÃO'),
+            ],
+          })
+        );
+      }
+
+      if (fpAnalysis) {
+        tableRows.push(
+          new TableRow({
+            children: [
+              createLabelCell("Pontos de Função"),
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: `${fpAnalysis.processType} (${fpAnalysis.processTypeDescription})`, size: FONT_SIZES.body, color: COLORS.bodyText }),
+                      new TextRun({ text: ` | Complexidade: `, size: FONT_SIZES.body, color: COLORS.mutedText }),
+                      new TextRun({ text: fpAnalysis.complexity, bold: true, size: FONT_SIZES.body, color: COLORS.primary }),
+                      new TextRun({ text: ` | Total: `, size: FONT_SIZES.body, color: COLORS.mutedText }),
+                      new TextRun({ text: `${fpAnalysis.totalFunctionPoints} PF`, bold: true, size: FONT_SIZES.body, color: COLORS.accent }),
+                    ],
+                  }),
+                ],
+                margins: { top: convertInchesToTwip(0.06), bottom: convertInchesToTwip(0.06), left: convertInchesToTwip(0.1), right: convertInchesToTwip(0.1) },
+              }),
+            ],
+          })
+        );
+      }
+
+      allElements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: createTableBorders(),
+          layout: TableLayoutType.FIXED,
+          rows: tableRows,
+        })
+      );
+
+      if (process.workDetails && process.workDetails.trim()) {
+        let cleanWorkDetails = process.workDetails;
+        if (cleanWorkDetails.includes('=== DADOS EXTRAÍDOS POR IA ===')) {
+          cleanWorkDetails = cleanWorkDetails.split('=== DADOS EXTRAÍDOS POR IA ===')[0].trim();
+        }
+        
+        if (cleanWorkDetails) {
+          allElements.push(
+            new Paragraph({
+              children: [new TextRun({ text: "Detalhamento do Trabalho:", bold: true, size: FONT_SIZES.body, color: COLORS.headerText })],
+              spacing: { before: 200, after: 100 },
+            })
+          );
+          
+          allElements.push(...splitTextIntoParagraphs(cleanWorkDetails));
+        }
+      }
+
+      if (images.length > 0 || text.trim()) {
+        allElements.push(
+          new Paragraph({
+            children: [new TextRun({ text: "Evidências (Prints de Tela):", bold: true, size: FONT_SIZES.body, color: COLORS.headerText })],
+            spacing: { before: 200, after: 120 },
+          })
+        );
+
+        if (text.trim()) {
+          allElements.push(...splitTextIntoParagraphs(text));
+        }
+
+        if (images.length > 0) {
+          const imageElements = await processImages(images);
+          allElements.push(...imageElements);
+        }
+      }
+
+      allElements.push(new Paragraph({ text: "", spacing: { after: 200 } }));
+      
+      if (index < data.scope.processes.length - 1 && (images.length > 2 || (process.workDetails?.length || 0) > 500)) {
+        allElements.push(new Paragraph({ children: [new PageBreak()] }));
+      }
+    }
+    
+    return allElements;
+  };
+
+  const functionalityElements = await buildFunctionalityElements();
+
   const doc = new Document({
     styles: {
-      paragraphStyles: [
-        {
-          id: "title",
-          name: "Title",
-          basedOn: "Normal",
-          next: "Normal",
-          quickFormat: true,
+      default: {
+        document: {
           run: {
-            size: 32,
-            bold: true,
-            color: "2563EB",
-          },
-          paragraph: {
-            spacing: {
-              after: 300,
-            },
-            alignment: AlignmentType.CENTER,
+            font: "Calibri",
+            size: FONT_SIZES.body,
           },
         },
-        {
-          id: "subtitle",
-          name: "Subtitle",
-          basedOn: "Normal",
-          next: "Normal",
-          quickFormat: true,
-          run: {
-            size: 16,
-            color: "6B7280",
-          },
-          paragraph: {
-            spacing: {
-              after: 400,
-            },
-            alignment: AlignmentType.CENTER,
-          },
-        },
-        {
-          id: "heading1",
-          name: "Heading 1",
-          basedOn: "Normal",
-          next: "Normal",
-          quickFormat: true,
-          run: {
-            size: 24,
-            bold: true,
-            color: "1F2937",
-          },
-          paragraph: {
-            spacing: {
-              before: 240,
-              after: 120,
-            },
-          },
-        },
-        {
-          id: "heading2",
-          name: "Heading 2",
-          basedOn: "Normal",
-          next: "Normal",
-          quickFormat: true,
-          run: {
-            size: 20,
-            bold: true,
-            color: "374151",
-          },
-          paragraph: {
-            spacing: {
-              before: 200,
-              after: 100,
-            },
-          },
-        },
-      ],
+      },
     },
     sections: [
       {
-        properties: {},
+        properties: {
+          page: {
+            margin: {
+              top: convertInchesToTwip(1),
+              right: convertInchesToTwip(1),
+              bottom: convertInchesToTwip(1),
+              left: convertInchesToTwip(1.25),
+            },
+          },
+        },
+        headers: {
+          default: new Header({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: data.title || "Análise de Impacto", size: FONT_SIZES.small, color: COLORS.mutedText }),
+                ],
+                alignment: AlignmentType.RIGHT,
+              }),
+            ],
+          }),
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: "NuPTechs - Sua fábrica de softwares inteligentes", size: FONT_SIZES.caption, color: COLORS.mutedText, italics: true }),
+                  new TextRun({ text: "  |  Página ", size: FONT_SIZES.caption, color: COLORS.mutedText }),
+                  new TextRun({ children: [PageNumber.CURRENT], size: FONT_SIZES.caption, color: COLORS.mutedText }),
+                  new TextRun({ text: " de ", size: FONT_SIZES.caption, color: COLORS.mutedText }),
+                  new TextRun({ children: [PageNumber.TOTAL_PAGES], size: FONT_SIZES.caption, color: COLORS.mutedText }),
+                ],
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
+          }),
+        },
         children: [
-          // Title Page
           new Paragraph({
-            text: data.title || "Análise de Impacto",
-            style: "title",
+            children: [new TextRun({ text: data.title || "Análise de Impacto", bold: true, size: FONT_SIZES.title, color: COLORS.primary })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 120 },
           }),
           
           new Paragraph({
-            text: "Documento de Análise de Impacto",
-            style: "subtitle",
+            children: [new TextRun({ text: "Documento de Análise de Pontos de Função", size: FONT_SIZES.subtitle, color: COLORS.mutedText })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 },
           }),
 
-          // Document Info Table with better formatting
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
-            borders: {
-              top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-              bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-              left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-              right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-              insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-              insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-            },
+            borders: createTableBorders(),
+            layout: TableLayoutType.FIXED,
             rows: [
               new TableRow({
                 children: [
-                  new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({ text: "Número da PA:", bold: true })]
-                    })],
-                    width: { size: 25, type: WidthType.PERCENTAGE },
-                    shading: { fill: "F3F4F6" },
-                  }),
-                  new TableCell({
-                    children: [new Paragraph(data.title || "N/A")],
-                    width: { size: 25, type: WidthType.PERCENTAGE },
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({ text: "Projeto:", bold: true })]
-                    })],
-                    width: { size: 25, type: WidthType.PERCENTAGE },
-                    shading: { fill: "F3F4F6" },
-                  }),
-                  new TableCell({
-                    children: [new Paragraph(data.project || "N/A")],
-                    width: { size: 25, type: WidthType.PERCENTAGE },
-                  }),
+                  createLabelCell("Número PA", 20),
+                  createDataCell(data.title || "N/A", 30),
+                  createLabelCell("Projeto", 20),
+                  createDataCell(data.project || "N/A", 30),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({ text: "Autor:", bold: true })]
-                    })],
-                    shading: { fill: "F3F4F6" },
-                  }),
-                  new TableCell({
-                    children: [new Paragraph(data.author || "N/A")],
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({ text: "Data:", bold: true })]
-                    })],
-                    shading: { fill: "F3F4F6" },
-                  }),
-                  new TableCell({
-                    children: [new Paragraph(new Date(data.date).toLocaleDateString('pt-BR') || "N/A")],
-                  }),
+                  createLabelCell("Autor"),
+                  createDataCell(data.author || "N/A"),
+                  createLabelCell("Data"),
+                  createDataCell(data.date ? new Date(data.date).toLocaleDateString('pt-BR') : "N/A"),
                 ],
               }),
               new TableRow({
                 children: [
-                  new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({ text: "Versão:", bold: true })]
-                    })],
-                    shading: { fill: "F3F4F6" },
-                  }),
-                  new TableCell({
-                    children: [new Paragraph(data.version || "N/A")],
-                  }),
-                  new TableCell({
-                    children: [new Paragraph("")],
-                  }),
-                  new TableCell({
-                    children: [new Paragraph("")],
-                  }),
+                  createLabelCell("Versão"),
+                  createDataCell(data.version || "1.0"),
+                  createLabelCell("Status"),
+                  createDataCell("Em Análise"),
                 ],
               }),
             ],
           }),
 
-          new Paragraph({ text: "", spacing: { after: 400 } }),
+          new Paragraph({ text: "", spacing: { after: SPACING.sectionGap } }),
 
-          // Description
           ...(data.description ? [
-            new Paragraph({
-              text: "1. Descrição",
-              style: "heading1",
-            }),
-            new Paragraph({
-              text: data.description,
-              spacing: { after: 300 },
-            }),
+            createSectionHeading("1.", "Descrição"),
+            ...splitTextIntoParagraphs(data.description),
+            new Paragraph({ text: "", spacing: { after: 200 } }),
           ] : []),
 
-          // Scope
-          new Paragraph({
-            text: "2. Escopo",
-            style: "heading1",
-          }),
+          createSectionHeading("2.", "Escopo da Análise"),
+          createSectionHeading("2.1", "Funcionalidades Impactadas", 2),
+          
+          ...functionalityElements,
 
-          ...(data.scope.processes.length > 0 ? [
-            new Paragraph({
-              text: "2.1 Funcionalidades Impactadas",
-              style: "heading2",
-            }),
-            
-            // Create separate table for each functionality
-            ...data.scope.processes.flatMap((process, index) => {
-              const elements: (Table | Paragraph)[] = [];
-              const { images, text } = parseImageData(process.screenshots || '');
-              const fpAnalysis = parseFunctionPointAnalysis(process.workDetails);
-              
-              // Add functionality title
-              elements.push(
-                new Paragraph({
-                  children: [new TextRun({ text: `Funcionalidade ${index + 1}: ${process.name}`, bold: true })],
-                  spacing: { before: 200, after: 100 },
-                })
-              );
-
-              // Create table for this functionality
-              const tableRows = [
-                // Header row
-                new TableRow({
-                  children: [
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Campo", bold: true })]
-                      })],
-                      width: { size: 30, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Informação", bold: true })]
-                      })],
-                      width: { size: 70, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
-                  ],
-                }),
-                // Status row
-                new TableRow({
-                  children: [
-                    new TableCell({
-                      children: [new Paragraph("Status")],
-                    }),
-                    new TableCell({
-                      children: [new Paragraph(process.status.charAt(0).toUpperCase() + process.status.slice(1))],
-                    }),
-                  ],
-                }),
-              ];
-
-              // Add Websis row if applicable
-              if (process.status === 'alterada' && process.websisCreated !== undefined) {
-                tableRows.push(
-                  new TableRow({
-                    children: [
-                      new TableCell({
-                        children: [new Paragraph("Websis Criou/Alterou Antes")],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(process.websisCreated ? 'SIM' : 'NÃO')],
-                      }),
-                    ],
-                  })
-                );
-              }
-
-              // Add Function Point Analysis if available
-              if (fpAnalysis) {
-                tableRows.push(
-                  new TableRow({
-                    children: [
-                      new TableCell({
-                        children: [new Paragraph("Análise de Pontos de Função")],
-                      }),
-                      new TableCell({
-                        children: [
-                          new Paragraph({
-                            children: [
-                              new TextRun({ text: "Processo Elementar: ", bold: true }),
-                              new TextRun(`${fpAnalysis.processType} (${fpAnalysis.processTypeDescription})`),
-                            ],
-                          }),
-                          new Paragraph({
-                            children: [
-                              new TextRun({ text: "Complexidade: ", bold: true }),
-                              new TextRun(fpAnalysis.complexity),
-                            ],
-                          }),
-                          new Paragraph({
-                            children: [
-                              new TextRun({ text: "Total de Pontos de Função: ", bold: true }),
-                              new TextRun(`${fpAnalysis.totalFunctionPoints}`),
-                            ],
-                          }),
-                        ],
-                      }),
-                    ],
-                  })
-                );
-              }
-
-              // Add work details row if available
-              if (process.workDetails && process.workDetails.trim()) {
-                // Remove the AI extracted data section for cleaner output
-                let cleanWorkDetails = process.workDetails;
-                if (cleanWorkDetails.includes('=== DADOS EXTRAÍDOS POR IA ===')) {
-                  cleanWorkDetails = cleanWorkDetails.split('=== DADOS EXTRAÍDOS POR IA ===')[0].trim();
-                }
-                
-                if (cleanWorkDetails) {
-                  tableRows.push(
-                    new TableRow({
-                      children: [
-                        new TableCell({
-                          children: [new Paragraph("Detalhamento do Trabalho")],
-                        }),
-                        new TableCell({
-                          children: [new Paragraph(cleanWorkDetails)],
-                        }),
-                      ],
-                    })
-                  );
-                }
-              }
-
-              elements.push(
-                new Table({
-                  width: { size: 100, type: WidthType.PERCENTAGE },
-                  borders: {
-                    top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                    bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                    left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                    right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                    insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                    insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                  },
-                  rows: tableRows,
-                })
-              );
-
-              // Add screenshots if available
-              if (process.screenshots && process.screenshots.trim()) {
-                if (text.trim() || images.length > 0) {
-                  elements.push(
-                    new Paragraph({
-                      children: [new TextRun({ text: "Prints das Telas:", bold: true })],
-                      spacing: { before: 150, after: 100 },
-                    })
-                  );
-
-                  if (text.trim()) {
-                    elements.push(
-                      new Paragraph({
-                        text: text,
-                        spacing: { after: 100 },
-                      })
-                    );
-                  }
-
-                  // Add images
-                  images.forEach((imageData, imgIndex) => {
-                    try {
-                      const imageBuffer = base64ToBuffer(imageData.base64);
-                      if (imageBuffer.length > 0) {
-                        elements.push(
-                          new Paragraph({
-                            children: [
-                              new ImageRun({
-                                data: imageBuffer,
-                                transformation: {
-                                  width: 400,
-                                  height: 300,
-                                },
-                              }),
-                            ],
-                            spacing: { after: 100 },
-                            alignment: AlignmentType.CENTER,
-                          })
-                        );
-                        
-                        // Add image caption
-                        elements.push(
-                          new Paragraph({
-                            text: imageData.name,
-                            spacing: { after: 150 },
-                            alignment: AlignmentType.CENTER,
-                            run: {
-                              italics: true,
-                              size: 18,
-                              color: "666666",
-                            },
-                          })
-                        );
-                      }
-                    } catch (error) {
-                      console.error('Error processing image:', error);
-                      elements.push(
-                        new Paragraph({
-                          text: `[${imageData.name} - Erro ao processar imagem]`,
-                          spacing: { after: 100 },
-                          alignment: AlignmentType.CENTER,
-                          run: {
-                            italics: true,
-                            color: "FF0000",
-                          },
-                        })
-                      );
-                    }
-                  });
-                }
-              }
-
-              // Add spacing after each functionality
-              elements.push(new Paragraph({ text: "", spacing: { after: 200 } }));
-              
-              return elements;
-            }),
-          ] : [
-            new Paragraph({
-              text: "Nenhuma funcionalidade definida no escopo.",
-              spacing: { after: 300 },
-            }),
-          ]),
-
-          // Impacts
-          new Paragraph({
-            text: "3. Análise de Impactos",
-            style: "heading1",
-          }),
-
+          createSectionHeading("3.", "Análise de Impactos"),
           ...generateImpactSections(data),
 
-          // Risks
           ...(data.risks.length > 0 ? [
-            new Paragraph({
-              text: "4. Matriz de Riscos",
-              style: "heading1",
-            }),
+            createSectionHeading("4.", "Matriz de Riscos"),
             
             new Table({
               width: { size: 100, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-              },
+              borders: createTableBorders(),
+              layout: TableLayoutType.FIXED,
               rows: [
                 new TableRow({
                   children: [
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Descrição do Risco", bold: true })]
-                      })],
-                      width: { size: 40, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Impacto", bold: true })]
-                      })],
-                      width: { size: 15, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Probabilidade", bold: true })]
-                      })],
-                      width: { size: 15, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Mitigação", bold: true })]
-                      })],
-                      width: { size: 30, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
+                    createHeaderCell("Descrição do Risco", 40),
+                    createHeaderCell("Impacto", 15),
+                    createHeaderCell("Probabilidade", 15),
+                    createHeaderCell("Mitigação", 30),
                   ],
                 }),
                 ...data.risks.map(risk => 
                   new TableRow({
                     children: [
-                      new TableCell({
-                        children: [new Paragraph(risk.description)],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(risk.impact.charAt(0).toUpperCase() + risk.impact.slice(1))],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(risk.probability.charAt(0).toUpperCase() + risk.probability.slice(1))],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(risk.mitigation || 'N/A')],
-                      }),
+                      createDataCell(risk.description),
+                      createDataCell(capitalize(risk.impact)),
+                      createDataCell(capitalize(risk.probability)),
+                      createDataCell(risk.mitigation || 'N/A'),
                     ],
                   })
                 ),
               ],
             }),
+            new Paragraph({ text: "", spacing: { after: SPACING.sectionGap } }),
           ] : []),
 
-          // Mitigations
           ...(data.mitigations.length > 0 ? [
-            new Paragraph({
-              text: "5. Plano de Mitigação",
-              style: "heading1",
-            }),
+            createSectionHeading("5.", "Plano de Mitigação"),
             
             new Table({
               width: { size: 100, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-              },
+              borders: createTableBorders(),
+              layout: TableLayoutType.FIXED,
               rows: [
                 new TableRow({
                   children: [
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Ação", bold: true })]
-                      })],
-                      width: { size: 40, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Responsável", bold: true })]
-                      })],
-                      width: { size: 25, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Prazo", bold: true })]
-                      })],
-                      width: { size: 20, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: "Prioridade", bold: true })]
-                      })],
-                      width: { size: 15, type: WidthType.PERCENTAGE },
-                      shading: { fill: "E5E7EB" },
-                    }),
+                    createHeaderCell("Ação", 35),
+                    createHeaderCell("Responsável", 25),
+                    createHeaderCell("Prazo", 20),
+                    createHeaderCell("Prioridade", 20),
                   ],
                 }),
                 ...data.mitigations.map(mitigation => 
                   new TableRow({
                     children: [
-                      new TableCell({
-                        children: [new Paragraph(mitigation.action)],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(mitigation.responsible)],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(new Date(mitigation.deadline).toLocaleDateString('pt-BR'))],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(mitigation.priority.charAt(0).toUpperCase() + mitigation.priority.slice(1))],
-                      }),
+                      createDataCell(mitigation.action),
+                      createDataCell(mitigation.responsible),
+                      createDataCell(new Date(mitigation.deadline).toLocaleDateString('pt-BR')),
+                      createDataCell(capitalize(mitigation.priority)),
                     ],
                   })
                 ),
               ],
             }),
+            new Paragraph({ text: "", spacing: { after: SPACING.sectionGap } }),
           ] : []),
 
-          // Conclusions
           ...(data.conclusions.summary || data.conclusions.recommendations.length > 0 || data.conclusions.nextSteps.length > 0 ? [
-            new Paragraph({
-              text: "6. Conclusões e Recomendações",
-              style: "heading1",
-            }),
+            createSectionHeading("6.", "Conclusões e Recomendações"),
 
             ...(data.conclusions.summary ? [
-              new Paragraph({
-                text: "6.1 Resumo Executivo",
-                style: "heading2",
-              }),
-              new Paragraph({
-                text: data.conclusions.summary,
-                spacing: { after: 200 },
-              }),
+              createSectionHeading("6.1", "Resumo Executivo", 2),
+              ...splitTextIntoParagraphs(data.conclusions.summary),
             ] : []),
 
             ...(data.conclusions.recommendations.length > 0 ? [
-              new Paragraph({
-                text: "6.2 Recomendações",
-                style: "heading2",
-              }),
-              ...data.conclusions.recommendations.map(recommendation => 
+              createSectionHeading("6.2", "Recomendações", 2),
+              ...data.conclusions.recommendations.map(rec => 
                 new Paragraph({
-                  text: `• ${recommendation}`,
-                  spacing: { after: 100 },
+                  children: [
+                    new TextRun({ text: "• ", size: FONT_SIZES.body, color: COLORS.primary }),
+                    new TextRun({ text: rec, size: FONT_SIZES.body, color: COLORS.bodyText }),
+                  ],
+                  spacing: { after: SPACING.listItem },
+                  indent: { left: convertInchesToTwip(0.25) },
                 })
               ),
             ] : []),
 
             ...(data.conclusions.nextSteps.length > 0 ? [
-              new Paragraph({
-                text: "6.3 Próximos Passos",
-                style: "heading2",
-              }),
-              ...data.conclusions.nextSteps.map(step => 
+              createSectionHeading("6.3", "Próximos Passos", 2),
+              ...data.conclusions.nextSteps.map((step, i) => 
                 new Paragraph({
-                  text: `• ${step}`,
-                  spacing: { after: 100 },
+                  children: [
+                    new TextRun({ text: `${i + 1}. `, bold: true, size: FONT_SIZES.body, color: COLORS.primary }),
+                    new TextRun({ text: step, size: FONT_SIZES.body, color: COLORS.bodyText }),
+                  ],
+                  spacing: { after: SPACING.listItem },
+                  indent: { left: convertInchesToTwip(0.25) },
                 })
               ),
             ] : []),
           ] : []),
-          
-          // Footer with NuPTechs branding
-          new Paragraph({
-            text: "",
-            spacing: { before: 400 },
-          }),
-          new Paragraph({
-            text: "NuPTechs - Sua fábrica de softwares inteligentes",
-            alignment: AlignmentType.CENTER,
-            spacing: { before: 200 },
-            run: {
-              italics: true,
-              color: "6B7280",
-            },
-          }),
         ],
       },
     ],
   });
 
   const blob = await Packer.toBlob(doc);
-  const fileName = `${data.title || 'Analise_de_Impacto'}_${new Date().toISOString().split('T')[0]}.docx`;
+  const fileName = `${(data.title || 'Analise_de_Impacto').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.docx`;
   saveAs(blob, fileName);
 };
+
+function translateStatus(status: string): string {
+  const translations: Record<string, string> = {
+    'incluida': 'Incluída',
+    'alterada': 'Alterada',
+    'excluida': 'Excluída',
+  };
+  return translations[status] || capitalize(status);
+}
+
+function capitalize(str: string): string {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 function generateImpactSections(data: ImpactAnalysis): Paragraph[] {
   const sections: Paragraph[] = [];
@@ -727,41 +630,60 @@ function generateImpactSections(data: ImpactAnalysis): Paragraph[] {
   };
 
   let sectionNumber = 1;
+  let hasAnyImpact = false;
 
   Object.entries(categories).forEach(([category, title]) => {
     const impacts = data.impacts[category as keyof typeof data.impacts];
     
     if (impacts.length > 0) {
+      hasAnyImpact = true;
       sections.push(
         new Paragraph({
-          text: `3.${sectionNumber} ${title}`,
-          style: "heading2",
+          children: [
+            new TextRun({ text: `3.${sectionNumber} `, bold: true, size: FONT_SIZES.heading2, color: COLORS.primaryLight }),
+            new TextRun({ text: title, bold: true, size: FONT_SIZES.heading2, color: COLORS.headerText }),
+          ],
+          spacing: { before: 240, after: 120 },
         })
       );
 
-      impacts.forEach((impact, index) => {
+      impacts.forEach((impact) => {
         sections.push(
           new Paragraph({
-            text: `• ${impact.description}`,
-            spacing: { after: 50 },
+            children: [
+              new TextRun({ text: "• ", size: FONT_SIZES.body, color: COLORS.primary }),
+              new TextRun({ text: impact.description, size: FONT_SIZES.body, color: COLORS.bodyText }),
+            ],
+            spacing: { after: 60 },
+            indent: { left: convertInchesToTwip(0.25) },
           }),
           new Paragraph({
             children: [
-              new TextRun({ text: "  Severidade: ", bold: true }),
-              new TextRun({ text: impact.severity.charAt(0).toUpperCase() + impact.severity.slice(1) }),
-              new TextRun({ text: " | " }),
-              new TextRun({ text: "Probabilidade: ", bold: true }),
-              new TextRun({ text: impact.probability.charAt(0).toUpperCase() + impact.probability.slice(1) })
+              new TextRun({ text: "Severidade: ", bold: true, size: FONT_SIZES.small, color: COLORS.mutedText }),
+              new TextRun({ text: capitalize(impact.severity), size: FONT_SIZES.small, color: COLORS.bodyText }),
+              new TextRun({ text: "  |  ", size: FONT_SIZES.small, color: COLORS.mutedText }),
+              new TextRun({ text: "Probabilidade: ", bold: true, size: FONT_SIZES.small, color: COLORS.mutedText }),
+              new TextRun({ text: capitalize(impact.probability), size: FONT_SIZES.small, color: COLORS.bodyText }),
             ],
-            spacing: { after: 100 },
+            spacing: { after: SPACING.listItem },
+            indent: { left: convertInchesToTwip(0.5) },
           })
         );
       });
 
-      sections.push(new Paragraph({ text: "", spacing: { after: 200 } }));
+      sections.push(new Paragraph({ text: "", spacing: { after: 160 } }));
       sectionNumber++;
     }
   });
+
+  if (!hasAnyImpact) {
+    sections.push(
+      new Paragraph({
+        children: [new TextRun({ text: "Nenhum impacto identificado.", size: FONT_SIZES.body, color: COLORS.mutedText, italics: true })],
+        spacing: { after: SPACING.sectionGap },
+      })
+    );
+  }
 
   return sections;
 }
