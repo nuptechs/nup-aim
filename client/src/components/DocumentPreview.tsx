@@ -193,7 +193,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({ data }) => {
                       </div>
                     )}
                     
-                    {(process.status !== '' && 
+                    {(process.status && 
                       (process.status !== 'alterada' || process.websisCreated !== undefined)) && (
                       <div className="mt-3 space-y-3 border-t border-gray-100 pt-3">
                         {process.workDetails && (
@@ -260,47 +260,6 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({ data }) => {
         )}
       </div>
 
-      {/* Impacts */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Análise de Impactos</h2>
-        <div className="space-y-6">
-          {['business', 'technical', 'operational', 'financial'].map((category) => {
-            const impacts = data.impacts[category as keyof typeof data.impacts];
-            const titles = {
-              business: 'Impactos de Negócio',
-              technical: 'Impactos Técnicos',
-              operational: 'Impactos Operacionais',
-              financial: 'Impactos Financeiros'
-            };
-            
-            if (impacts.length === 0) return null;
-            
-            return (
-              <div key={category}>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">
-                  {titles[category as keyof typeof titles]}
-                </h3>
-                <div className="space-y-3">
-                  {impacts.map((impact, index) => (
-                    <div key={impact.id} className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-gray-800 mb-2 break-words">{impact.description}</p>
-                      <div className="flex gap-2 flex-wrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getSeverityBadge(impact.severity)}`}>
-                          {impact.severity.charAt(0).toUpperCase() + impact.severity.slice(1)}
-                        </span>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getSeverityBadge(impact.probability)}`}>
-                          Prob: {impact.probability.charAt(0).toUpperCase() + impact.probability.slice(1)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Risks */}
       {data.risks.length > 0 && (
         <div className="mb-8">
@@ -351,45 +310,6 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({ data }) => {
         </div>
       )}
 
-      {/* Conclusions */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Conclusões e Recomendações</h2>
-        
-        {data.conclusions.summary && (
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Resumo Executivo</h3>
-            <p className="text-gray-700 leading-relaxed break-words">{data.conclusions.summary}</p>
-          </div>
-        )}
-        
-        {data.conclusions.recommendations.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Recomendações</h3>
-            <ul className="space-y-2">
-              {data.conclusions.recommendations.map((recommendation, index) => (
-                <li key={index} className="text-gray-700 flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                  <span className="break-words">{recommendation}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {data.conclusions.nextSteps.length > 0 && (
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Próximos Passos</h3>
-            <ul className="space-y-2">
-              {data.conclusions.nextSteps.map((step, index) => (
-                <li key={index} className="text-gray-700 flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0"></span>
-                  <span className="break-words">{step}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
     </div>
   );
 };
