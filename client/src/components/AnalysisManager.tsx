@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Edit, Trash2, Plus, Search, Calendar, User, Copy } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FileText, Edit, Trash2, Plus, Search, Calendar, User, Copy, Loader2, RefreshCw } from 'lucide-react';
 import { ImpactAnalysis } from '../types';
 import { getStoredAnalyses, deleteAnalysis } from '../utils/storage';
 import { CopyAnalysisModal } from './CopyAnalysisModal';
 import { useAuth } from '../contexts/ApiAuthContext';
+import { LoadingSpinner, ContentLoader } from './ui/LoadingOverlay';
 
 interface AnalysisManagerProps {
   onLoadAnalysis: (analysis: ImpactAnalysis) => void;
@@ -22,15 +23,28 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'project'>('date');
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [selectedAnalysisForCopy, setSelectedAnalysisForCopy] = useState<ImpactAnalysis | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
+
+  const loadAnalyses = useCallback(async (forceRefresh = false) => {
+    if (forceRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+    try {
+      const stored = await getStoredAnalyses(forceRefresh);
+      setAnalyses(stored);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadAnalyses();
-  }, []);
-
-  const loadAnalyses = async () => {
-    const stored = await getStoredAnalyses();
-    setAnalyses(stored);
-  };
+  }, [loadAnalyses]);
 
   const handleDelete = async (id: string) => {
     if (!hasPermission('ANALYSIS', 'DELETE')) {
@@ -39,8 +53,24 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
     }
 
     if (window.confirm('Tem certeza que deseja excluir esta análise?')) {
-      await deleteAnalysis(id);
-      await loadAnalyses();
+      setLoadingItemId(id);
+      const removedItem = analyses.find(a => a.id === id);
+      const originalIndex = analyses.findIndex(a => a.id === id);
+      setAnalyses(prev => prev.filter(a => a.id !== id));
+      try {
+        await deleteAnalysis(id);
+      } catch {
+        if (removedItem) {
+          setAnalyses(prev => {
+            const newList = [...prev];
+            newList.splice(originalIndex, 0, removedItem);
+            return newList;
+          });
+          alert('Erro ao excluir análise. Tente novamente.');
+        }
+      } finally {
+        setLoadingItemId(null);
+      }
     }
   };
 
@@ -64,14 +94,19 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
     onClose();
   };
 
-  const handleEditAnalysis = (analysis: ImpactAnalysis) => {
+  const handleEditAnalysis = async (analysis: ImpactAnalysis) => {
     if (!hasPermission('ANALYSIS', 'EDIT') && !hasPermission('ANALYSIS', 'VIEW')) {
       alert('Você não tem permissão para acessar esta análise.');
       return;
     }
 
-    onLoadAnalysis(analysis);
-    onClose();
+    setLoadingItemId(analysis.id);
+    try {
+      onLoadAnalysis(analysis);
+      onClose();
+    } finally {
+      setLoadingItemId(null);
+    }
   };
 
   const filteredAnalyses = analyses
@@ -143,6 +178,14 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              <button
+                onClick={() => loadAnalyses(true)}
+                disabled={isRefreshing}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                title="Atualizar lista"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
@@ -156,7 +199,24 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
 
             {/* Analysis Grid */}
             <div className="overflow-auto max-h-[60vh]">
-              {filteredAnalyses.length === 0 ? (
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="border border-gray-200 rounded-lg p-4 bg-white animate-pulse">
+                      <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                      <div className="flex gap-2 mb-3">
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
+                        <div className="h-3 bg-gray-200 rounded w-20"></div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="h-8 bg-gray-200 rounded w-16"></div>
+                        <div className="h-8 bg-gray-200 rounded w-16"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredAnalyses.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -187,8 +247,13 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
                   {filteredAnalyses.map((analysis) => (
                     <div
                       key={analysis.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
+                      className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all bg-white relative ${loadingItemId === analysis.id ? 'opacity-50 pointer-events-none' : ''}`}
                     >
+                      {loadingItemId === analysis.id && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-white/50 rounded-lg">
+                          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                        </div>
+                      )}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-900 truncate">
