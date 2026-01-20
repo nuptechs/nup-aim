@@ -25,6 +25,7 @@ import { registerNuPAIMSections } from './hooks/useCustomFields';
 import { getSystemSettings, SystemSettings } from './utils/systemSettings';
 import { ImpactAnalysis } from './types';
 import { Save, FolderOpen, LayoutDashboard, FileText } from 'lucide-react';
+import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
 const CURRENT_ANALYSIS_KEY = 'nup_aim_current_analysis';
 const CUSTOM_FIELDS_KEY = 'nup_aim_custom_fields';
@@ -86,6 +87,7 @@ const AppContent: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [isNavigationLoading, setIsNavigationLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'preview'>('dashboard');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [showAnalysisManager, setShowAnalysisManager] = useState(false);
@@ -362,6 +364,7 @@ const AppContent: React.FC = () => {
       return;
     }
 
+    setIsNavigationLoading(true);
     try {
       const analysis = await getAnalysisById(analysisId);
       if (analysis) {
@@ -372,6 +375,8 @@ const AppContent: React.FC = () => {
     } catch (error) {
       console.error('Erro ao carregar análise:', error);
       toast.error('Erro ao carregar a análise.');
+    } finally {
+      setIsNavigationLoading(false);
     }
   };
 
@@ -407,6 +412,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 theme-transition">
+      <LoadingOverlay isVisible={isNavigationLoading} message="Carregando análise..." />
       <Header onExport={handleExport} isExporting={isExporting} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
