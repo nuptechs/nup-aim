@@ -20,13 +20,23 @@ export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
   customFieldsValues = {},
   onCustomFieldsChange 
 }) => {
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showDataManager, setShowDataManager] = useState(false);
 
   useEffect(() => {
     loadProjects();
   }, []);
+
+  useEffect(() => {
+    // Set default author from logged-in user's full name
+    if (!data.author && user) {
+      const authorName = user.fullName || user.username || '';
+      if (authorName) {
+        onChange({ author: authorName });
+      }
+    }
+  }, [user, data.author, onChange]);
 
   useEffect(() => {
     // Set default project if no project is selected
