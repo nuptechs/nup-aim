@@ -339,7 +339,7 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
           <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Funcionalidades Cadastradas ({data.scope.processes.length}):
           </h5>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="flex flex-wrap gap-2">
             {data.scope.processes.map((process, index) => {
               // Format display name: remove type prefix if present, limit to 30 chars
               const displayName = (() => {
