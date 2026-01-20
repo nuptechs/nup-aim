@@ -178,7 +178,8 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
   };
 
   const isProcessComplete = (process: ProcessItem) => {
-    if (!process.name.trim()) return false;
+    if (!process) return false;
+    if (!process.name?.trim()) return false;
     if (process.status === 'alterada' && process.websisCreated === undefined) return false;
     return true;
   };
