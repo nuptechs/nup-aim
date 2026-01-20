@@ -300,13 +300,23 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
     };
   };
 
-  const applyPresetPermissions = (preset: 'admin' | 'user' | 'viewer' | 'analyst') => {
+  const applyPresetPermissions = (preset: 'admin' | 'default' | 'user' | 'viewer' | 'analyst') => {
     const allPermissions = generateDefaultPermissions();
     let newPermissions: string[] = [];
 
     switch (preset) {
       case 'admin':
         newPermissions = [...allPermissions];
+        break;
+      case 'default':
+        // Use permissions from the profile marked as default
+        const defaultProfile = profiles.find(p => p.isDefault);
+        if (defaultProfile && Array.isArray(defaultProfile.permissions)) {
+          newPermissions = [...defaultProfile.permissions];
+        } else {
+          // Fallback: basic analysis permissions
+          newPermissions = ['ANALYSIS_CREATE', 'ANALYSIS_EDIT', 'ANALYSIS_VIEW', 'ANALYSIS_EXPORT'];
+        }
         break;
       case 'user':
         newPermissions = allPermissions.filter(p => 
@@ -462,13 +472,21 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
                   {/* Permission Presets */}
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h5 className="font-medium text-gray-900 mb-3">Modelos de Permissão</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                       <button
                         type="button"
                         onClick={() => applyPresetPermissions('admin')}
                         className="px-3 py-2 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors"
                       >
                         Administrador
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyPresetPermissions('default')}
+                        className="px-3 py-2 text-sm bg-purple-100 text-purple-800 rounded hover:bg-purple-200 transition-colors font-medium"
+                        title="Aplica as permissões do perfil marcado como padrão"
+                      >
+                        Padrão
                       </button>
                       <button
                         type="button"
