@@ -47,11 +47,22 @@ export const LoginForm: React.FC = () => {
 
   // Generate captcha after component mounts and canvas is ready
   useEffect(() => {
-    // Small delay to ensure canvas is rendered
-    const timer = setTimeout(() => {
-      generateCaptcha();
-    }, 100);
-    return () => clearTimeout(timer);
+    // Use requestAnimationFrame to ensure DOM is painted before generating captcha
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const tryGenerateCaptcha = () => {
+      const canvas = captchaCanvasRef.current;
+      if (canvas && canvas.getContext('2d')) {
+        generateCaptcha();
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        requestAnimationFrame(tryGenerateCaptcha);
+      }
+    };
+    
+    // Start after initial render
+    requestAnimationFrame(tryGenerateCaptcha);
   }, []);
 
   const checkAuthMode = async () => {
