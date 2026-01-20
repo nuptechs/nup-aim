@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Edit2, Check, X, Calculator, Info, AlertTriangle } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { Plus, Edit2, Check, X, Calculator, Info, AlertTriangle, Sparkles, Upload, FileText, Loader2 } from 'lucide-react';
 import { ImpactAnalysis, ProcessItem, WorkspaceInput } from '../types';
 import { ImagePasteField } from './ImagePasteField';
 import { useAuth } from '../contexts/ApiAuthContext';
@@ -35,6 +35,11 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState<{ summary?: string; totalPoints?: number } | null>(null);
   const [showRationaleProcess, setShowRationaleProcess] = useState<ProcessItem | null>(null);
+  const [hybridInput, setHybridInput] = useState('');
+  const [hybridImages, setHybridImages] = useState<WorkspaceInput[]>([]);
+  const [isExtractingSingle, setIsExtractingSingle] = useState(false);
+  const [showBatchImport, setShowBatchImport] = useState(false);
+  const hybridInputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAIAnalyze = async (inputs: WorkspaceInput[]) => {
     const token = localStorage.getItem('nup_aim_auth_token');
@@ -116,10 +121,94 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
       }
     });
 
-    setOriginalProcessData({ ...newProcess }); // Save original (empty) state
-    setIsEditingExistingProcess(false); // This is a NEW process
+    setHybridInput('');
+    setHybridImages([]);
+    setOriginalProcessData({ ...newProcess });
+    setIsEditingExistingProcess(false);
     setEditingProcess(newProcess.id);
     setShowForm(true);
+  };
+
+  const handleHybridPaste = useCallback((e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const newInput: WorkspaceInput = {
+              id: Date.now().toString(),
+              type: 'image',
+              content: event.target?.result as string,
+              mimeType: file.type,
+              fileName: `imagem_${Date.now()}.png`,
+              timestamp: new Date().toISOString()
+            };
+            setHybridImages(prev => [...prev, newInput]);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    }
+  }, []);
+
+  const handleHybridExtract = async (processIndex: number) => {
+    const token = localStorage.getItem('nup_aim_auth_token');
+    if (!token) return;
+    if (!hybridInput.trim() && hybridImages.length === 0) return;
+
+    setIsExtractingSingle(true);
+    try {
+      const inputs: WorkspaceInput[] = [...hybridImages];
+      if (hybridInput.trim()) {
+        inputs.push({
+          id: Date.now().toString(),
+          type: 'text',
+          content: hybridInput,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const response = await fetch('/api/ai/analyze-function-points', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ inputs })
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.functionalities && result.functionalities.length > 0) {
+        const firstFunc = result.functionalities[0];
+        updateProcess(processIndex, {
+          name: firstFunc.name || '',
+          status: firstFunc.status || 'nova',
+          workDetails: firstFunc.workDetails || '',
+          functionType: firstFunc.functionType,
+          complexity: firstFunc.complexity,
+          aiGenerated: true,
+          aiConfidence: firstFunc.confidence,
+          aiRationale: firstFunc.rationale
+        });
+        setHybridInput('');
+        setHybridImages([]);
+      }
+    } catch (error) {
+      console.error('Erro na extração:', error);
+    } finally {
+      setIsExtractingSingle(false);
+    }
+  };
+
+  const removeHybridImage = (id: string) => {
+    setHybridImages(prev => prev.filter(img => img.id !== id));
   };
 
   const updateProcess = (index: number, updates: Partial<ProcessItem>) => {
@@ -284,54 +373,84 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* AI Workspace Capture Section */}
-      <div className="space-y-3">
-        <WorkspaceCapture onAnalyze={handleAIAnalyze} isAnalyzing={isAnalyzing} />
-
-        {aiAnalysisResult && (
-          <div className={`p-4 rounded-lg border ${
-            aiAnalysisResult.totalPoints 
-              ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
-              : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-          }`}>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className={`text-sm ${aiAnalysisResult.totalPoints ? 'text-gray-700 dark:text-gray-300' : 'text-yellow-800 dark:text-yellow-300'}`}>
-                  {aiAnalysisResult.summary}
-                </p>
-                {aiAnalysisResult.totalPoints && (
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-2">
-                    Total estimado: {aiAnalysisResult.totalPoints} Pontos de Função
-                  </p>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setAiAnalysisResult(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-3"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Sticky Header with Add Button */}
       <div className="sticky top-0 bg-white dark:bg-gray-800 z-20 py-4 border-b border-gray-200 dark:border-gray-700 -mx-6 px-6">
         <div className="flex items-center justify-between">
           <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">Funcionalidades Impactadas</h4>
-          <button
-            type="button"
-            onClick={addProcess}
-            disabled={editingProcess !== null}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar Funcionalidade
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowBatchImport(!showBatchImport)}
+              disabled={editingProcess !== null}
+              className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                showBatchImport 
+                  ? 'bg-purple-100 text-purple-700 border border-purple-300' 
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Importar em Lote
+            </button>
+            <button
+              type="button"
+              onClick={addProcess}
+              disabled={editingProcess !== null}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Funcionalidade
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Batch Import Section - shown when button is clicked */}
+      {showBatchImport && (
+        <div className="space-y-3 border-2 border-purple-200 dark:border-purple-700 rounded-lg p-4 bg-purple-50 dark:bg-purple-900/20">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <span className="font-medium text-purple-900 dark:text-purple-100">Importar várias funcionalidades com IA</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowBatchImport(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <WorkspaceCapture onAnalyze={handleAIAnalyze} isAnalyzing={isAnalyzing} />
+
+          {aiAnalysisResult && (
+            <div className={`p-4 rounded-lg border ${
+              aiAnalysisResult.totalPoints 
+                ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
+                : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+            }`}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className={`text-sm ${aiAnalysisResult.totalPoints ? 'text-gray-700 dark:text-gray-300' : 'text-yellow-800 dark:text-yellow-300'}`}>
+                    {aiAnalysisResult.summary}
+                  </p>
+                  {aiAnalysisResult.totalPoints && (
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-2">
+                      Total estimado: {aiAnalysisResult.totalPoints} Pontos de Função
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAiAnalysisResult(null)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-3"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Functionality Tags */}
       {data.scope.processes.length > 0 && (
@@ -456,6 +575,66 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
 
             return (
               <div className="space-y-4 bg-white dark:bg-gray-700 rounded-lg p-4">
+                {/* Hybrid Input - AI extraction or manual typing */}
+                {!isEditingExistingProcess && !process.name && (
+                  <div className="border-2 border-dashed border-purple-300 dark:border-purple-600 rounded-lg p-4 bg-purple-50 dark:bg-purple-900/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                        Cole texto ou imagem para extração automática com IA
+                      </span>
+                    </div>
+                    <textarea
+                      ref={hybridInputRef}
+                      value={hybridInput}
+                      onChange={(e) => setHybridInput(e.target.value)}
+                      onPaste={handleHybridPaste}
+                      placeholder="Cole aqui a descrição da funcionalidade ou uma imagem (Ctrl+V)..."
+                      rows={3}
+                      className="w-full px-3 py-2 border border-purple-200 dark:border-purple-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                    />
+                    {hybridImages.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {hybridImages.map(img => (
+                          <div key={img.id} className="relative">
+                            <img src={img.content} alt="Preview" className="w-16 h-16 object-cover rounded border" />
+                            <button
+                              type="button"
+                              onClick={() => removeHybridImage(img.id)}
+                              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(hybridInput.trim() || hybridImages.length > 0) && (
+                      <button
+                        type="button"
+                        onClick={() => handleHybridExtract(processIndex)}
+                        disabled={isExtractingSingle}
+                        className="mt-2 inline-flex items-center px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 transition-colors disabled:opacity-50"
+                      >
+                        {isExtractingSingle ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            Extraindo...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-1" />
+                            Extrair com IA
+                          </>
+                        )}
+                      </button>
+                    )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      Ou preencha manualmente abaixo
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nome da Funcionalidade *
