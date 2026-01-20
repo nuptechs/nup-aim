@@ -2,6 +2,7 @@ export interface SystemSettings {
   showAdditionalSectionsToAll: boolean;
   showCustomFieldsToAll: boolean;
   enableFpaGuidelines: boolean;
+  enableAutoDiscovery: boolean;
 }
 
 const SYSTEM_SETTINGS_KEY = 'nup_aim_system_settings';
@@ -10,6 +11,7 @@ const defaultSettings: SystemSettings = {
   showAdditionalSectionsToAll: true,
   showCustomFieldsToAll: true,
   enableFpaGuidelines: true,
+  enableAutoDiscovery: true,
 };
 
 export const getSystemSettings = (): SystemSettings => {

@@ -502,6 +502,10 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
             if (!process) return null;
 
             const handleDiscoverFunctionalities = async () => {
+              // Check if auto discovery is enabled in system settings
+              const settings = getSystemSettings();
+              if (!settings.enableAutoDiscovery) return;
+              
               const currentProcess = data.scope.processes[processIndex];
               if (!currentProcess) return;
               
