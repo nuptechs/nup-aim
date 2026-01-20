@@ -579,6 +579,175 @@ export function registerRoutes(app: Express) {
     `);
   });
   
+  // Profiles routes (API for profile management)
+  app.get('/api/profiles', authenticateToken, async (req, res) => {
+    try {
+      const profilesResult = await db.select().from(profiles);
+      res.json(profilesResult);
+    } catch (error) {
+      console.error('Profiles fetch error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/profiles', authenticateToken, async (req: any, res) => {
+    try {
+      // Check user has PROFILES_MANAGE permission
+      const userProfileId = req.user?.profileId;
+      if (userProfileId) {
+        const [userProfile] = await db.select().from(profiles).where(eq(profiles.id, userProfileId));
+        const permissions = (userProfile?.permissions as string[]) || [];
+        if (!permissions.includes('PROFILES_MANAGE') && !permissions.includes('PROFILES_CREATE')) {
+          return res.status(403).json({ error: 'Permission denied: PROFILES_MANAGE required' });
+        }
+      }
+      
+      const { name, description, permissions: newPermissions, isDefault } = req.body;
+
+      if (!name) {
+        return res.status(400).json({ error: 'Name is required' });
+      }
+
+      // If setting as default, remove default from others
+      if (isDefault) {
+        await db.update(profiles).set({ isDefault: false });
+      }
+
+      const newProfile = await db.insert(profiles)
+        .values({
+          name,
+          description: description || '',
+          permissions: newPermissions || [],
+          isDefault: isDefault || false
+        })
+        .returning();
+
+      res.status(201).json(newProfile[0]);
+    } catch (error) {
+      console.error('Profile creation error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/profiles/:id', authenticateToken, async (req: any, res) => {
+    try {
+      // Check user has PROFILES_MANAGE permission
+      const userProfileId = req.user?.profileId;
+      if (userProfileId) {
+        const [userProfile] = await db.select().from(profiles).where(eq(profiles.id, userProfileId));
+        const permissions = (userProfile?.permissions as string[]) || [];
+        if (!permissions.includes('PROFILES_MANAGE') && !permissions.includes('PROFILES_EDIT')) {
+          return res.status(403).json({ error: 'Permission denied: PROFILES_MANAGE required' });
+        }
+      }
+      
+      const { id } = req.params;
+      const { name, description, permissions: newPermissions, isDefault } = req.body;
+
+      // If setting as default, remove default from others first
+      if (isDefault) {
+        await db.update(profiles).set({ isDefault: false });
+      }
+
+      const updated = await db.update(profiles)
+        .set({
+          name,
+          description,
+          permissions: newPermissions,
+          isDefault,
+          updatedAt: new Date()
+        })
+        .where(eq(profiles.id, id))
+        .returning();
+
+      if (updated.length === 0) {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+
+      res.json(updated[0]);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/profiles/:id', authenticateToken, async (req: any, res) => {
+    try {
+      // Check user has PROFILES_MANAGE permission
+      const userProfileId = req.user?.profileId;
+      if (userProfileId) {
+        const [userProfile] = await db.select().from(profiles).where(eq(profiles.id, userProfileId));
+        const permissions = (userProfile?.permissions as string[]) || [];
+        if (!permissions.includes('PROFILES_MANAGE') && !permissions.includes('PROFILES_DELETE')) {
+          return res.status(403).json({ error: 'Permission denied: PROFILES_MANAGE required' });
+        }
+      }
+      
+      const { id } = req.params;
+
+      // Check if profile is used by any user
+      const usedByUser = await db.select({ id: users.id })
+        .from(users)
+        .where(eq(users.profileId, id))
+        .limit(1);
+
+      if (usedByUser.length > 0) {
+        return res.status(400).json({ 
+          error: 'Cannot delete profile that is assigned to users' 
+        });
+      }
+
+      // Check how many profiles exist
+      const allProfiles = await db.select().from(profiles);
+      if (allProfiles.length <= 1) {
+        return res.status(400).json({ 
+          error: 'Cannot delete the last profile' 
+        });
+      }
+
+      await db.delete(profiles).where(eq(profiles.id, id));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Profile delete error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/profiles/:id/set-default', authenticateToken, async (req: any, res) => {
+    try {
+      // Check user has PROFILES_MANAGE permission
+      const userProfileId = req.user?.profileId;
+      if (userProfileId) {
+        const [userProfile] = await db.select().from(profiles).where(eq(profiles.id, userProfileId));
+        const permissions = (userProfile?.permissions as string[]) || [];
+        if (!permissions.includes('PROFILES_MANAGE')) {
+          return res.status(403).json({ error: 'Permission denied: PROFILES_MANAGE required' });
+        }
+      }
+      
+      const { id } = req.params;
+
+      // Remove default from all profiles
+      await db.update(profiles).set({ isDefault: false });
+
+      // Set this profile as default
+      const updated = await db.update(profiles)
+        .set({ isDefault: true, updatedAt: new Date() })
+        .where(eq(profiles.id, id))
+        .returning();
+
+      if (updated.length === 0) {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+
+      res.json(updated[0]);
+    } catch (error) {
+      console.error('Set default profile error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Projects routes
   app.get('/api/projects', authenticateToken, async (req, res) => {
     try {
