@@ -213,6 +213,26 @@ export function registerRoutes(app: Express) {
       await db.update(users)
         .set({ lastLogin: new Date() })
         .where(eq(users.id, user.id));
+
+      // Get user profile with permissions
+      let profileData: { id: string; name: string; description: string | null; permissions: unknown; isDefault: boolean | null } | null = null;
+      if (user.profileId) {
+        const profileResult = await db.select()
+          .from(profiles)
+          .where(eq(profiles.id, user.profileId))
+          .limit(1);
+        
+        if (profileResult.length > 0) {
+          const p = profileResult[0];
+          profileData = {
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            permissions: p.permissions,
+            isDefault: p.isDefault
+          };
+        }
+      }
   
       res.json({
         token,
@@ -221,7 +241,14 @@ export function registerRoutes(app: Express) {
           username: user.username,
           email: user.email,
           profileId: user.profileId
-        }
+        },
+        profile: profileData ? {
+          id: profileData.id,
+          name: profileData.name,
+          description: profileData.description,
+          permissions: profileData.permissions || [],
+          isDefault: profileData.isDefault
+        } : null
       });
     } catch (error) {
       console.error('Login error:', error);

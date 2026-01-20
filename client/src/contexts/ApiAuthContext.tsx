@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AuthContextType, User, Profile } from '../types/auth';
+import { AuthContextType, User, Profile, Permission } from '../types/auth';
 import { apiClient } from '../lib/apiClient';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,6 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     apiClient.logout(); // This removes the auth token
     localStorage.removeItem(LAST_ACTIVITY_KEY);
     localStorage.removeItem('nup_aim_current_user');
+    localStorage.removeItem('nup_aim_current_profile');
     setUser(null);
     setProfile(null);
   };
@@ -105,33 +106,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
 
-        // Try to get current user data (this would need a /me endpoint on backend)
+        // Try to get current user data from localStorage
         const currentUser = localStorage.getItem('nup_aim_current_user');
+        const savedProfile = localStorage.getItem('nup_aim_current_profile');
+        
         if (currentUser) {
           const userData = JSON.parse(currentUser);
           setUser(userData);
           
-          // Create a simple profile for now (in production, this would come from API)
-          const userProfile: Profile = {
-            id: 'admin-profile',
-            name: 'Administrador',
-            description: 'Perfil de administrador com acesso completo',
-            isDefault: false,
-            createdAt: new Date().toISOString(),
-            permissions: [
-              { id: '1', module: 'ANALYSIS', action: 'CREATE', allowed: true },
-              { id: '2', module: 'ANALYSIS', action: 'EDIT', allowed: true },
-              { id: '3', module: 'ANALYSIS', action: 'DELETE', allowed: true },
-              { id: '4', module: 'ANALYSIS', action: 'VIEW', allowed: true },
-              { id: '5', module: 'PROJECTS', action: 'CREATE', allowed: true },
-              { id: '6', module: 'PROJECTS', action: 'EDIT', allowed: true },
-              { id: '7', module: 'PROJECTS', action: 'DELETE', allowed: true },
-              { id: '8', module: 'PROJECTS', action: 'VIEW', allowed: true },
-              { id: '9', module: 'PROJECTS', action: 'MANAGE', allowed: true },
-              { id: '10', module: 'USERS', action: 'MANAGE', allowed: true },
-              { id: '11', module: 'PROFILES', action: 'MANAGE', allowed: true },
-            ]
-          };
+          // Use saved profile or fallback to default
+          let userProfile: Profile;
+          if (savedProfile) {
+            userProfile = JSON.parse(savedProfile);
+            console.log('🔄 Session restored with profile:', userProfile.name);
+          } else {
+            // Fallback to basic user profile
+            userProfile = {
+              id: 'default-user-profile',
+              name: 'Usuário Padrão',
+              description: 'Perfil de usuário com acesso básico',
+              isDefault: true,
+              createdAt: new Date().toISOString(),
+              permissions: [
+                { id: '1', module: 'ANALYSIS', action: 'VIEW', allowed: true },
+                { id: '2', module: 'ANALYSIS', action: 'CREATE', allowed: true },
+                { id: '3', module: 'ANALYSIS', action: 'EDIT', allowed: true },
+                { id: '4', module: 'PROJECTS', action: 'VIEW', allowed: true },
+              ]
+            };
+            console.log('⚠️ No saved profile, using default');
+          }
+          
           setProfile(userProfile);
           updateLastActivity();
           console.log('🔄 Session restored for:', userData.username);
@@ -161,31 +166,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = response.data.user;
         setUser(userData);
         
-        // Create admin profile (in production, this would come from API)
-        const userProfile: Profile = {
-          id: 'admin-profile',
-          name: 'Administrador',
-          description: 'Perfil de administrador com acesso completo',
-          isDefault: false,
-          createdAt: new Date().toISOString(),
-          permissions: [
-            { id: '1', module: 'ANALYSIS', action: 'CREATE', allowed: true },
-            { id: '2', module: 'ANALYSIS', action: 'EDIT', allowed: true },
-            { id: '3', module: 'ANALYSIS', action: 'DELETE', allowed: true },
-            { id: '4', module: 'ANALYSIS', action: 'VIEW', allowed: true },
-            { id: '5', module: 'PROJECTS', action: 'CREATE', allowed: true },
-            { id: '6', module: 'PROJECTS', action: 'EDIT', allowed: true },
-            { id: '7', module: 'PROJECTS', action: 'DELETE', allowed: true },
-            { id: '8', module: 'PROJECTS', action: 'VIEW', allowed: true },
-            { id: '9', module: 'PROJECTS', action: 'MANAGE', allowed: true },
-            { id: '10', module: 'USERS', action: 'MANAGE', allowed: true },
-            { id: '11', module: 'PROFILES', action: 'MANAGE', allowed: true },
-          ]
-        };
+        // Use profile from API response
+        const apiProfile = response.data.profile;
+        let userProfile: Profile;
+        
+        if (apiProfile) {
+          // Convert API permissions array to Permission objects
+          const permissionsList: Permission[] = [];
+          const apiPermissions = apiProfile.permissions || [];
+          
+          apiPermissions.forEach((perm: string, index: number) => {
+            // Parse permission string like "ANALYSIS_VIEW" or "PROJECTS_MANAGE"
+            const parts = perm.split('_');
+            if (parts.length >= 2) {
+              const module = parts[0];
+              const action = parts.slice(1).join('_');
+              permissionsList.push({
+                id: String(index + 1),
+                module: module,
+                action: action,
+                allowed: true
+              });
+            }
+          });
+          
+          userProfile = {
+            id: apiProfile.id,
+            name: apiProfile.name,
+            description: apiProfile.description || '',
+            isDefault: apiProfile.isDefault || false,
+            createdAt: new Date().toISOString(),
+            permissions: permissionsList
+          };
+          console.log('📋 Profile loaded from API:', apiProfile.name);
+        } else {
+          // Fallback to basic user profile if no profile returned
+          userProfile = {
+            id: 'default-user-profile',
+            name: 'Usuário Padrão',
+            description: 'Perfil de usuário com acesso básico',
+            isDefault: true,
+            createdAt: new Date().toISOString(),
+            permissions: [
+              { id: '1', module: 'ANALYSIS', action: 'VIEW', allowed: true },
+              { id: '2', module: 'ANALYSIS', action: 'CREATE', allowed: true },
+              { id: '3', module: 'ANALYSIS', action: 'EDIT', allowed: true },
+              { id: '4', module: 'PROJECTS', action: 'VIEW', allowed: true },
+            ]
+          };
+          console.log('⚠️ No profile from API, using default user profile');
+        }
+        
         setProfile(userProfile);
         
-        // Store user data for session persistence
+        // Store user data and profile for session persistence
         localStorage.setItem('nup_aim_current_user', JSON.stringify(userData));
+        localStorage.setItem('nup_aim_current_profile', JSON.stringify(userProfile));
         updateLastActivity();
         
         return { success: true };
