@@ -143,10 +143,10 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'nova': return 'bg-white dark:bg-gray-800 border-emerald-300 dark:border-emerald-700';
-      case 'alterada': return 'bg-white dark:bg-gray-800 border-amber-300 dark:border-amber-700';
-      case 'excluida': return 'bg-white dark:bg-gray-800 border-rose-300 dark:border-rose-700';
-      default: return 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';
+      case 'nova': return 'bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 dark:border-emerald-600';
+      case 'alterada': return 'bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-400 dark:border-amber-600';
+      case 'excluida': return 'bg-rose-50 dark:bg-rose-900/20 border-2 border-rose-400 dark:border-rose-600';
+      default: return 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -341,7 +341,7 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
           </h5>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {data.scope.processes.map((process, index) => {
-              // Format display name: remove type prefix if present
+              // Format display name: remove type prefix if present, limit to 30 chars
               const displayName = (() => {
                 let name = process.name;
                 if (process.functionType && name.startsWith(process.functionType + ' - ')) {
@@ -349,7 +349,7 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                 } else if (process.functionType && name.startsWith(process.functionType + ' ')) {
                   name = name.substring(process.functionType.length + 1);
                 }
-                return name;
+                return name.length > 30 ? name.substring(0, 30) + '...' : name;
               })();
               
               // Determine if item needs review
@@ -387,15 +387,11 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                     )}
                   </div>
                   
-                  {/* Row 2: Complexity | Status | Actions - evenly spaced */}
+                  {/* Row 2: Complexity | Actions - status indicated by card color */}
                   <div className="flex items-center mt-2 ml-11 text-xs text-gray-500 dark:text-gray-400">
                     {process.complexity && (
-                      <>
-                        <span>{process.complexity}</span>
-                        <span className="mx-2">•</span>
-                      </>
+                      <span>{process.complexity}</span>
                     )}
-                    <span>{getStatusLabel(process.status)}</span>
                     <span className="flex-1" />
                     <div className="flex items-center">
                       {process.aiGenerated && process.aiRationale && (
