@@ -7,6 +7,91 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { corsMiddleware } from './middleware/cors.middleware';
 import { authenticateToken } from './middleware/auth.middleware';
+import sgMail from '@sendgrid/mail';
+
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const VERIFIED_SENDER_EMAIL = process.env.VERIFIED_SENDER_EMAIL;
+
+if (SENDGRID_API_KEY) {
+  sgMail.setApiKey(SENDGRID_API_KEY);
+  console.log('✅ [Email] SendGrid configured');
+} else {
+  console.log('⚠️  [Email] SendGrid not configured - emails will be simulated');
+}
+
+async function sendVerificationEmail(email: string, verificationToken: string): Promise<boolean> {
+  const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+    : process.env.REPL_SLUG 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      : 'http://localhost:5000';
+  
+  const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+  
+  if (!SENDGRID_API_KEY || !VERIFIED_SENDER_EMAIL) {
+    console.log(`📧 [Email] Simulating email to ${email}`);
+    console.log(`   Verification URL: ${verificationUrl}`);
+    return true;
+  }
+  
+  try {
+    await sgMail.send({
+      to: email,
+      from: VERIFIED_SENDER_EMAIL,
+      subject: 'NuP_AIM - Verifique seu email',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2563eb; margin: 0;">NuP_AIM</h1>
+            <p style="color: #6b7280; margin: 5px 0;">Sistema de Análise de Impacto</p>
+          </div>
+          
+          <h2 style="color: #111827;">Bem-vindo ao NuP_AIM!</h2>
+          
+          <p style="color: #374151; line-height: 1.6;">
+            Sua conta foi criada com sucesso. Para ativar sua conta e começar a usar o sistema, 
+            clique no botão abaixo:
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" 
+               style="background-color: #2563eb; color: white; padding: 12px 30px; 
+                      text-decoration: none; border-radius: 6px; font-weight: bold;
+                      display: inline-block;">
+              Verificar Email
+            </a>
+          </div>
+          
+          <p style="color: #6b7280; font-size: 14px;">
+            Se o botão não funcionar, copie e cole este link no seu navegador:
+            <br>
+            <a href="${verificationUrl}" style="color: #2563eb; word-break: break-all;">
+              ${verificationUrl}
+            </a>
+          </p>
+          
+          <p style="color: #6b7280; font-size: 14px;">
+            Este link expira em 24 horas.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+          
+          <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+            NuPTechs - Sua fábrica de softwares inteligentes
+          </p>
+        </div>
+      `
+    });
+    console.log(`✅ [Email] Verification email sent to ${email}`);
+    return true;
+  } catch (error: any) {
+    console.error(`❌ [Email] Failed to send to ${email}:`, error.message);
+    if (error.response) {
+      console.error('   SendGrid response:', error.response.body);
+    }
+    return false;
+  }
+}
 
 const JWT_SECRET: string = process.env.JWT_SECRET || '';
 
@@ -219,8 +304,11 @@ export function registerRoutes(app: Express) {
         emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
       }).returning();
   
-      // Send verification email (placeholder - integrate with your email service)
-      console.log(`Verification email would be sent to ${email} with token: ${verificationToken}`);
+      // Send verification email
+      const emailSent = await sendVerificationEmail(email, verificationToken);
+      if (!emailSent) {
+        console.log(`⚠️  [Email] Could not send verification email to ${email}, but user was created`);
+      }
   
       res.status(201).json({
         success: true,
@@ -341,8 +429,12 @@ export function registerRoutes(app: Express) {
         })
         .where(eq(users.id, user.id));
   
-      // Send verification email (placeholder - integrate with your email service)
-      console.log(`Verification email resent to ${email} with token: ${verificationToken}`);
+      // Send verification email
+      const emailSent = await sendVerificationEmail(email, verificationToken);
+      
+      if (!emailSent) {
+        return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+      }
   
       res.json({
         success: true,
