@@ -1,0 +1,48 @@
+index-BxrEJ8r4.js:40 Error: useAuth must be used within an AuthProvider
+    at Bo (index-BxrEJ8r4.js:380:1809)
+    at Bv (index-BxrEJ8r4.js:380:2173)
+    at ud (index-BxrEJ8r4.js:38:17027)
+    at U0 (index-BxrEJ8r4.js:40:44058)
+    at M0 (index-BxrEJ8r4.js:40:39790)
+    at Gw (index-BxrEJ8r4.js:40:39718)
+    at ao (index-BxrEJ8r4.js:40:39570)
+    at hu (index-BxrEJ8r4.js:40:35934)
+    at D0 (index-BxrEJ8r4.js:40:34883)
+    at R (index-BxrEJ8r4.js:25:1562)
+
+index-BxrEJ8r4.js:951 React Error Boundary caught an error: Error: useAuth must be used within an AuthProvider
+    at Bo (index-BxrEJ8r4.js:380:1809)
+    at Bv (index-BxrEJ8r4.js:380:2173)
+    at ud (index-BxrEJ8r4.js:38:17027)
+    at U0 (index-BxrEJ8r4.js:40:44058)
+    at M0 (index-BxrEJ8r4.js:40:39790)
+    at Gw (index-BxrEJ8r4.js:40:39718)
+    at ao (index-BxrEJ8r4.js:40:39570)
+    at hu (index-BxrEJ8r4.js:40:35934)
+    at D0 (index-BxrEJ8r4.js:40:34883)
+    at R (index-BxrEJ8r4.js:25:1562)
+ 
+Object
+content.js:74209 Loading the script 'https://nupaim.replit.app/@excalidraw/excalidraw@0.17.6/dist/excalidraw-assets/vendor-677e88c….js' violates the following Content Security Policy directive: "script-src 'self' 'wasm-unsafe-eval' 'inline-speculation-rules' chrome-extension://c6117398-eb2e-4202-a0b2-8e1102e887a8/". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked.
+3
+content.js:74234 Uncaught (in promise) ChunkLoadError: Loading chunk 4736 failed.
+(error: https://nupaim.replit.app/@excalidraw/excalidraw@0.17.6/dist/excalidraw-assets/vendor-677e88c….js)
+    at e.exports.Z.f.j (content.js:74234:31)
+    at content.js:74025:36
+    at Array.reduce (<anonymous>)
+    at e.exports.Z.e (content.js:74024:38)
+    at 6548 (content.js:50358:29)
+    at Z (content.js:73963:29)
+    at 4419 (content.js:51343:27)
+    at Z (content.js:73963:29)
+    at 3668 (content.js:70175:27)
+    at Z (content.js:73963:29)
+ipapi.co/json/:1 
+ Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+﻿
+
+Press cmd i to turn on code suggestions. Press cmd x to disable code suggestions.
+cmd
+i
+ to turn on code suggestions. Don't show again
+
