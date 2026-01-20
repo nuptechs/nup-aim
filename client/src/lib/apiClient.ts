@@ -135,6 +135,7 @@ class ApiClient {
 
   async register(userData: {
     username: string;
+    fullName?: string;
     email: string;
     password: string;
     profileId: string;
