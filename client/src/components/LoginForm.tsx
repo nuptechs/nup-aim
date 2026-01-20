@@ -391,44 +391,50 @@ export const LoginForm: React.FC = () => {
 
         {isRegistering ? (
           // Registration Form
-          <div className="mt-8 space-y-6">
-            <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900">Criar Nova Conta</h3>
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Criar Nova Conta</h1>
+                <p className="mt-2 text-gray-600">Preencha os dados para se cadastrar</p>
+              </div>
+              <button
+                onClick={toggleRegistration}
+                className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-medium"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Voltar para Login
+              </button>
+            </div>
+              
+            {registerSuccess ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+                <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mx-auto mb-4">
+                  <Mail className="w-8 h-8 text-green-600" />
+                </div>
+                <h4 className="text-xl font-semibold text-gray-900 mb-2">Cadastro Realizado!</h4>
+                <p className="text-gray-600 mb-6">
+                  Enviamos um email de verificação para <strong className="text-gray-900">{registeredEmail}</strong>.
+                  Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.
+                </p>
                 <button
                   onClick={toggleRegistration}
-                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  <ArrowLeft className="w-4 h-4" />
                   Voltar para Login
                 </button>
               </div>
-              
-              {registerSuccess ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mx-auto mb-3">
-                    <Mail className="w-6 h-6 text-green-600" />
-                  </div>
-                  <h4 className="text-lg font-medium text-green-800 mb-2">Cadastro Realizado!</h4>
-                  <p className="text-sm text-green-700 mb-3">
-                    Enviamos um email de verificação para <strong>{registeredEmail}</strong>.
-                    Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.
-                  </p>
-                  <button
-                    onClick={toggleRegistration}
-                    className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    Voltar para Login
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleRegister} className="space-y-4">
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <form onSubmit={handleRegister} className="space-y-5">
+                  {/* Username Field */}
                   <div>
-                    <label htmlFor="register-username" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="register-username" className="block text-sm font-medium text-gray-700 mb-2">
                       Nome de Usuário *
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <User className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
@@ -438,21 +444,22 @@ export const LoginForm: React.FC = () => {
                         required
                         value={registerData.username}
                         onChange={(e) => setRegisterData({...registerData, username: e.target.value})}
-                        className={`block w-full pl-10 pr-3 py-2 border ${registerErrors.username ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+                        className={`block w-full pl-12 pr-4 py-3 border ${registerErrors.username ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 placeholder-gray-400`}
                         placeholder="Digite seu nome de usuário"
                       />
                     </div>
                     {registerErrors.username && (
-                      <p className="mt-1 text-sm text-red-600">{registerErrors.username}</p>
+                      <p className="mt-2 text-sm text-red-600">{registerErrors.username}</p>
                     )}
                   </div>
 
+                  {/* Email Field */}
                   <div>
-                    <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-2">
                       Email *
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Mail className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
@@ -462,72 +469,81 @@ export const LoginForm: React.FC = () => {
                         required
                         value={registerData.email}
                         onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
-                        className={`block w-full pl-10 pr-3 py-2 border ${registerErrors.email ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+                        className={`block w-full pl-12 pr-4 py-3 border ${registerErrors.email ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 placeholder-gray-400`}
                         placeholder="seu.email@exemplo.com"
                       />
                     </div>
                     {registerErrors.email && (
-                      <p className="mt-1 text-sm text-red-600">{registerErrors.email}</p>
+                      <p className="mt-2 text-sm text-red-600">{registerErrors.email}</p>
                     )}
                   </div>
 
+                  {/* Password Field */}
                   <div>
-                    <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-2">
                       Senha *
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Lock className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
                         id="register-password"
                         name="password"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         required
                         value={registerData.password}
                         onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
-                        className={`block w-full pl-10 pr-3 py-2 border ${registerErrors.password ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+                        className={`block w-full pl-12 pr-12 py-3 border ${registerErrors.password ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 placeholder-gray-400`}
                         placeholder="Mínimo 6 caracteres"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
                     </div>
                     {registerErrors.password && (
-                      <p className="mt-1 text-sm text-red-600">{registerErrors.password}</p>
+                      <p className="mt-2 text-sm text-red-600">{registerErrors.password}</p>
                     )}
                   </div>
 
+                  {/* Confirm Password Field */}
                   <div>
-                    <label htmlFor="register-confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="register-confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
                       Confirmar Senha *
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Lock className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
                         id="register-confirm-password"
                         name="confirmPassword"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         required
                         value={registerData.confirmPassword}
                         onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
-                        className={`block w-full pl-10 pr-3 py-2 border ${registerErrors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+                        className={`block w-full pl-12 pr-4 py-3 border ${registerErrors.confirmPassword ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 placeholder-gray-400`}
                         placeholder="Digite a senha novamente"
                       />
                     </div>
                     {registerErrors.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-600">{registerErrors.confirmPassword}</p>
+                      <p className="mt-2 text-sm text-red-600">{registerErrors.confirmPassword}</p>
                     )}
                   </div>
 
                   {registerErrors.form && (
-                    <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl">
                       <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
                       <p className="text-sm text-red-800">{registerErrors.form}</p>
                     </div>
                   )}
 
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
+                  <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+                    <p className="text-sm text-indigo-800">
                       <strong>Importante:</strong> Após o cadastro, você receberá um email de verificação. 
                       É necessário clicar no link de confirmação para ativar sua conta.
                     </p>
@@ -536,19 +552,31 @@ export const LoginForm: React.FC = () => {
                   <button
                     type="submit"
                     disabled={registerLoading}
-                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                   >
                     {registerLoading ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Cadastrando...
-                      </div>
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span>Cadastrando...</span>
+                      </>
                     ) : (
-                      'Cadastrar'
+                      <>
+                        <span>Cadastrar</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
                     )}
                   </button>
                 </form>
-              )}
+              </div>
+            )}
+
+            <div className="text-center text-xs text-gray-500">
+              <p>Ao continuar, você concorda com nossos</p>
+              <p>
+                <a href="#" className="text-indigo-600 hover:underline">Termos de Uso</a>
+                {' '}e{' '}
+                <a href="#" className="text-indigo-600 hover:underline">Política de Privacidade</a>
+              </p>
             </div>
           </div>
         ) : checkingAuthMode ? (
