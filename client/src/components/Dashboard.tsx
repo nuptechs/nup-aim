@@ -128,25 +128,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${hasPermission('PROJECTS', 'VIEW') ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
         <div className="animate-fade-in-up stagger-1">
           <StatCard
-            title="Total de Análises"
+            title="Minhas Análises"
             value={stats?.totalAnalyses || 0}
             icon={<FileText className="w-6 h-6" />}
             color="primary"
-            change={{ value: 12, type: 'increase' }}
           />
         </div>
-        <div className="animate-fade-in-up stagger-2">
-          <StatCard
-            title="Projetos Ativos"
-            value={stats?.totalProjects || 0}
-            icon={<FolderOpen className="w-6 h-6" />}
-            color="success"
-            change={{ value: 5, type: 'increase' }}
-          />
-        </div>
+        {hasPermission('PROJECTS', 'VIEW') && (
+          <div className="animate-fade-in-up stagger-2">
+            <StatCard
+              title="Projetos Ativos"
+              value={stats?.totalProjects || 0}
+              icon={<FolderOpen className="w-6 h-6" />}
+              color="success"
+            />
+          </div>
+        )}
         <div className="animate-fade-in-up stagger-3">
           <StatCard
             title="Impactos Identificados"
