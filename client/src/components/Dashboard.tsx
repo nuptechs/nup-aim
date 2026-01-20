@@ -22,9 +22,10 @@ interface DashboardStats {
 interface DashboardProps {
   onNavigate?: (view: string) => void;
   onNewAnalysis?: () => void;
+  onSelectAnalysis?: (analysisId: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis, onSelectAnalysis }) => {
   const { hasPermission } = useAuth();
   const token = apiClient.getToken();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -253,6 +254,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis 
                   {stats.recentAnalyses.slice(0, 5).map((analysis: any, index: number) => (
                     <div
                       key={analysis.id || index}
+                      onClick={() => analysis.id && onSelectAnalysis?.(analysis.id)}
                       className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3">

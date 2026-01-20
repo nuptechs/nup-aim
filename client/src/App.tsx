@@ -20,7 +20,7 @@ import { Dashboard } from './components/Dashboard';
 import { AIAssistant } from './components/AIAssistant';
 import { Onboarding } from './components/Onboarding';
 import { exportToWord } from './utils/documentExporter';
-import { saveAnalysis, generateNewId } from './utils/storage';
+import { saveAnalysis, generateNewId, getAnalysisById } from './utils/storage';
 import { registerNuPAIMSections } from './hooks/useCustomFields';
 import { getSystemSettings, SystemSettings } from './utils/systemSettings';
 import { ImpactAnalysis } from './types';
@@ -356,6 +356,25 @@ const AppContent: React.FC = () => {
     setShowAnalysisManager(false);
   };
 
+  const handleSelectAnalysis = async (analysisId: string) => {
+    if (!hasPermission('ANALYSIS', 'VIEW')) {
+      alert('Você não tem permissão para visualizar análises.');
+      return;
+    }
+
+    try {
+      const analysis = await getAnalysisById(analysisId);
+      if (analysis) {
+        handleLoadAnalysis(analysis);
+      } else {
+        toast.error('Análise não encontrada.');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar análise:', error);
+      toast.error('Erro ao carregar a análise.');
+    }
+  };
+
   const handleNewAnalysis = () => {
     if (!hasPermission('ANALYSIS', 'CREATE')) {
       alert('Você não tem permissão para criar análises.');
@@ -440,6 +459,7 @@ const AppContent: React.FC = () => {
                 setShowProjectsManager(true);
               }
             }}
+            onSelectAnalysis={handleSelectAnalysis}
           />
         ) : activeTab === 'form' ? (
           <div className="max-w-4xl mx-auto space-y-6">
