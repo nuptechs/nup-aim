@@ -222,25 +222,12 @@ export const AnalysisManager: React.FC<AnalysisManagerProps> = ({
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     {searchTerm ? 'Nenhuma análise encontrada' : 'Nenhuma análise salva'}
                   </h3>
-                  <p className="text-gray-500 mb-4">
+                  <p className="text-gray-500">
                     {searchTerm 
                       ? 'Tente ajustar os termos de busca'
-                      : 'Comece criando sua primeira análise de impacto'
+                      : 'Use o botão acima para criar sua primeira análise'
                     }
                   </p>
-                  {!searchTerm && (
-                    <div className="flex items-center justify-center gap-3">
-                      {canCreate && (
-                        <button
-                          onClick={handleNewAnalysis}
-                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Criar Nova Análise
-                        </button>
-                      )}
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
