@@ -178,31 +178,35 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
                         </button>
                       )}
 
-                      {/* Custom Fields Admin Panel */}
-                      <button
-                        onClick={() => {
-                          const sdk = getCustomFieldsSDK();
-                          window.open(sdk.getAdminUrl(), '_blank');
-                          setShowUserDropdown(false);
-                        }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        data-testid="button-custom-fields-admin"
-                      >
-                        <Sliders className="w-4 h-4" />
-                        Campos Personalizados
-                      </button>
+                      {/* Custom Fields Admin Panel - Admin only */}
+                      {hasPermission('PROFILES', 'MANAGE') && (
+                        <button
+                          onClick={() => {
+                            const sdk = getCustomFieldsSDK();
+                            window.open(sdk.getAdminUrl(), '_blank');
+                            setShowUserDropdown(false);
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          data-testid="button-custom-fields-admin"
+                        >
+                          <Sliders className="w-4 h-4" />
+                          Campos Personalizados
+                        </button>
+                      )}
 
-                      {/* System Settings */}
-                      <button
-                        onClick={() => {
-                          setShowSystemSettings(true);
-                          setShowUserDropdown(false);
-                        }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        <Settings className="w-4 h-4" />
-                        Configurações
-                      </button>
+                      {/* System Settings - Admin only */}
+                      {hasPermission('PROFILES', 'MANAGE') && (
+                        <button
+                          onClick={() => {
+                            setShowSystemSettings(true);
+                            setShowUserDropdown(false);
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <Settings className="w-4 h-4" />
+                          Configurações
+                        </button>
+                      )}
                       
                       <div className="border-t border-gray-200 my-1"></div>
                       
