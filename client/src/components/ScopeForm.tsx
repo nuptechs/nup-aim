@@ -428,18 +428,26 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                     )}
                     <button
                       type="button"
-                      onClick={() => handleEditProcess(process.id)}
-                      disabled={editingProcess !== null}
-                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors disabled:opacity-30"
+                      onClick={() => {
+                        if (editingProcess && editingProcess !== process.id) {
+                          handleCancelEdit();
+                        }
+                        handleEditProcess(process.id);
+                      }}
+                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
                       title="Editar"
                     >
                       <Edit2 className="w-3 h-3" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => removeProcess(index)}
-                      disabled={editingProcess !== null}
-                      className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors disabled:opacity-30"
+                      onClick={() => {
+                        if (editingProcess === process.id) {
+                          handleCancelEdit();
+                        }
+                        removeProcess(index);
+                      }}
+                      className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors"
                       title="Remover"
                     >
                       <X className="w-3 h-3" />
