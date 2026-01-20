@@ -1270,22 +1270,41 @@ export function registerRoutes(app: Express) {
   // DASHBOARD ANALYTICS ROUTES
   // ============================================
 
-  // Get dashboard statistics
+  // Get dashboard statistics (filtered by user)
   app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
     try {
-      const analysesCount = await db.select().from(analyses);
+      const userId = (req as any).user?.id;
+      
+      // Filter analyses by user
+      const userAnalyses = userId 
+        ? await db.select().from(analyses).where(eq(analyses.createdBy, userId))
+        : [];
+      
+      // Get user's analysis IDs for filtering related data
+      const userAnalysisIds = userAnalyses.map(a => a.id);
+      
+      // Get impacts and risks only for user's analyses
+      let userImpacts: any[] = [];
+      let userRisks: any[] = [];
+      
+      if (userAnalysisIds.length > 0) {
+        userImpacts = await db.select().from(impacts).where(
+          sql`${impacts.analysisId} = ANY(${userAnalysisIds})`
+        );
+        userRisks = await db.select().from(risks).where(
+          sql`${risks.analysisId} = ANY(${userAnalysisIds})`
+        );
+      }
+      
+      // Projects count is still global (for admins)
       const projectsCount = await db.select().from(projects);
-      const usersCount = await db.select().from(users);
-      const impactsCount = await db.select().from(impacts);
-      const risksCount = await db.select().from(risks);
       
       const stats = {
-        totalAnalyses: analysesCount.length,
+        totalAnalyses: userAnalyses.length,
         totalProjects: projectsCount.length,
-        totalUsers: usersCount.length,
-        totalImpacts: impactsCount.length,
-        totalRisks: risksCount.length,
-        recentAnalyses: analysesCount.slice(-5),
+        totalImpacts: userImpacts.length,
+        totalRisks: userRisks.length,
+        recentAnalyses: userAnalyses.slice(-5),
       };
       
       res.json({ success: true, stats });
