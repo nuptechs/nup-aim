@@ -241,7 +241,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
           <Card>
             <CardHeader
               action={
-                <button className="text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
+                <button 
+                  onClick={() => onNavigate?.('analyses')}
+                  className="text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
+                >
                   Ver todas <ArrowRight className="w-4 h-4" />
                 </button>
               }
