@@ -21,10 +21,11 @@ if (RESEND_API_KEY) {
 }
 
 async function sendVerificationEmail(email: string, verificationToken: string): Promise<boolean> {
-  const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-    : process.env.REPL_SLUG 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+  // Use REPLIT_DOMAINS for production/dev detection (works in both environments)
+  const baseUrl = process.env.REPLIT_DOMAINS 
+    ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
+    : process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
       : 'http://localhost:5000';
   
   const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
