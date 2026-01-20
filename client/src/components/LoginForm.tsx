@@ -32,6 +32,7 @@ export const LoginForm: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerData, setRegisterData] = useState({
     username: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -269,6 +270,7 @@ export const LoginForm: React.FC = () => {
       // Create user
       const result = await apiClient.register({
         username: registerData.username,
+        fullName: registerData.fullName.trim() || undefined,
         email: registerData.email,
         password: registerData.password,
         profileId: '', // Will use default profile from backend
@@ -283,6 +285,7 @@ export const LoginForm: React.FC = () => {
         // Reset form after successful registration
         setRegisterData({
           username: '',
+          fullName: '',
           email: '',
           password: '',
           confirmPassword: ''
@@ -464,6 +467,28 @@ export const LoginForm: React.FC = () => {
                     {registerErrors.username && (
                       <p className="mt-2 text-sm text-red-600">{registerErrors.username}</p>
                     )}
+                  </div>
+
+                  {/* Full Name Field */}
+                  <div>
+                    <label htmlFor="register-fullname" className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome Completo
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="register-fullname"
+                        name="fullName"
+                        type="text"
+                        value={registerData.fullName}
+                        onChange={(e) => setRegisterData({...registerData, fullName: e.target.value})}
+                        className="block w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900 placeholder-gray-400"
+                        placeholder="Ex: João da Silva"
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Será usado como autor padrão nas análises</p>
                   </div>
 
                   {/* Email Field */}
