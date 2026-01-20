@@ -642,8 +642,8 @@ const AppContent: React.FC = () => {
         />
       )}
 
-      {/* Projects Manager Modal */}
-      {showProjectsManager && hasPermission('PROJECTS', 'VIEW') && (
+      {/* Projects Manager Modal - Only for admins with PROJECTS_MANAGE permission */}
+      {showProjectsManager && hasPermission('PROJECTS', 'MANAGE') && (
         <BasicDataManager
           onClose={() => setShowProjectsManager(false)}
         />
