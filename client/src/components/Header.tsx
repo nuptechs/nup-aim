@@ -129,12 +129,6 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
                       <div className="font-medium text-gray-900">{user?.username}</div>
                       <div className="text-sm text-gray-500">{user?.email}</div>
                       <div className="text-xs text-blue-600 mt-1">{profile?.name}</div>
-                      {sessionTimeLeft && (
-                        <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
-                          <Clock className="w-3 h-3" />
-                          <span>Sessão expira em: {sessionTimeLeft}</span>
-                        </div>
-                      )}
                     </div>
                     
                     <div className="py-1">
