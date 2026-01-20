@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Plus, Edit2, Trash2, Check, X, Star, StarOff, Info } from 'lucide-react';
 import { Profile, Permission, SYSTEM_MODULES } from '../types/auth';
-import { 
-  getStoredProfiles, 
-  saveProfile as saveStoredProfile, 
-  deleteProfile as deleteStoredProfile, 
-  generateId 
-} from '../utils/authStorage';
+import { apiClient } from '../lib/apiClient';
 
 interface ProfileManagementProps {
   onClose: () => void;
@@ -24,39 +19,34 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<'basic' | 'permissions' | 'additional'>('basic');
-  const [useSupabase, setUseSupabase] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkSupabaseAndLoadData();
+    loadProfilesFromAPI();
   }, []);
 
-  const checkSupabaseAndLoadData = async () => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    
-    if (supabaseUrl && supabaseKey && supabaseUrl !== 'https://your-project.supabase.co') {
-      try {
-        console.log('🔗 Tentando usar Supabase para gerenciamento de perfis...');
-        const { getProfiles } = await import('../utils/supabaseAuth');
-        const data = await getProfiles();
+  const loadProfilesFromAPI = async () => {
+    try {
+      setIsLoading(true);
+      const token = apiClient.getToken();
+      const response = await fetch('/api/profiles', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📋 Perfis carregados da API:', data);
         setProfiles(data);
-        setUseSupabase(true);
-        console.log('✅ Usando Supabase para gerenciamento');
-      } catch (error) {
-        console.error('❌ Erro ao conectar com Supabase, usando localStorage:', error);
-        loadLocalData();
+      } else {
+        console.error('Erro ao carregar perfis:', await response.text());
       }
-    } else {
-      console.log('🔄 Usando localStorage para gerenciamento de perfis');
-      loadLocalData();
+    } catch (error) {
+      console.error('Erro ao carregar perfis:', error);
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const loadLocalData = () => {
-    const loadedProfiles = getStoredProfiles();
-    console.log('📋 Perfis carregados do localStorage:', loadedProfiles);
-    setProfiles(loadedProfiles);
-    setUseSupabase(false);
   };
 
   const generateDefaultPermissions = (): string[] => {
@@ -101,63 +91,51 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
     if (!validateForm()) return;
     
     try {
-      if (useSupabase) {
-        const { createProfile, updateProfile } = await import('../utils/supabaseAuth');
-        
-        if (editingProfile) {
-          const result = await updateProfile(editingProfile, {
+      const token = apiClient.getToken();
+      
+      if (editingProfile) {
+        const response = await fetch(`/api/profiles/${editingProfile}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             name: formData.name.trim(),
             description: formData.description.trim(),
             permissions: formData.permissions,
             isDefault: formData.isDefault
-          });
-
-          if (!result.success) {
-            alert(`Erro ao atualizar perfil: ${result.error}`);
-            return;
-          }
-        } else {
-          const result = await createProfile({
-            name: formData.name.trim(),
-            description: formData.description.trim(),
-            permissions: formData.permissions,
-            isDefault: formData.isDefault
-          });
-
-          if (!result.success) {
-            alert(`Erro ao criar perfil: ${result.error}`);
-            return;
-          }
-        }
-        
-        await checkSupabaseAndLoadData();
-      } else {
-        // Use localStorage
-        const permissions: Permission[] = formData.permissions.map(perm => {
-          const [module, action] = perm.split('_');
-          return {
-            id: perm,
-            module,
-            action,
-            allowed: true
-          };
+          }),
         });
-        
-        const profile: Profile = {
-          id: editingProfile || generateId(),
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-          permissions,
-          isDefault: formData.isDefault,
-          createdAt: editingProfile ? 
-            profiles.find(p => p.id === editingProfile)?.createdAt || new Date().toISOString() :
-            new Date().toISOString()
-        };
-        
-        saveStoredProfile(profile);
-        loadLocalData();
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`Erro ao atualizar perfil: ${error.error || 'Erro desconhecido'}`);
+          return;
+        }
+      } else {
+        const response = await fetch('/api/profiles', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            description: formData.description.trim(),
+            permissions: formData.permissions,
+            isDefault: formData.isDefault
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`Erro ao criar perfil: ${error.error || 'Erro desconhecido'}`);
+          return;
+        }
       }
       
+      await loadProfilesFromAPI();
       handleCancel();
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -168,23 +146,13 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
   const handleEdit = (profile: any) => {
     setEditingProfile(profile.id);
     
-    // Fix: Properly extract permissions based on data source
-    let permissionsList: string[] = [];
-    
-    if (useSupabase) {
-      // For Supabase, permissions are already string array
-      permissionsList = Array.isArray(profile.permissions) ? profile.permissions : [];
-    } else {
-      // For localStorage, permissions are objects with id, module, action, allowed
-      permissionsList = profile.permissions
-        .filter((p: Permission) => p.allowed)
-        .map((p: Permission) => p.id);
-    }
+    // Permissions are stored as string array in database
+    const permissionsList = Array.isArray(profile.permissions) ? profile.permissions : [];
     
     setFormData({
       name: profile.name,
-      description: profile.description,
-      isDefault: useSupabase ? profile.is_default : profile.isDefault,
+      description: profile.description || '',
+      isDefault: profile.isDefault,
       permissions: permissionsList
     });
     
@@ -204,21 +172,19 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
     
     if (window.confirm(`Tem certeza que deseja excluir o perfil "${profile.name}"?`)) {
       try {
-        if (useSupabase) {
-          const { deleteProfile } = await import('../utils/supabaseAuth');
-          const result = await deleteProfile(id);
-          if (result.success) {
-            await checkSupabaseAndLoadData();
-          } else {
-            alert(`Erro ao excluir perfil: ${result.error}`);
-          }
+        const token = apiClient.getToken();
+        const response = await fetch(`/api/profiles/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          await loadProfilesFromAPI();
         } else {
-          const success = deleteStoredProfile(id);
-          if (success) {
-            loadLocalData();
-          } else {
-            alert('Não foi possível excluir o perfil. Verifique se não há usuários utilizando este perfil.');
-          }
+          const error = await response.json();
+          alert(`Erro ao excluir perfil: ${error.error || 'Erro desconhecido'}`);
         }
       } catch (error) {
         console.error('Erro ao excluir perfil:', error);
@@ -231,18 +197,19 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
     const profile = profiles.find(p => p.id === id);
     if (profile) {
       try {
-        if (useSupabase) {
-          const { updateProfile } = await import('../utils/supabaseAuth');
-          const result = await updateProfile(id, { isDefault: true });
-          if (result.success) {
-            await checkSupabaseAndLoadData();
-          } else {
-            alert(`Erro ao definir perfil padrão: ${result.error}`);
-          }
+        const token = apiClient.getToken();
+        const response = await fetch(`/api/profiles/${id}/set-default`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          await loadProfilesFromAPI();
         } else {
-          const updatedProfile = { ...profile, isDefault: true };
-          saveStoredProfile(updatedProfile);
-          loadLocalData();
+          const error = await response.json();
+          alert(`Erro ao definir perfil padrão: ${error.error || 'Erro desconhecido'}`);
         }
       } catch (error) {
         console.error('Erro ao definir perfil padrão:', error);
@@ -311,18 +278,8 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
   const getPermissionsSummary = (profile: any) => {
     const allPermissions = generateDefaultPermissions();
     
-    // Fix: Properly extract permissions based on data source
-    let allowedPermissions: string[] = [];
-    
-    if (useSupabase) {
-      // For Supabase, permissions are already string array
-      allowedPermissions = Array.isArray(profile.permissions) ? profile.permissions : [];
-    } else {
-      // For localStorage, permissions are objects with id, module, action, allowed
-      allowedPermissions = profile.permissions
-        .filter((p: Permission) => p.allowed)
-        .map((p: Permission) => p.id);
-    }
+    // Permissions are stored as string array in database
+    const allowedPermissions: string[] = Array.isArray(profile.permissions) ? profile.permissions : [];
     
     const modulesSummary = Object.keys(SYSTEM_MODULES).map(moduleKey => {
       const modulePermissions = getModulePermissions(moduleKey);
@@ -377,8 +334,8 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
           <div className="flex items-center gap-3">
             <Shield className="w-6 h-6 text-blue-600" />
             <h2 className="text-xl font-semibold text-gray-900">Gerenciar Perfis de Acesso</h2>
-            <span className={`text-xs px-2 py-1 rounded ${useSupabase ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-              {useSupabase ? 'Supabase' : 'Local'}
+            <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
+              PostgreSQL
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -691,7 +648,7 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
                     <div
                       key={profile.id}
                       className={`border rounded-lg p-4 transition-colors ${
-                        (useSupabase ? profile.is_default : profile.isDefault)
+                        profile.isDefault
                           ? 'border-blue-200 bg-blue-50' 
                           : 'border-gray-200 bg-white hover:bg-gray-50'
                       }`}
@@ -702,7 +659,7 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
                             <h4 className="font-medium text-gray-900 truncate">
                               {profile.name}
                             </h4>
-                            {(useSupabase ? profile.is_default : profile.isDefault) && (
+                            {profile.isDefault && (
                               <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
                                 <Star className="w-3 h-3 mr-1" />
                                 Padrão
@@ -713,13 +670,13 @@ export const ProfileManagement: React.FC<ProfileManagementProps> = ({ onClose })
                             {profile.description}
                           </p>
                           <div className="text-xs text-gray-500 space-y-1">
-                            <p>Criado em {new Date(useSupabase ? profile.created_at : profile.createdAt).toLocaleDateString('pt-BR')}</p>
+                            <p>Criado em {new Date(profile.createdAt).toLocaleDateString('pt-BR')}</p>
                             <p>{summary.allowed} de {summary.total} permissões ativas ({summary.percentage}%)</p>
                           </div>
                         </div>
                         
                         <div className="flex items-center gap-2 ml-4">
-                          {!(useSupabase ? profile.is_default : profile.isDefault) && (
+                          {!profile.isDefault && (
                             <button
                               onClick={() => handleSetDefault(profile.id)}
                               className="p-1 text-yellow-600 hover:text-yellow-800 transition-colors"
