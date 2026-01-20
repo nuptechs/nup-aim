@@ -486,79 +486,54 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
             
             if (!process) return null;
 
-            const handleSmartPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>, fieldProcessIndex: number) => {
-              const text = e.clipboardData.getData('text');
-              const hasImages = Array.from(e.clipboardData.items).some(item => item.type.startsWith('image/'));
+            const handleDiscoverFunctionalities = async () => {
+              const currentProcess = data.scope.processes[processIndex];
+              if (!currentProcess) return;
               
-              // Check if pasted content is substantial (likely a description, not just a name)
-              const isSubstantialText = text.length > 60 || text.includes('\n');
+              const workDetails = currentProcess.workDetails || '';
+              const primaryName = currentProcess.name || '';
               
-              if (!isSubstantialText && !hasImages) {
-                // Short text without images - let it paste normally as the name
-                return;
-              }
+              // Skip if no substantial content
+              if (workDetails.trim().length < 30) return;
               
-              // Substantial content detected - trigger silent AI extraction
-              e.preventDefault();
-              
-              // Collect images if any
-              const pastedImages: { id: string; content: string; type: string }[] = [];
-              for (const item of Array.from(e.clipboardData.items)) {
-                if (item.type.startsWith('image/')) {
-                  const blob = item.getAsFile();
-                  if (blob) {
-                    const reader = new FileReader();
-                    const imageData = await new Promise<string>((resolve) => {
-                      reader.onloadend = () => resolve(reader.result as string);
-                      reader.readAsDataURL(blob);
-                    });
-                    pastedImages.push({
-                      id: crypto.randomUUID(),
-                      content: imageData,
-                      type: item.type
-                    });
-                  }
-                }
-              }
-              
-              // Show subtle loading state
               setIsExtractingSingle(true);
               
               try {
-                const token = localStorage.getItem('auth_token');
-                const inputs: any[] = [];
+                const token = localStorage.getItem('nup_aim_auth_token') || localStorage.getItem('auth_token');
+                const existingNames = data.scope.processes.map(p => p.name).filter(Boolean);
                 
-                if (text.trim()) {
-                  inputs.push({ type: 'text', content: text, id: crypto.randomUUID(), timestamp: new Date().toISOString() });
-                }
-                for (const img of pastedImages) {
-                  inputs.push({ type: 'image', content: img.content, id: img.id, timestamp: new Date().toISOString() });
-                }
-                
-                const response = await fetch('/api/ai/analyze-function-points', {
+                const response = await fetch('/api/ai/discover-functionalities', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                  body: JSON.stringify({ inputs })
+                  body: JSON.stringify({ primaryName, workDetails, existingNames })
                 });
                 
                 const result = await response.json();
                 
-                if (result.success && result.functionalities && result.functionalities.length > 0) {
-                  const func = result.functionalities[0];
-                  updateProcess(fieldProcessIndex, {
-                    name: func.name || '',
-                    functionType: func.type || 'EE',
-                    workDetails: text,
-                    complexity: func.complexity || 'Baixa'
+                if (result.success && result.additionalFunctionalities && result.additionalFunctionalities.length > 0) {
+                  // Create new process items for discovered functionalities
+                  const newProcesses: ProcessItem[] = result.additionalFunctionalities.map((f: any) => ({
+                    id: Date.now().toString() + Math.random(),
+                    name: f.name,
+                    status: f.status || 'nova',
+                    workDetails: '',
+                    screenshots: '',
+                    functionType: f.type || 'EE',
+                    complexity: 'Baixa',
+                    aiGenerated: true,
+                    aiRationale: f.rationale
+                  }));
+                  
+                  // Add new functionalities to the list (preserving current process data)
+                  const updatedProcesses = [...data.scope.processes];
+                  onChange({
+                    scope: {
+                      processes: [...updatedProcesses, ...newProcesses]
+                    }
                   });
-                } else {
-                  // AI couldn't extract - just keep the pasted text in workDetails
-                  updateProcess(fieldProcessIndex, { workDetails: text });
                 }
               } catch (error) {
-                console.error('Smart paste extraction failed:', error);
-                // Fallback: just paste the text normally
-                updateProcess(fieldProcessIndex, { workDetails: text });
+                console.error('Discover functionalities failed:', error);
               } finally {
                 setIsExtractingSingle(false);
               }
@@ -656,7 +631,7 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                           <textarea
                             value={process.workDetails || ''}
                             onChange={(e) => updateProcess(processIndex, { workDetails: e.target.value })}
-                            onPaste={(e) => handleSmartPaste(e, processIndex)}
+                            onBlur={() => handleDiscoverFunctionalities()}
                             placeholder="Descreva detalhadamente o trabalho realizado nesta funcionalidade..."
                             rows={4}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"

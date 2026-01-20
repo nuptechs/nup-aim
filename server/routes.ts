@@ -1470,6 +1470,118 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Discover additional functionalities from work details
+  app.post('/api/ai/discover-functionalities', authenticateToken, async (req, res) => {
+    try {
+      const { primaryName, workDetails, existingNames = [] } = req.body;
+      
+      if (!workDetails || typeof workDetails !== 'string') {
+        return res.json({ success: true, additionalFunctionalities: [] });
+      }
+
+      // Skip if workDetails is too short
+      if (workDetails.trim().length < 30) {
+        return res.json({ success: true, additionalFunctionalities: [] });
+      }
+
+      const { GoogleGenAI } = await import('@google/genai');
+      const apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        return res.json({ success: true, additionalFunctionalities: [] });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+
+      const prompt = `Você é um analista de sistemas especializado em análise de pontos de função IFPUG.
+
+TAREFA: Analise o detalhamento do trabalho abaixo e identifique se há OUTRAS funcionalidades sendo mencionadas além da funcionalidade principal.
+
+FUNCIONALIDADE PRINCIPAL DECLARADA: "${primaryName || 'Não informada'}"
+
+DETALHAMENTO DO TRABALHO:
+${workDetails}
+
+FUNCIONALIDADES JÁ CADASTRADAS (ignorar estas):
+${existingNames.length > 0 ? existingNames.join('\n') : 'Nenhuma'}
+
+INSTRUÇÕES:
+1. Leia o detalhamento cuidadosamente
+2. Identifique menções a OUTRAS funcionalidades além da principal (ex: "ao cadastrar ou ALTERAR usuário" sugere que há também uma funcionalidade de Alteração)
+3. Procure por padrões como: consultar, listar, alterar, incluir, excluir, gerar relatório, emitir, validar, etc.
+4. NÃO inclua a funcionalidade principal declarada
+5. NÃO inclua funcionalidades que já estão cadastradas
+6. Retorne APENAS funcionalidades CLARAMENTE mencionadas no texto
+
+Retorne um JSON no formato:
+{
+  "additionalFunctionalities": [
+    {
+      "name": "Nome da funcionalidade descoberta",
+      "type": "EE|SE|CE|ALI|AIE",
+      "status": "nova|alterada",
+      "rationale": "Breve justificativa de por que esta funcionalidade foi identificada"
+    }
+  ]
+}
+
+Se não houver funcionalidades adicionais, retorne: {"additionalFunctionalities": []}`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+
+      const responseText = response.text || '';
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          const additionalFunctionalities = parsed.additionalFunctionalities || [];
+          
+          // Normalize function to remove accents and simplify for comparison
+          const normalize = (str: string) => {
+            return str
+              .toLowerCase()
+              .trim()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '') // Remove accents
+              .replace(/[^a-z0-9\s]/g, '') // Remove special chars
+              .replace(/s\s*$/, '') // Remove trailing 's' (plural)
+              .trim();
+          };
+          
+          // Filter out any that match the primary name or existing names
+          const filtered = additionalFunctionalities.filter((f: any) => {
+            const nameNorm = normalize(f.name || '');
+            const primaryNorm = normalize(primaryName || '');
+            const existingNorm = existingNames.map((n: string) => normalize(n));
+            
+            // Skip if too similar to primary
+            if (nameNorm === primaryNorm) return false;
+            if (primaryNorm && (nameNorm.includes(primaryNorm) || primaryNorm.includes(nameNorm))) return false;
+            
+            // Skip if too similar to existing
+            if (existingNorm.some((e: string) => nameNorm === e || (e && (nameNorm.includes(e) || e.includes(nameNorm))))) return false;
+            
+            return true;
+          });
+          
+          return res.json({ success: true, additionalFunctionalities: filtered });
+        } catch (parseError) {
+          console.error('Failed to parse AI response:', parseError);
+          return res.json({ success: true, additionalFunctionalities: [] });
+        }
+      }
+
+      res.json({ success: true, additionalFunctionalities: [] });
+    } catch (error: any) {
+      console.error('Discover functionalities error:', error);
+      res.json({ success: true, additionalFunctionalities: [] });
+    }
+  });
+
   // ============================================
   // DASHBOARD ANALYTICS ROUTES
   // ============================================
