@@ -15,6 +15,7 @@ import { MitigationsForm } from './components/MitigationsForm';
 import { ConclusionsForm } from './components/ConclusionsForm';
 import { DocumentPreview } from './components/DocumentPreview';
 import { AnalysisManager } from './components/AnalysisManager';
+import { BasicDataManager } from './components/BasicDataManager';
 import { Dashboard } from './components/Dashboard';
 import { AIAssistant } from './components/AIAssistant';
 import { Onboarding } from './components/Onboarding';
@@ -88,6 +89,7 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'preview'>('dashboard');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [showAnalysisManager, setShowAnalysisManager] = useState(false);
+  const [showProjectsManager, setShowProjectsManager] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(getSystemSettings());
   const [currentView, setCurrentView] = useState<'login' | 'verify-email' | 'app'>('login');
@@ -434,6 +436,8 @@ const AppContent: React.FC = () => {
             onNavigate={(view) => {
               if (view === 'analyses') {
                 setShowAnalysisManager(true);
+              } else if (view === 'projects') {
+                setShowProjectsManager(true);
               }
             }}
           />
@@ -604,6 +608,13 @@ const AppContent: React.FC = () => {
           onLoadAnalysis={handleLoadAnalysis}
           onNewAnalysis={handleNewAnalysis}
           onClose={() => setShowAnalysisManager(false)}
+        />
+      )}
+
+      {/* Projects Manager Modal */}
+      {showProjectsManager && hasPermission('PROJECTS', 'VIEW') && (
+        <BasicDataManager
+          onClose={() => setShowProjectsManager(false)}
         />
       )}
 

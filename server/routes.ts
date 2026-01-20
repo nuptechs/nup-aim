@@ -55,6 +55,15 @@ export function registerRoutes(app: Express) {
   // AUTH ROUTES
   // ============================================
 
+  // Auth mode - indicates if SSO or local authentication is used
+  app.get('/api/auth/mode', (req, res) => {
+    res.json({ 
+      mode: 'local', 
+      ssoLoginUrl: null, 
+      ssoLogoutUrl: null 
+    });
+  });
+
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
     try {
