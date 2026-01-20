@@ -22,7 +22,8 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
   customFieldsValues = {},
   onCustomFieldsChange 
 }) => {
-  useAuth();
+  const { hasPermission } = useAuth();
+  const canUseAI = hasPermission('ANALYSIS', 'IMPORT_AI');
   const [editingProcess, setEditingProcess] = useState<string | null>(null);
   const [originalProcessData, setOriginalProcessData] = useState<ProcessItem | null>(null);
   const [isEditingExistingProcess, setIsEditingExistingProcess] = useState(false);
@@ -657,27 +658,29 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                               Prints das Telas Impactadas
                             </label>
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleAnalyzeFunctionPoints(process.id)}
-                                disabled={!process.screenshots}
-                                className="inline-flex items-center px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:opacity-50"
-                                title="Realizar análise de pontos de função"
-                              >
-                                <Calculator className="w-3 h-3 mr-1" />
-                                Análise de Pontos de Função
-                              </button>
-                              <label className="flex items-center text-xs">
-                                <input
-                                  type="checkbox"
-                                  checked={autoExtractEnabled}
-                                  onChange={(e) => setAutoExtractEnabled(e.target.checked)}
-                                  className="mr-1 text-blue-600 focus:ring-blue-500"
-                                />
-                                Extração automática
-                              </label>
-                            </div>
+                            {canUseAI && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleAnalyzeFunctionPoints(process.id)}
+                                  disabled={!process.screenshots}
+                                  className="inline-flex items-center px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:opacity-50"
+                                  title="Realizar análise de pontos de função"
+                                >
+                                  <Calculator className="w-3 h-3 mr-1" />
+                                  Análise de Pontos de Função
+                                </button>
+                                <label className="flex items-center text-xs">
+                                  <input
+                                    type="checkbox"
+                                    checked={autoExtractEnabled}
+                                    onChange={(e) => setAutoExtractEnabled(e.target.checked)}
+                                    className="mr-1 text-blue-600 focus:ring-blue-500"
+                                  />
+                                  Extração automática
+                                </label>
+                              </div>
+                            )}
                           </div>
                           <ImagePasteField
                             value={process.screenshots || ''}

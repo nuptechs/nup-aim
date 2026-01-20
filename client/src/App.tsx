@@ -657,8 +657,8 @@ const AppContent: React.FC = () => {
         />
       )}
 
-      {/* AI Assistant */}
-      {isAuthenticated && activeTab === 'form' && (
+      {/* AI Assistant - only for users with AI permission */}
+      {isAuthenticated && activeTab === 'form' && hasPermission('ANALYSIS', 'IMPORT_AI') && (
         <AIAssistant 
           analysisContext={{
             title: data.title,
