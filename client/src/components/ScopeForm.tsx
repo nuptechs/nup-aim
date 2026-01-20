@@ -430,7 +430,10 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                       type="button"
                       onClick={() => {
                         if (editingProcess && editingProcess !== process.id) {
-                          handleCancelEdit();
+                          setEditingProcess(null);
+                          setShowForm(false);
+                          setOriginalProcessData(null);
+                          setIsEditingExistingProcess(false);
                         }
                         handleEditProcess(process.id);
                       }}
@@ -443,7 +446,10 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
                       type="button"
                       onClick={() => {
                         if (editingProcess === process.id) {
-                          handleCancelEdit();
+                          setEditingProcess(null);
+                          setShowForm(false);
+                          setOriginalProcessData(null);
+                          setIsEditingExistingProcess(false);
                         }
                         removeProcess(index);
                       }}
