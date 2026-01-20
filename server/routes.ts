@@ -1118,7 +1118,9 @@ export function registerRoutes(app: Express) {
               "ANALYSIS_CREATE", "ANALYSIS_EDIT", "ANALYSIS_DELETE", "ANALYSIS_VIEW", "ANALYSIS_EXPORT", "ANALYSIS_IMPORT_AI", "ANALYSIS_COPY",
               "PROJECTS_CREATE", "PROJECTS_EDIT", "PROJECTS_DELETE", "PROJECTS_VIEW", "PROJECTS_MANAGE",
               "USERS_CREATE", "USERS_EDIT", "USERS_DELETE", "USERS_VIEW", "USERS_MANAGE",
-              "PROFILES_CREATE", "PROFILES_EDIT", "PROFILES_DELETE", "PROFILES_VIEW", "PROFILES_MANAGE"
+              "PROFILES_CREATE", "PROFILES_EDIT", "PROFILES_DELETE", "PROFILES_VIEW", "PROFILES_MANAGE",
+              "FPA_GUIDELINES_CREATE", "FPA_GUIDELINES_EDIT", "FPA_GUIDELINES_DELETE", "FPA_GUIDELINES_VIEW", "FPA_GUIDELINES_MANAGE",
+              "DATA_MANAGE", "DATA_BACKUP", "DATA_STATUS"
             ],
             isDefault: false
           },
@@ -1127,8 +1129,7 @@ export function registerRoutes(app: Express) {
             name: 'Usuário Padrão',
             description: 'Acesso básico para criar e visualizar análises',
             permissions: [
-              "ANALYSIS_CREATE", "ANALYSIS_EDIT", "ANALYSIS_VIEW", "ANALYSIS_EXPORT",
-              "PROJECTS_VIEW"
+              "ANALYSIS_CREATE", "ANALYSIS_EDIT", "ANALYSIS_VIEW", "ANALYSIS_EXPORT"
             ],
             isDefault: true
           }
