@@ -207,33 +207,35 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
           </Card>
         </div>
 
-        <div className="animate-fade-in-up stagger-6">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Progresso do Mês</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center py-4">
-              <CircularProgress
-                value={68}
-                size={120}
-                strokeWidth={10}
-                variant="primary"
-                label="Concluído"
-              />
-              <div className="mt-6 w-full space-y-3">
-                {activityData.map((item, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{item.value}%</span>
+        {hasPermission('DASHBOARD', 'VIEW_PROGRESS') && (
+          <div className="animate-fade-in-up stagger-6">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle>Progresso do Mês</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center py-4">
+                <CircularProgress
+                  value={68}
+                  size={120}
+                  strokeWidth={10}
+                  variant="primary"
+                  label="Concluído"
+                />
+                <div className="mt-6 w-full space-y-3">
+                  {activityData.map((item, index) => (
+                    <div key={index}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{item.value}%</span>
+                      </div>
+                      <Progress value={item.value} size="sm" variant="gradient" />
                     </div>
-                    <Progress value={item.value} size="sm" variant="gradient" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -301,54 +303,56 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
           </Card>
         </div>
 
-        <div className="animate-fade-in-up stagger-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Estatísticas do Sistema</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                      <Users className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+        {hasPermission('DASHBOARD', 'VIEW_STATS') && (
+          <div className="animate-fade-in-up stagger-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Estatísticas do Sistema</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        <Users className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">Usuários Ativos</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Total cadastrados</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">Usuários Ativos</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Total cadastrados</p>
-                    </div>
-                  </div>
-                  <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                    {stats?.totalUsers || 0}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-success-50 dark:bg-success-900/20 rounded-xl text-center">
-                    <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-success-600 dark:text-success-400">95%</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Taxa de Sucesso</p>
-                  </div>
-                  <div className="p-4 bg-warning-50 dark:bg-warning-900/20 rounded-xl text-center">
-                    <Activity className="w-6 h-6 text-warning-600 dark:text-warning-400 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-warning-600 dark:text-warning-400">24</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Ações Pendentes</p>
-                  </div>
-                </div>
-
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Capacidade do Sistema
+                    <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                      {stats?.totalUsers || 0}
                     </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">45%</span>
                   </div>
-                  <Progress value={45} variant="gradient" animated />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-success-50 dark:bg-success-900/20 rounded-xl text-center">
+                      <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400 mx-auto mb-2" />
+                      <p className="text-2xl font-bold text-success-600 dark:text-success-400">95%</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Taxa de Sucesso</p>
+                    </div>
+                    <div className="p-4 bg-warning-50 dark:bg-warning-900/20 rounded-xl text-center">
+                      <Activity className="w-6 h-6 text-warning-600 dark:text-warning-400 mx-auto mb-2" />
+                      <p className="text-2xl font-bold text-warning-600 dark:text-warning-400">24</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Ações Pendentes</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Capacidade do Sistema
+                      </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">45%</span>
+                    </div>
+                    <Progress value={45} variant="gradient" animated />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

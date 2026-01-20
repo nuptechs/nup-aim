@@ -53,6 +53,13 @@ export const SYSTEM_MODULES = {
       IMPORT_AI: 'Importar com IA'
     }
   },
+  DASHBOARD: {
+    name: 'Painel Principal',
+    actions: {
+      VIEW_PROGRESS: 'Ver Progresso do Mês',
+      VIEW_STATS: 'Ver Estatísticas do Sistema'
+    }
+  },
   PROJECTS: {
     name: 'Projetos',
     actions: {
