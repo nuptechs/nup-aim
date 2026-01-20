@@ -38,6 +38,7 @@ export const LoginForm: React.FC = () => {
   const [registerErrors, setRegisterErrors] = useState<Record<string, string>>({});
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   useEffect(() => {
     checkAuthMode();
@@ -254,6 +255,7 @@ export const LoginForm: React.FC = () => {
       if (!result.success) {
         setRegisterErrors({ form: result.error || 'Erro ao criar usuário' });
       } else {
+        setRegisteredEmail(registerData.email);
         setRegisterSuccess(true);
         
         // Reset form after successful registration
@@ -334,7 +336,7 @@ export const LoginForm: React.FC = () => {
                   </div>
                   <h4 className="text-lg font-medium text-green-800 mb-2">Cadastro Realizado!</h4>
                   <p className="text-sm text-green-700 mb-3">
-                    Enviamos um email de verificação para <strong>{registerData.email}</strong>.
+                    Enviamos um email de verificação para <strong>{registeredEmail}</strong>.
                     Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.
                   </p>
                   <button
