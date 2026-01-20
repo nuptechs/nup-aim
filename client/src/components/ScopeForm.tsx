@@ -362,67 +362,56 @@ export const ScopeForm: React.FC<ScopeFormProps> = ({
               return (
                 <div
                   key={process.id}
-                  className={`flex flex-col px-4 py-3 rounded-lg border ${getStatusColor(process.status)} transition-all hover:shadow-sm`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md ${getStatusColor(process.status)} transition-all hover:shadow-sm`}
                 >
-                  {/* Row 1: Type badge + Name (single line, no wrap) */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    {process.functionType && (
-                      <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-slate-700 dark:bg-slate-600 text-white text-xs font-semibold rounded">
-                        {process.functionType}
-                      </span>
-                    )}
-                    <span 
-                      className="flex-1 font-medium text-sm text-gray-900 dark:text-gray-100 truncate" 
-                      title={process.name}
-                    >
-                      {displayName}
+                  {process.functionType && (
+                    <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-slate-700 dark:bg-slate-600 text-white text-[10px] font-semibold rounded">
+                      {process.functionType}
                     </span>
-                    {needsReview && (
-                      <span 
-                        title="Requer revisão"
-                        className="flex-shrink-0 text-amber-500 dark:text-amber-400"
-                      >
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                      </span>
-                    )}
-                  </div>
-                  
-                  {/* Row 2: Complexity | Actions - status indicated by card color */}
-                  <div className="flex items-center mt-2 ml-11 text-xs text-gray-500 dark:text-gray-400">
-                    {process.complexity && (
-                      <span>{process.complexity}</span>
-                    )}
-                    <span className="flex-1" />
-                    <div className="flex items-center">
-                      {process.aiGenerated && process.aiRationale && (
-                        <button
-                          type="button"
-                          onClick={() => setShowRationaleProcess(process)}
-                          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
-                          title="Ver justificativa da IA"
-                        >
-                          <Info className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                  )}
+                  <span 
+                    className="flex-1 font-medium text-sm text-gray-900 dark:text-gray-100 truncate" 
+                    title={process.name}
+                  >
+                    {displayName}
+                  </span>
+                  {needsReview && (
+                    <span title="Requer revisão" className="flex-shrink-0 text-amber-500 dark:text-amber-400">
+                      <AlertTriangle className="w-3 h-3" />
+                    </span>
+                  )}
+                  {process.complexity && (
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400">{process.complexity}</span>
+                  )}
+                  <div className="flex items-center flex-shrink-0">
+                    {process.aiGenerated && process.aiRationale && (
                       <button
                         type="button"
-                        onClick={() => handleEditProcess(process.id)}
-                        disabled={editingProcess !== null}
-                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors disabled:opacity-30"
-                        title="Editar"
+                        onClick={() => setShowRationaleProcess(process)}
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
+                        title="Ver justificativa da IA"
                       >
-                        <Edit2 className="w-3.5 h-3.5" />
+                        <Info className="w-3 h-3" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeProcess(index)}
-                        disabled={editingProcess !== null}
-                        className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors disabled:opacity-30"
-                        title="Remover"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleEditProcess(process.id)}
+                      disabled={editingProcess !== null}
+                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors disabled:opacity-30"
+                      title="Editar"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeProcess(index)}
+                      disabled={editingProcess !== null}
+                      className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors disabled:opacity-30"
+                      title="Remover"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
               );
