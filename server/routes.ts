@@ -688,6 +688,9 @@ export function registerRoutes(app: Express) {
   // Get all analyses for current user (with summary info) - MUST be before /:id route
   app.get('/api/analyses/list/all', authenticateToken, async (req: any, res) => {
     try {
+      const userId = req.user?.id;
+      
+      // Filter analyses by the logged-in user
       const analysesResult = await db.select({
         id: analyses.id,
         title: analyses.title,
@@ -697,7 +700,7 @@ export function registerRoutes(app: Express) {
         projectId: analyses.projectId,
         createdAt: analyses.createdAt,
         updatedAt: analyses.updatedAt
-      }).from(analyses);
+      }).from(analyses).where(eq(analyses.createdBy, userId));
       
       // Get processes for each analysis to include in the response
       const analysisIds = analysesResult.map(a => a.id);
