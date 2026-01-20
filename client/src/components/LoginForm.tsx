@@ -45,25 +45,27 @@ export const LoginForm: React.FC = () => {
     checkAuthMode();
   }, []);
 
-  // Generate captcha after component mounts and canvas is ready
+  // Generate captcha after auth mode check is complete (when the form is visible)
   useEffect(() => {
-    // Use requestAnimationFrame to ensure DOM is painted before generating captcha
-    let attempts = 0;
-    const maxAttempts = 10;
+    if (checkingAuthMode) return;
     
-    const tryGenerateCaptcha = () => {
+    // Use interval to retry until canvas is ready
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    const interval = setInterval(() => {
       const canvas = captchaCanvasRef.current;
       if (canvas && canvas.getContext('2d')) {
         generateCaptcha();
-      } else if (attempts < maxAttempts) {
-        attempts++;
-        requestAnimationFrame(tryGenerateCaptcha);
+        clearInterval(interval);
+      } else if (attempts >= maxAttempts) {
+        clearInterval(interval);
       }
-    };
+      attempts++;
+    }, 100);
     
-    // Start after initial render
-    requestAnimationFrame(tryGenerateCaptcha);
-  }, []);
+    return () => clearInterval(interval);
+  }, [checkingAuthMode]);
 
   const checkAuthMode = async () => {
     try {
