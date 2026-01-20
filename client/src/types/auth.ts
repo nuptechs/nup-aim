@@ -49,7 +49,8 @@ export const SYSTEM_MODULES = {
       DELETE: 'Excluir',
       VIEW: 'Visualizar',
       EXPORT: 'Exportar',
-      COPY: 'Copiar'
+      COPY: 'Copiar',
+      IMPORT_AI: 'Importar com IA'
     }
   },
   PROJECTS: {
@@ -74,6 +75,16 @@ export const SYSTEM_MODULES = {
   },
   PROFILES: {
     name: 'Perfis',
+    actions: {
+      CREATE: 'Criar',
+      EDIT: 'Editar',
+      DELETE: 'Excluir',
+      VIEW: 'Visualizar',
+      MANAGE: 'Gerenciar'
+    }
+  },
+  FPA_GUIDELINES: {
+    name: 'Diretrizes de APF',
     actions: {
       CREATE: 'Criar',
       EDIT: 'Editar',
