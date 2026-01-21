@@ -983,7 +983,7 @@ export function registerRoutes(app: Express) {
           title: analyses.title,
           description: analyses.description,
           author: analyses.author,
-          status: analyses.status,
+          version: analyses.version,
           projectId: analyses.projectId,
           createdAt: analyses.createdAt,
           updatedAt: analyses.updatedAt,
