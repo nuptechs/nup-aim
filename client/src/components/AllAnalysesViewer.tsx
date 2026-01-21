@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Search, RefreshCw, FileText, Filter, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Search, RefreshCw, FileText, Filter, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { apiClient } from '../lib/apiClient';
 
 interface Analysis {
@@ -22,12 +22,17 @@ interface AllAnalysesViewerProps {
   onOpenAnalysis?: (analysisId: string) => void;
 }
 
+type SortField = 'title' | 'version' | 'author' | 'createdAt' | 'user';
+type SortDirection = 'asc' | 'desc' | null;
+
 export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, onOpenAnalysis }) => {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const loadAnalyses = async () => {
     try {
@@ -59,7 +64,7 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
     loadAnalyses();
   }, []);
 
-  const uniqueUsers = React.useMemo(() => {
+  const uniqueUsers = useMemo(() => {
     const users = new Map<string, { name: string; email: string | null }>();
     analyses.forEach(a => {
       const userId = a.createdByUserId || 'unknown';
@@ -73,19 +78,81 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
     return Array.from(users.entries()).map(([id, data]) => ({ id, ...data }));
   }, [analyses]);
 
-  const filteredAnalyses = analyses.filter(analysis => {
-    const search = searchTerm.toLowerCase();
-    const matchesSearch = 
-      analysis.title.toLowerCase().includes(search) ||
-      analysis.author.toLowerCase().includes(search) ||
-      analysis.createdByUsername?.toLowerCase().includes(search) ||
-      analysis.createdByFullName?.toLowerCase().includes(search) ||
-      analysis.createdByEmail?.toLowerCase().includes(search);
-    
-    const matchesUser = selectedUser === 'all' || analysis.createdByUserId === selectedUser;
-    
-    return matchesSearch && matchesUser;
-  });
+  const filteredAndSortedAnalyses = useMemo(() => {
+    let result = analyses.filter(analysis => {
+      const search = searchTerm.toLowerCase();
+      const matchesSearch = 
+        analysis.title.toLowerCase().includes(search) ||
+        analysis.author.toLowerCase().includes(search) ||
+        analysis.createdByUsername?.toLowerCase().includes(search) ||
+        analysis.createdByFullName?.toLowerCase().includes(search) ||
+        analysis.createdByEmail?.toLowerCase().includes(search);
+      
+      const matchesUser = selectedUser === 'all' || analysis.createdByUserId === selectedUser;
+      
+      return matchesSearch && matchesUser;
+    });
+
+    if (sortField && sortDirection) {
+      result = [...result].sort((a, b) => {
+        let valueA: string | number = '';
+        let valueB: string | number = '';
+
+        switch (sortField) {
+          case 'title':
+            valueA = a.title.toLowerCase();
+            valueB = b.title.toLowerCase();
+            break;
+          case 'version':
+            valueA = a.version || '';
+            valueB = b.version || '';
+            break;
+          case 'author':
+            valueA = a.author.toLowerCase();
+            valueB = b.author.toLowerCase();
+            break;
+          case 'createdAt':
+            valueA = new Date(a.createdAt).getTime();
+            valueB = new Date(b.createdAt).getTime();
+            break;
+          case 'user':
+            valueA = (a.createdByFullName || a.createdByUsername || '').toLowerCase();
+            valueB = (b.createdByFullName || b.createdByUsername || '').toLowerCase();
+            break;
+        }
+
+        if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+        if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [analyses, searchTerm, selectedUser, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortField('createdAt');
+        setSortDirection('desc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field || !sortDirection) {
+      return <ChevronsUpDown className="w-3 h-3 text-gray-300" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ChevronUp className="w-3 h-3 text-blue-500" />
+      : <ChevronDown className="w-3 h-3 text-blue-500" />;
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('pt-BR', {
@@ -103,6 +170,17 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
       onClose();
     }
   };
+
+  const HeaderCell: React.FC<{ field: SortField; children: React.ReactNode; className?: string }> = ({ field, children, className = '' }) => (
+    <button
+      type="button"
+      onClick={() => handleSort(field)}
+      className={`flex items-center justify-center gap-1 hover:text-gray-700 transition-colors cursor-pointer select-none ${className}`}
+    >
+      <span>{children}</span>
+      {getSortIcon(field)}
+    </button>
+  );
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -163,12 +241,12 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
           </div>
         </div>
 
-        <div className="hidden md:grid grid-cols-[1fr_60px_140px_150px_160px_24px] gap-4 px-6 py-2 bg-gray-50/50 border-b border-gray-100 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
-          <div>Título</div>
-          <div className="text-center">Versão</div>
-          <div>Autor</div>
-          <div className="text-right">Data</div>
-          <div className="text-right">Usuário</div>
+        <div className="hidden md:grid grid-cols-[1fr_70px_140px_150px_160px_24px] gap-4 px-6 py-2.5 bg-gray-50/50 border-b border-gray-100 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+          <HeaderCell field="title">Título</HeaderCell>
+          <HeaderCell field="version">Versão</HeaderCell>
+          <HeaderCell field="author">Autor</HeaderCell>
+          <HeaderCell field="createdAt">Data</HeaderCell>
+          <HeaderCell field="user">Usuário</HeaderCell>
           <div></div>
         </div>
 
@@ -191,7 +269,7 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
                 Tentar novamente
               </button>
             </div>
-          ) : filteredAnalyses.length === 0 ? (
+          ) : filteredAndSortedAnalyses.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 gap-3">
               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                 <FileText className="w-6 h-6 text-gray-400" />
@@ -202,17 +280,17 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
             </div>
           ) : (
             <div>
-              {filteredAnalyses.map((analysis, index) => (
+              {filteredAndSortedAnalyses.map((analysis, index) => (
                 <button
                   key={analysis.id}
                   type="button"
                   onClick={() => handleRowClick(analysis.id)}
                   disabled={!onOpenAnalysis}
-                  className={`w-full text-left grid grid-cols-1 md:grid-cols-[1fr_60px_140px_150px_160px_24px] gap-2 md:gap-4 px-6 py-3.5 items-center transition-all duration-150 group ${
+                  className={`w-full text-left grid grid-cols-1 md:grid-cols-[1fr_70px_140px_150px_160px_24px] gap-2 md:gap-4 px-6 py-3.5 items-center transition-all duration-150 group ${
                     onOpenAnalysis 
                       ? 'hover:bg-blue-50/50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset' 
                       : 'cursor-default'
-                  } ${index !== filteredAnalyses.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  } ${index !== filteredAndSortedAnalyses.length - 1 ? 'border-b border-gray-100' : ''}`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-[14px] font-semibold text-gray-900 truncate">
@@ -229,15 +307,15 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
                     </span>
                   </div>
                   
-                  <div className="hidden md:block text-[13px] text-gray-500 truncate" title={analysis.author}>
+                  <div className="hidden md:block text-[13px] text-gray-500 truncate text-center" title={analysis.author}>
                     {analysis.author || '—'}
                   </div>
                   
-                  <div className="hidden md:block text-[13px] text-gray-400 text-right font-mono tabular-nums">
+                  <div className="hidden md:block text-[13px] text-gray-400 text-center font-mono tabular-nums">
                     {formatDate(analysis.createdAt)}
                   </div>
                   
-                  <div className="hidden md:flex justify-end">
+                  <div className="hidden md:flex justify-center">
                     <span 
                       className="inline-block max-w-[150px] px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-medium rounded-full truncate"
                       title={analysis.createdByEmail || undefined}
@@ -268,12 +346,12 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
           )}
         </div>
 
-        {filteredAnalyses.length > 0 && (
+        {filteredAndSortedAnalyses.length > 0 && (
           <div className="px-6 py-2.5 bg-gray-50 border-t border-gray-100">
             <p className="text-[11px] text-gray-400 text-center">
-              {filteredAnalyses.length === analyses.length 
-                ? `${filteredAnalyses.length} análise(s)` 
-                : `${filteredAnalyses.length} de ${analyses.length} análise(s)`
+              {filteredAndSortedAnalyses.length === analyses.length 
+                ? `${filteredAndSortedAnalyses.length} análise(s)` 
+                : `${filteredAndSortedAnalyses.length} de ${analyses.length} análise(s)`
               }
             </p>
           </div>
