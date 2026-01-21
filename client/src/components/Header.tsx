@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, LogOut, User, Users, Shield, Database, Clock, Image, Sliders, Settings } from 'lucide-react';
+import { FileText, Download, LogOut, User, Users, Shield, Database, Clock, Image, Sliders, Settings, ClipboardList } from 'lucide-react';
 import { useAuth } from '../contexts/ApiAuthContext';
 import { UserManagement } from './UserManagement';
 import { ProfileManagement } from './ProfileManagement';
 import { DataManager } from './DataManager';
 import { ImageFieldExtractor } from './ImageFieldExtractor';
 import { SystemSettingsModal } from './SystemSettings';
+import { AllAnalysesViewer } from './AllAnalysesViewer';
 import { getCustomFieldsSDK } from '../hooks/useCustomFields';
 import { ThemeToggle } from './ui/ThemeToggle';
 
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
   const [showDataManager, setShowDataManager] = useState(false);
   const [showImageFieldExtractor, setShowImageFieldExtractor] = useState(false);
   const [showSystemSettings, setShowSystemSettings] = useState(false);
+  const [showAllAnalyses, setShowAllAnalyses] = useState(false);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<string>('');
 
   // Calcular tempo restante da sessão
@@ -188,6 +190,20 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
                         </button>
                       )}
 
+                      {/* All Analyses Viewer - Requires ANALYSIS_VIEW_ALL permission */}
+                      {hasPermission('ANALYSIS', 'VIEW_ALL') && (
+                        <button
+                          onClick={() => {
+                            setShowAllAnalyses(true);
+                            setShowUserDropdown(false);
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <ClipboardList className="w-4 h-4" />
+                          Ver Todas as Análises
+                        </button>
+                      )}
+
                       {/* System Settings - Admin only */}
                       {hasPermission('PROFILES', 'MANAGE') && (
                         <button
@@ -243,6 +259,11 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
       {/* System Settings Modal */}
       {showSystemSettings && (
         <SystemSettingsModal onClose={() => setShowSystemSettings(false)} />
+      )}
+
+      {/* All Analyses Viewer Modal */}
+      {showAllAnalyses && (
+        <AllAnalysesViewer onClose={() => setShowAllAnalyses(false)} />
       )}
     </>
   );
