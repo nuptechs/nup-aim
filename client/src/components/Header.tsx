@@ -13,9 +13,10 @@ import { ThemeToggle } from './ui/ThemeToggle';
 interface HeaderProps {
   onExport: () => void;
   isExporting: boolean;
+  onSelectAnalysis?: (analysisId: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
+export const Header: React.FC<HeaderProps> = ({ onExport, isExporting, onSelectAnalysis }) => {
   const { user, profile, logout, hasPermission } = useAuth();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
@@ -263,7 +264,10 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting }) => {
 
       {/* All Analyses Viewer Modal */}
       {showAllAnalyses && (
-        <AllAnalysesViewer onClose={() => setShowAllAnalyses(false)} />
+        <AllAnalysesViewer 
+          onClose={() => setShowAllAnalyses(false)} 
+          onOpenAnalysis={onSelectAnalysis}
+        />
       )}
     </>
   );
