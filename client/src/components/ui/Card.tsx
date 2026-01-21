@@ -122,6 +122,7 @@ interface StatCardProps {
   };
   icon?: React.ReactNode;
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+  onClick?: () => void;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -130,6 +131,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   change,
   icon,
   color = 'primary',
+  onClick,
 }) => {
   const colors = {
     primary: 'from-primary-500 to-primary-600',
@@ -154,7 +156,11 @@ export const StatCard: React.FC<StatCardProps> = ({
   };
 
   return (
-    <Card className="relative overflow-hidden card-hover">
+    <Card 
+      className={`relative overflow-hidden ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''} card-hover`}
+      onClick={onClick}
+      hover={!!onClick}
+    >
       <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full bg-gradient-to-br ${colors[color]} opacity-10`} />
       
       <div className="relative flex items-start justify-between">
