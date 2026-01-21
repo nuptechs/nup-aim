@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Search, RefreshCw, FileText, Filter, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown, Trash2 } from 'lucide-react';
+import { X, Search, RefreshCw, FileText, Filter, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown, Trash2, CheckCircle2, Circle } from 'lucide-react';
 import { apiClient } from '../lib/apiClient';
 
 interface Analysis {
@@ -36,6 +36,7 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
 
   const loadAnalyses = async () => {
     try {
@@ -52,6 +53,7 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
         const data = await response.json();
         setAnalyses(data);
         setSelectedIds(new Set());
+        setSelectionMode(false);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Erro ao carregar análises');
@@ -169,14 +171,15 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
   };
 
   const handleRowClick = (analysisId: string) => {
-    if (onOpenAnalysis) {
+    if (selectionMode) {
+      toggleSelection(analysisId);
+    } else if (onOpenAnalysis) {
       onOpenAnalysis(analysisId);
       onClose();
     }
   };
 
-  const toggleSelection = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedIds);
     if (newSelected.has(id)) {
       newSelected.delete(id);
@@ -184,13 +187,9 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
       newSelected.add(id);
     }
     setSelectedIds(newSelected);
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === filteredAndSortedAnalyses.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredAndSortedAnalyses.map(a => a.id)));
+    
+    if (newSelected.size === 0) {
+      setSelectionMode(false);
     }
   };
 
@@ -245,11 +244,17 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
       await Promise.all(deletePromises);
       setAnalyses(prev => prev.filter(a => !selectedIds.has(a.id)));
       setSelectedIds(new Set());
+      setSelectionMode(false);
     } catch (err) {
       console.error('Erro ao excluir análises:', err);
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const cancelSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
   };
 
   const HeaderCell: React.FC<{ field: SortField; children: React.ReactNode; className?: string }> = ({ field, children, className = '' }) => (
@@ -262,9 +267,6 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
       {getSortIcon(field)}
     </button>
   );
-
-  const allSelected = filteredAndSortedAnalyses.length > 0 && selectedIds.size === filteredAndSortedAnalyses.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < filteredAndSortedAnalyses.length;
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -325,36 +327,31 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
           </div>
         </div>
 
-        {selectedIds.size > 0 && (
-          <div className="px-6 py-2 bg-red-50 border-b border-red-100 flex items-center justify-between">
-            <span className="text-sm text-red-700">
-              {selectedIds.size} análise(s) selecionada(s)
-            </span>
+        {selectionMode && (
+          <div className="px-6 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-blue-700">
+                {selectedIds.size} selecionada(s)
+              </span>
+              <button
+                onClick={cancelSelection}
+                className="text-xs text-blue-600 hover:text-blue-800 underline underline-offset-2"
+              >
+                Cancelar
+              </button>
+            </div>
             <button
               onClick={handleDeleteSelected}
-              disabled={isDeleting}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+              disabled={isDeleting || selectedIds.size === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 shadow-sm"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Excluir selecionadas
+              Excluir
             </button>
           </div>
         )}
 
-        <div className="hidden md:grid grid-cols-[32px_1fr_70px_140px_150px_160px_32px] gap-4 px-6 py-2.5 bg-gray-50/50 border-b border-gray-100 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
-          <div className="flex justify-center">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              ref={input => {
-                if (input) {
-                  input.indeterminate = someSelected;
-                }
-              }}
-              onChange={toggleSelectAll}
-              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
-            />
-          </div>
+        <div className="hidden md:grid grid-cols-[1fr_70px_140px_150px_160px_32px] gap-4 px-6 py-2.5 bg-gray-50/50 border-b border-gray-100 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
           <HeaderCell field="title">Título</HeaderCell>
           <HeaderCell field="version">Versão</HeaderCell>
           <HeaderCell field="author">Autor</HeaderCell>
@@ -393,36 +390,30 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
             </div>
           ) : (
             <div>
-              {filteredAndSortedAnalyses.map((analysis, index) => (
-                <div
-                  key={analysis.id}
-                  className={`relative w-full grid grid-cols-1 md:grid-cols-[32px_1fr_70px_140px_150px_160px_32px] gap-2 md:gap-4 px-6 py-3.5 items-center transition-all duration-150 group ${
-                    onOpenAnalysis 
-                      ? 'hover:bg-blue-50/50 cursor-pointer' 
-                      : 'cursor-default'
-                  } ${index !== filteredAndSortedAnalyses.length - 1 ? 'border-b border-gray-100' : ''} ${
-                    selectedIds.has(analysis.id) ? 'bg-blue-50/30' : ''
-                  }`}
-                >
-                  <div 
-                    className="hidden md:flex justify-center"
-                    onClick={(e) => toggleSelection(analysis.id, e)}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(analysis.id)}
-                      onChange={() => {}}
-                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
+              {filteredAndSortedAnalyses.map((analysis, index) => {
+                const isSelected = selectedIds.has(analysis.id);
+                
+                return (
+                  <div
+                    key={analysis.id}
                     onClick={() => handleRowClick(analysis.id)}
-                    disabled={!onOpenAnalysis}
-                    className="contents"
+                    className={`relative w-full grid grid-cols-1 md:grid-cols-[1fr_70px_140px_150px_160px_32px] gap-2 md:gap-4 px-6 py-3.5 items-center transition-all duration-150 group cursor-pointer ${
+                      isSelected 
+                        ? 'bg-blue-50 border-l-2 border-l-blue-500' 
+                        : 'hover:bg-gray-50/80 border-l-2 border-l-transparent'
+                    } ${index !== filteredAndSortedAnalyses.length - 1 ? 'border-b border-gray-100' : ''}`}
                   >
-                    <div className="flex items-center gap-2 min-w-0 text-left">
+                    {selectionMode && (
+                      <div className="absolute left-2 top-1/2 -translate-y-1/2">
+                        {isSelected ? (
+                          <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-gray-300 group-hover:text-gray-400" />
+                        )}
+                      </div>
+                    )}
+
+                    <div className={`flex items-center gap-2 min-w-0 text-left ${selectionMode ? 'pl-6' : ''}`}>
                       <span className="text-[14px] font-semibold text-gray-900 truncate">
                         {analysis.title || 'Sem título'}
                       </span>
@@ -453,58 +444,77 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
                         {analysis.createdByFullName || analysis.createdByUsername || 'Desconhecido'}
                       </span>
                     </div>
-                  </button>
-                  
-                  <div className="hidden md:flex justify-center items-center gap-1">
-                    {showDeleteConfirm === analysis.id ? (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => confirmDelete(analysis.id)}
-                          disabled={isDeleting}
-                          className="p-1 bg-red-100 hover:bg-red-200 rounded text-red-600 transition-colors"
-                          title="Confirmar exclusão"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setShowDeleteConfirm(null)}
-                          className="p-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-500 transition-colors"
-                          title="Cancelar"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={(e) => handleDeleteSingle(analysis.id, e)}
-                        className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded text-gray-300 hover:text-red-500 transition-all"
-                        title="Excluir análise"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                    
+                    <div className="hidden md:flex justify-center items-center">
+                      {!selectionMode && (
+                        <>
+                          {showDeleteConfirm === analysis.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); confirmDelete(analysis.id); }}
+                                disabled={isDeleting}
+                                className="p-1 bg-red-100 hover:bg-red-200 rounded text-red-600 transition-colors"
+                                title="Confirmar"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(null); }}
+                                className="p-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-500 transition-colors"
+                                title="Cancelar"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-0.5">
+                              <button
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setSelectionMode(true);
+                                  toggleSelection(analysis.id);
+                                }}
+                                className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-blue-50 rounded text-gray-300 hover:text-blue-500 transition-all"
+                                title="Selecionar para exclusão em lote"
+                              >
+                                <Circle className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={(e) => handleDeleteSingle(analysis.id, e)}
+                                className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded text-gray-300 hover:text-red-500 transition-all"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
 
-                  <div className="md:hidden flex items-center justify-between text-[12px] text-gray-400 mt-1">
-                    <div className="flex items-center gap-3">
-                      <span>{analysis.author || '—'}</span>
-                      <span>•</span>
-                      <span className="font-mono tabular-nums">{formatDate(analysis.createdAt)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded-full">
-                        {analysis.createdByFullName || analysis.createdByUsername || '?'}
-                      </span>
-                      <button
-                        onClick={(e) => handleDeleteSingle(analysis.id, e)}
-                        className="p-1 hover:bg-red-50 rounded text-gray-300 hover:text-red-500 transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="md:hidden flex items-center justify-between text-[12px] text-gray-400 mt-1">
+                      <div className="flex items-center gap-3">
+                        <span>{analysis.author || '—'}</span>
+                        <span>•</span>
+                        <span className="font-mono tabular-nums">{formatDate(analysis.createdAt)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded-full">
+                          {analysis.createdByFullName || analysis.createdByUsername || '?'}
+                        </span>
+                        {!selectionMode && (
+                          <button
+                            onClick={(e) => handleDeleteSingle(analysis.id, e)}
+                            className="p-1 hover:bg-red-50 rounded text-gray-300 hover:text-red-500 transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
