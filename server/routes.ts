@@ -961,6 +961,47 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  // Get all analyses from all users (requires ANALYSIS_VIEW_ALL permission)
+  app.get('/api/analyses/all', authenticateToken, async (req: any, res) => {
+    try {
+      // Check if user has ANALYSIS_VIEW_ALL permission
+      const [userProfile] = await db.select({ permissions: profiles.permissions })
+        .from(profiles)
+        .innerJoin(users, eq(users.profileId, profiles.id))
+        .where(eq(users.id, req.user.userId));
+
+      const permissions = (userProfile?.permissions as string[]) || [];
+      if (!permissions.includes('ANALYSIS_VIEW_ALL')) {
+        return res.status(403).json({ error: 'Sem permissão para visualizar todas as análises' });
+      }
+
+      // Get all analyses with user information
+      const allAnalyses = await db
+        .select({
+          id: analyses.id,
+          title: analyses.title,
+          description: analyses.description,
+          author: analyses.author,
+          status: analyses.status,
+          projectId: analyses.projectId,
+          createdAt: analyses.createdAt,
+          updatedAt: analyses.updatedAt,
+          createdByUserId: analyses.createdBy,
+          createdByUsername: users.username,
+          createdByEmail: users.email,
+          createdByFullName: users.fullName
+        })
+        .from(analyses)
+        .leftJoin(users, eq(analyses.createdBy, users.id))
+        .orderBy(analyses.createdAt);
+
+      res.json(allAnalyses);
+    } catch (error) {
+      console.error('All analyses fetch error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   
   app.post('/api/analyses', authenticateToken, async (req: any, res) => {
     try {
