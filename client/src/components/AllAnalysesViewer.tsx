@@ -129,7 +129,7 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar..."
+                placeholder="Buscar por título, autor ou email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all placeholder:text-gray-400"
@@ -163,6 +163,15 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
           </div>
         </div>
 
+        <div className="hidden md:grid grid-cols-[1fr_60px_140px_150px_160px_24px] gap-4 px-6 py-2 bg-gray-50/50 border-b border-gray-100 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+          <div>Título</div>
+          <div className="text-center">Versão</div>
+          <div>Autor</div>
+          <div className="text-right">Data</div>
+          <div className="text-right">Usuário</div>
+          <div></div>
+        </div>
+
         <div className="flex-1 overflow-auto">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-64 gap-3">
@@ -192,51 +201,66 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {filteredAnalyses.map((analysis) => (
+            <div>
+              {filteredAnalyses.map((analysis, index) => (
                 <button
                   key={analysis.id}
                   type="button"
                   onClick={() => handleRowClick(analysis.id)}
                   disabled={!onOpenAnalysis}
-                  className={`w-full text-left px-6 py-4 flex flex-col md:flex-row md:items-center gap-2 md:gap-6 transition-all duration-150 group ${
+                  className={`w-full text-left grid grid-cols-1 md:grid-cols-[1fr_60px_140px_150px_160px_24px] gap-2 md:gap-4 px-6 py-3.5 items-center transition-all duration-150 group ${
                     onOpenAnalysis 
-                      ? 'hover:bg-slate-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset' 
+                      ? 'hover:bg-blue-50/50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset' 
                       : 'cursor-default'
-                  }`}
+                  } ${index !== filteredAnalyses.length - 1 ? 'border-b border-gray-100' : ''}`}
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <h3 className="text-[15px] font-semibold text-gray-900 truncate">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-[14px] font-semibold text-gray-900 truncate">
                       {analysis.title || 'Sem título'}
-                    </h3>
-                    {analysis.version && (
-                      <span className="flex-shrink-0 px-2 py-0.5 bg-blue-50 text-blue-600 text-[11px] font-medium rounded">
-                        v{analysis.version}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-4 md:gap-6 text-[13px] text-gray-400">
-                    <span className="truncate max-w-[120px]" title={analysis.author}>
-                      {analysis.author || '—'}
                     </span>
-                    <span className="text-gray-300 hidden md:inline">•</span>
-                    <span className="tabular-nums">
-                      {formatDate(analysis.createdAt)}
+                    <span className="md:hidden flex-shrink-0 px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-medium rounded">
+                      v{analysis.version || '1.0'}
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-3 md:ml-auto">
+                  <div className="hidden md:flex justify-center">
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[11px] font-medium rounded">
+                      v{analysis.version || '1.0'}
+                    </span>
+                  </div>
+                  
+                  <div className="hidden md:block text-[13px] text-gray-500 truncate" title={analysis.author}>
+                    {analysis.author || '—'}
+                  </div>
+                  
+                  <div className="hidden md:block text-[13px] text-gray-400 text-right font-mono tabular-nums">
+                    {formatDate(analysis.createdAt)}
+                  </div>
+                  
+                  <div className="hidden md:flex justify-end">
                     <span 
-                      className="px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-medium rounded-full truncate max-w-[140px]"
+                      className="inline-block max-w-[150px] px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-medium rounded-full truncate"
                       title={analysis.createdByEmail || undefined}
                     >
                       {analysis.createdByFullName || analysis.createdByUsername || 'Desconhecido'}
                     </span>
-                    
+                  </div>
+                  
+                  <div className="hidden md:flex justify-center">
                     {onOpenAnalysis && (
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
                     )}
+                  </div>
+
+                  <div className="md:hidden flex items-center justify-between text-[12px] text-gray-400 mt-1">
+                    <div className="flex items-center gap-3">
+                      <span>{analysis.author || '—'}</span>
+                      <span>•</span>
+                      <span className="font-mono tabular-nums">{formatDate(analysis.createdAt)}</span>
+                    </div>
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-medium rounded-full">
+                      {analysis.createdByFullName || analysis.createdByUsername || '?'}
+                    </span>
                   </div>
                 </button>
               ))}
