@@ -1644,7 +1644,7 @@ Se não houver funcionalidades adicionais, retorne: {"additionalFunctionalities"
   // Get dashboard statistics (filtered by user)
   app.get('/api/dashboard/stats', authenticateToken, async (req, res) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.userId;
       
       // Filter analyses by user
       const userAnalyses = userId 
