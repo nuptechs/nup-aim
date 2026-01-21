@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FileText, Download, LogOut, User, Users, Shield, Database, Clock, Image, Sliders, Settings, ClipboardList } from 'lucide-react';
 import { useAuth } from '../contexts/ApiAuthContext';
 import { UserManagement } from './UserManagement';
@@ -26,6 +26,23 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting, onSelectA
   const [showSystemSettings, setShowSystemSettings] = useState(false);
   const [showAllAnalyses, setShowAllAnalyses] = useState(false);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<string>('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    if (showUserDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
 
   // Calcular tempo restante da sessão
   useEffect(() => {
@@ -112,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({ onExport, isExporting, onSelectA
               )}
 
               {/* User Menu */}
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
