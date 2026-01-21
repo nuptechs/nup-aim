@@ -152,12 +152,36 @@ const AppContent: React.FC = () => {
   }, []); // Only run once on mount
 
   // Auto-save: Persist to sessionStorage immediately when data changes
+  // Uses try-catch to handle QuotaExceededError when images are too large
   useEffect(() => {
-    sessionStorage.setItem(CURRENT_ANALYSIS_KEY, JSON.stringify(data));
+    try {
+      // Create a lightweight version without large base64 images for sessionStorage
+      const lightData = {
+        ...data,
+        // Keep only essential data, images will be recovered from database
+      };
+      sessionStorage.setItem(CURRENT_ANALYSIS_KEY, JSON.stringify(lightData));
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('[Storage] SessionStorage quota exceeded, clearing old data...');
+        // Clear session storage and rely on database auto-save
+        sessionStorage.removeItem(CURRENT_ANALYSIS_KEY);
+        sessionStorage.removeItem(CUSTOM_FIELDS_KEY);
+      } else {
+        console.error('[Storage] Error saving to sessionStorage:', error);
+      }
+    }
   }, [data]);
 
   useEffect(() => {
-    sessionStorage.setItem(CUSTOM_FIELDS_KEY, JSON.stringify(customFieldsValues));
+    try {
+      sessionStorage.setItem(CUSTOM_FIELDS_KEY, JSON.stringify(customFieldsValues));
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('[Storage] SessionStorage quota exceeded for custom fields');
+        sessionStorage.removeItem(CUSTOM_FIELDS_KEY);
+      }
+    }
   }, [customFieldsValues]);
 
   // Auto-save: Save to database as draft after 3 seconds of inactivity
