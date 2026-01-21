@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, RefreshCw, ExternalLink, User, Calendar, FileText, Filter } from 'lucide-react';
+import { X, Search, RefreshCw, FileText, Filter, ChevronRight } from 'lucide-react';
 import { apiClient } from '../lib/apiClient';
 
 interface Analysis {
@@ -97,7 +97,7 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
     });
   };
 
-  const handleOpenAnalysis = (analysisId: string) => {
+  const handleRowClick = (analysisId: string) => {
     if (onOpenAnalysis) {
       onOpenAnalysis(analysisId);
       onClose();
@@ -105,35 +105,34 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col overflow-hidden">
         
-        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900">Todas as Análises</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {analyses.length} análise(s) de {uniqueUsers.length} usuário(s)
+            <h2 className="text-xl font-semibold text-gray-900">Todas as Análises</h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {analyses.length} análise(s) • {uniqueUsers.length} usuário(s)
             </p>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            title="Fechar"
           >
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
-        <div className="px-8 py-4 bg-gray-50/50 border-b border-gray-100">
-          <div className="flex flex-col sm:flex-row gap-3">
+        <div className="px-6 py-3 bg-gray-50/80 border-b border-gray-100">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar por título ou autor..."
+                placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all placeholder:text-gray-400"
               />
             </div>
             
@@ -143,9 +142,9 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
                 <select
                   value={selectedUser}
                   onChange={(e) => setSelectedUser(e.target.value)}
-                  className="pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none cursor-pointer min-w-[180px]"
+                  className="pl-9 pr-6 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 appearance-none cursor-pointer min-w-[160px]"
                 >
-                  <option value="all">Todos os usuários</option>
+                  <option value="all">Todos</option>
                   {uniqueUsers.map(user => (
                     <option key={user.id} value={user.id}>{user.name}</option>
                   ))}
@@ -155,7 +154,7 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
               <button
                 onClick={loadAnalyses}
                 disabled={isLoading}
-                className="p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-colors disabled:opacity-50"
+                className="p-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
                 title="Atualizar"
               >
                 <RefreshCw className={`w-4 h-4 text-gray-500 ${isLoading ? 'animate-spin' : ''}`} />
@@ -166,104 +165,92 @@ export const AllAnalysesViewer: React.FC<AllAnalysesViewerProps> = ({ onClose, o
 
         <div className="flex-1 overflow-auto">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-64 gap-4">
-              <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-gray-500 text-sm">Carregando análises...</p>
+            <div className="flex flex-col items-center justify-center h-64 gap-3">
+              <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <p className="text-gray-400 text-sm">Carregando...</p>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center h-64 gap-4">
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
-                <X className="w-8 h-8 text-red-400" />
+            <div className="flex flex-col items-center justify-center h-64 gap-3">
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center">
+                <X className="w-6 h-6 text-red-400" />
               </div>
-              <p className="text-gray-600 font-medium">{error}</p>
+              <p className="text-gray-600 text-sm">{error}</p>
               <button
                 onClick={loadAnalyses}
-                className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Tentar novamente
               </button>
             </div>
           ) : filteredAnalyses.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 gap-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                <FileText className="w-8 h-8 text-gray-400" />
+            <div className="flex flex-col items-center justify-center h-64 gap-3">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                <FileText className="w-6 h-6 text-gray-400" />
               </div>
-              <div className="text-center">
-                <p className="text-gray-600 font-medium">
-                  {searchTerm || selectedUser !== 'all' ? 'Nenhuma análise encontrada' : 'Nenhuma análise cadastrada'}
-                </p>
-                <p className="text-gray-400 text-sm mt-1">
-                  {searchTerm ? 'Tente ajustar os filtros de busca' : 'As análises aparecerão aqui'}
-                </p>
-              </div>
+              <p className="text-gray-500 text-sm">
+                {searchTerm || selectedUser !== 'all' ? 'Nenhuma análise encontrada' : 'Nenhuma análise cadastrada'}
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
               {filteredAnalyses.map((analysis) => (
-                <div
+                <button
                   key={analysis.id}
-                  className="px-8 py-5 hover:bg-gray-50/70 transition-colors group"
+                  type="button"
+                  onClick={() => handleRowClick(analysis.id)}
+                  disabled={!onOpenAnalysis}
+                  className={`w-full text-left px-6 py-4 flex flex-col md:flex-row md:items-center gap-2 md:gap-6 transition-all duration-150 group ${
+                    onOpenAnalysis 
+                      ? 'hover:bg-slate-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-inset' 
+                      : 'cursor-default'
+                  }`}
                 >
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-base font-semibold text-gray-900 truncate">
-                          {analysis.title || 'Sem título'}
-                        </h3>
-                        {analysis.version && (
-                          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-md">
-                            v{analysis.version}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-500">
-                        <div className="flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5" />
-                          <span>{analysis.author || 'Sem autor'}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" />
-                          <span>{formatDate(analysis.createdAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="text-right hidden sm:block">
-                        <span 
-                          className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
-                          title={analysis.createdByEmail || undefined}
-                        >
-                          {analysis.createdByFullName || analysis.createdByUsername || 'Desconhecido'}
-                        </span>
-                      </div>
-                      
-                      <button
-                        onClick={() => handleOpenAnalysis(analysis.id)}
-                        disabled={!onOpenAnalysis}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                          onOpenAnalysis 
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white opacity-80 group-hover:opacity-100' 
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
-                        title={onOpenAnalysis ? 'Abrir análise' : 'Funcionalidade não disponível'}
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        <span className="hidden sm:inline">Abrir PA</span>
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <h3 className="text-[15px] font-semibold text-gray-900 truncate">
+                      {analysis.title || 'Sem título'}
+                    </h3>
+                    {analysis.version && (
+                      <span className="flex-shrink-0 px-2 py-0.5 bg-blue-50 text-blue-600 text-[11px] font-medium rounded">
+                        v{analysis.version}
+                      </span>
+                    )}
                   </div>
-                </div>
+                  
+                  <div className="flex items-center gap-4 md:gap-6 text-[13px] text-gray-400">
+                    <span className="truncate max-w-[120px]" title={analysis.author}>
+                      {analysis.author || '—'}
+                    </span>
+                    <span className="text-gray-300 hidden md:inline">•</span>
+                    <span className="tabular-nums">
+                      {formatDate(analysis.createdAt)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 md:ml-auto">
+                    <span 
+                      className="px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-medium rounded-full truncate max-w-[140px]"
+                      title={analysis.createdByEmail || undefined}
+                    >
+                      {analysis.createdByFullName || analysis.createdByUsername || 'Desconhecido'}
+                    </span>
+                    
+                    {onOpenAnalysis && (
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                    )}
+                  </div>
+                </button>
               ))}
             </div>
           )}
         </div>
 
         {filteredAnalyses.length > 0 && (
-          <div className="px-8 py-3 bg-gray-50 border-t border-gray-100">
-            <p className="text-xs text-gray-500 text-center">
-              Exibindo {filteredAnalyses.length} de {analyses.length} análise(s)
+          <div className="px-6 py-2.5 bg-gray-50 border-t border-gray-100">
+            <p className="text-[11px] text-gray-400 text-center">
+              {filteredAnalyses.length === analyses.length 
+                ? `${filteredAnalyses.length} análise(s)` 
+                : `${filteredAnalyses.length} de ${analyses.length} análise(s)`
+              }
             </p>
           </div>
         )}
