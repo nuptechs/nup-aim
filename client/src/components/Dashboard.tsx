@@ -135,6 +135,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
             value={stats?.totalAnalyses || 0}
             icon={<FileText className="w-6 h-6" />}
             color="primary"
+            onClick={() => onNavigate?.('analyses')}
           />
         </div>
         {hasPermission('PROJECTS', 'MANAGE') && (
@@ -144,6 +145,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
               value={stats?.totalProjects || 0}
               icon={<FolderOpen className="w-6 h-6" />}
               color="success"
+              onClick={() => onNavigate?.('projects')}
             />
           </div>
         )}
@@ -153,6 +155,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
             value={stats?.totalImpacts || 0}
             icon={<AlertTriangle className="w-6 h-6" />}
             color="warning"
+            onClick={() => onNavigate?.('analyses')}
           />
         </div>
         <div className="animate-fade-in-up stagger-4">
@@ -161,6 +164,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
             value={stats?.totalRisks || 0}
             icon={<Shield className="w-6 h-6" />}
             color="danger"
+            onClick={() => onNavigate?.('analyses')}
           />
         </div>
       </div>
