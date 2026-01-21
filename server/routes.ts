@@ -1660,10 +1660,10 @@ Se não houver funcionalidades adicionais, retorne: {"additionalFunctionalities"
       
       if (userAnalysisIds.length > 0) {
         userImpacts = await db.select().from(impacts).where(
-          sql`${impacts.analysisId} = ANY(${userAnalysisIds})`
+          inArray(impacts.analysisId, userAnalysisIds)
         );
         userRisks = await db.select().from(risks).where(
-          sql`${risks.analysisId} = ANY(${userAnalysisIds})`
+          inArray(risks.analysisId, userAnalysisIds)
         );
       }
       
