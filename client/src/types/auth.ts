@@ -49,6 +49,7 @@ export const SYSTEM_MODULES = {
       EDIT: 'Editar',
       DELETE: 'Excluir',
       VIEW: 'Visualizar',
+      VIEW_ALL: 'Visualizar Todas (Admin)',
       EXPORT: 'Exportar',
       COPY: 'Copiar',
       IMPORT_AI: 'Importar com IA'
