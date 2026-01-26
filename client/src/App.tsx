@@ -24,6 +24,7 @@ import { getSystemSettings, SystemSettings } from './utils/systemSettings';
 import { ImpactAnalysis } from './types';
 import { Save, FolderOpen, LayoutDashboard, FileText } from 'lucide-react';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
+import { DocumentVisionDemo } from './lib/document-vision';
 
 const CURRENT_ANALYSIS_KEY = 'nup_aim_current_analysis';
 const CUSTOM_FIELDS_KEY = 'nup_aim_custom_fields';
@@ -90,6 +91,7 @@ const AppContent: React.FC = () => {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [showAnalysisManager, setShowAnalysisManager] = useState(false);
   const [showProjectsManager, setShowProjectsManager] = useState(false);
+  const [showDocumentScanner, setShowDocumentScanner] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(getSystemSettings());
   const [currentView, setCurrentView] = useState<'login' | 'verify-email' | 'app'>('login');
@@ -490,6 +492,8 @@ const AppContent: React.FC = () => {
                 setShowAnalysisManager(true);
               } else if (view === 'projects') {
                 setShowProjectsManager(true);
+              } else if (view === 'document-scanner') {
+                setShowDocumentScanner(true);
               }
             }}
             onSelectAnalysis={handleSelectAnalysis}
@@ -633,6 +637,34 @@ const AppContent: React.FC = () => {
         <BasicDataManager
           onClose={() => setShowProjectsManager(false)}
         />
+      )}
+
+      {/* Document Scanner Modal */}
+      {showDocumentScanner && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center z-10">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                Scanner de Documentos - Visão Computacional
+              </h2>
+              <button
+                onClick={() => setShowDocumentScanner(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <DocumentVisionDemo
+                onExtractedData={(data) => {
+                  console.log('[DocumentVision] Extracted data:', data);
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Session Timeout Warning */}

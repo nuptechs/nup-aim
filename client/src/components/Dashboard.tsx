@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, Users, FolderOpen, AlertTriangle, Shield,
-  TrendingUp, Clock, ArrowRight, Plus, Activity
+  TrendingUp, Clock, ArrowRight, Plus, Activity, Eye
 } from 'lucide-react';
 import { useAuth } from '../contexts/ApiAuthContext';
 import { apiClient } from '../lib/apiClient';
@@ -101,6 +101,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onNewAnalysis,
       color: 'warning' as const,
       onClick: () => onNavigate?.('users'),
       permission: hasPermission('USERS', 'MANAGE'),
+    },
+    {
+      icon: Eye,
+      label: 'Scanner de Documentos',
+      description: 'Análise visual inteligente',
+      color: 'primary' as const,
+      onClick: () => onNavigate?.('document-scanner'),
+      permission: true,
     },
   ].filter(action => action.permission);
 
