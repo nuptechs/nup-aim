@@ -19,162 +19,165 @@ export interface DocumentStructure {
   pageCount: number;
 }
 
-export interface PageContent {
-  pageNumber: number;
-  text: string;
-  imageBase64?: string;
-  mimeType?: string;
+function extractJSON(text: string): string {
+  let cleaned = text.trim();
+  
+  cleaned = cleaned.replace(/```json\s*/gi, "").replace(/```\s*$/g, "").replace(/```/g, "");
+  
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    cleaned = jsonMatch[0];
+  }
+  
+  cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, (char) => {
+    if (char === "\n" || char === "\r" || char === "\t") return char;
+    return "";
+  });
+  
+  return cleaned.trim();
 }
 
-export async function analyzeDocumentPage(page: PageContent): Promise<DocumentSection[]> {
-  const prompt = `Analise esta página de documento e extraia a estrutura hierárquica.
+function parseDocumentText(text: string): DocumentSection[] {
+  const lines = text.split("\n").filter((line) => line.trim());
+  const sections: DocumentSection[] = [];
+  let currentSection: DocumentSection | null = null;
+  let currentContent: string[] = [];
 
-REGRAS:
-1. Identifique TODOS os títulos e subtítulos
-2. Associe cada conteúdo ao seu título/subtítulo correspondente
-3. Use níveis: 1 para títulos principais, 2 para subtítulos, 3 para sub-subtítulos, etc.
-4. Mantenha o texto exatamente como está, sem resumir
+  for (const line of lines) {
+    const trimmed = line.trim();
+    
+    const isTitle =
+      trimmed === trimmed.toUpperCase() && 
+      trimmed.length > 3 && 
+      trimmed.length < 100 &&
+      !trimmed.match(/^[\d.,\-–•]+$/) &&
+      trimmed.match(/[A-ZÀ-Ú]/);
 
-TEXTO DA PÁGINA ${page.pageNumber}:
-${page.text}
+    const isNumberedSection = /^(\d+\.?\d*\.?\d*)\s+[A-ZÀ-Ú]/.test(trimmed);
 
-Responda APENAS em JSON válido, sem markdown:
-{
-  "sections": [
-    {
-      "level": 1,
-      "title": "Título Principal",
-      "content": "Texto sob este título...",
-      "children": [
-        {
-          "level": 2,
-          "title": "Subtítulo",
-          "content": "Texto do subtítulo...",
-          "children": []
-        }
-      ]
+    if (isTitle || isNumberedSection) {
+      if (currentSection) {
+        currentSection.content = currentContent.join("\n").trim();
+        sections.push(currentSection);
+      }
+
+      let level = 1;
+      if (isNumberedSection) {
+        const dots = (trimmed.match(/\./g) || []).length;
+        level = Math.min(dots + 1, 3);
+      }
+
+      currentSection = {
+        level,
+        title: trimmed,
+        content: "",
+        children: [],
+      };
+      currentContent = [];
+    } else if (currentSection) {
+      currentContent.push(trimmed);
+    } else {
+      currentContent.push(trimmed);
     }
-  ]
-}`;
+  }
 
-  const contentBlocks: Anthropic.MessageCreateParams["messages"][0]["content"] = [];
-
-  if (page.imageBase64 && page.mimeType) {
-    contentBlocks.push({
-      type: "image",
-      source: {
-        type: "base64",
-        media_type: page.mimeType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-        data: page.imageBase64,
-      },
+  if (currentSection) {
+    currentSection.content = currentContent.join("\n").trim();
+    sections.push(currentSection);
+  } else if (currentContent.length > 0) {
+    sections.push({
+      level: 1,
+      title: "Conteúdo do Documento",
+      content: currentContent.join("\n").trim(),
+      children: [],
     });
   }
 
-  contentBlocks.push({
-    type: "text",
-    text: prompt,
-  });
+  return sections;
+}
+
+export async function analyzeDocumentWithAI(text: string): Promise<DocumentSection[]> {
+  const truncatedText = text.length > 30000 ? text.substring(0, 30000) + "\n[...]" : text;
+
+  const prompt = `Analise este documento e extraia sua estrutura hierárquica.
+
+INSTRUÇÕES:
+1. Identifique títulos principais (level 1), subtítulos (level 2), sub-subtítulos (level 3)
+2. Coloque o conteúdo de cada seção no campo "content"
+3. Retorne APENAS JSON válido, sem explicações
+
+Documento:
+${truncatedText}
+
+Responda com este formato JSON (sem markdown):
+{"sections":[{"level":1,"title":"Título","content":"texto...","children":[]}]}`;
 
   try {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 8192,
-      messages: [
-        {
-          role: "user",
-          content: contentBlocks,
-        },
-      ],
+      messages: [{ role: "user", content: prompt }],
     });
 
     const textContent = response.content.find((c) => c.type === "text");
     if (!textContent || textContent.type !== "text") {
-      return [];
+      console.log("[DocumentReader] Sem resposta de texto, usando parser local");
+      return parseDocumentText(text);
     }
 
-    let jsonText = textContent.text.trim();
-    if (jsonText.startsWith("```json")) {
-      jsonText = jsonText.slice(7);
-    } else if (jsonText.startsWith("```")) {
-      jsonText = jsonText.slice(3);
+    const jsonText = extractJSON(textContent.text);
+    
+    try {
+      const parsed = JSON.parse(jsonText);
+      if (parsed.sections && Array.isArray(parsed.sections) && parsed.sections.length > 0) {
+        return parsed.sections;
+      }
+    } catch (parseError) {
+      console.log("[DocumentReader] JSON inválido, usando parser local");
     }
-    if (jsonText.endsWith("```")) {
-      jsonText = jsonText.slice(0, -3);
-    }
-    jsonText = jsonText.trim();
 
-    const parsed = JSON.parse(jsonText);
-    return parsed.sections || [];
+    return parseDocumentText(text);
   } catch (error) {
-    console.error("Erro ao analisar página:", error);
-    return [];
+    console.error("[DocumentReader] Erro na API, usando parser local:", error);
+    return parseDocumentText(text);
   }
-}
-
-export async function readDocument(pages: PageContent[]): Promise<DocumentStructure> {
-  const allSections: DocumentSection[] = [];
-  let fullText = "";
-
-  for (const page of pages) {
-    fullText += `\n--- Página ${page.pageNumber} ---\n${page.text}`;
-    const pageSections = await analyzeDocumentPage(page);
-    allSections.push(...pageSections);
-  }
-
-  const documentTitle = allSections.length > 0 && allSections[0].level === 1 
-    ? allSections[0].title 
-    : "Documento sem título";
-
-  const mergedSections = mergeSections(allSections);
-
-  return {
-    title: documentTitle,
-    sections: mergedSections,
-    rawText: fullText.trim(),
-    pageCount: pages.length,
-  };
-}
-
-function mergeSections(sections: DocumentSection[]): DocumentSection[] {
-  const result: DocumentSection[] = [];
-  let currentParent: DocumentSection | null = null;
-
-  for (const section of sections) {
-    if (section.level === 1) {
-      currentParent = { ...section, children: [...section.children] };
-      result.push(currentParent);
-    } else if (currentParent) {
-      currentParent.children.push(section);
-    } else {
-      result.push(section);
-    }
-  }
-
-  return result;
 }
 
 export async function readDocumentFromText(text: string): Promise<DocumentStructure> {
-  const pages: PageContent[] = [
-    {
-      pageNumber: 1,
-      text: text,
-    },
-  ];
-  return readDocument(pages);
+  const sections = await analyzeDocumentWithAI(text);
+
+  const documentTitle =
+    sections.length > 0 && sections[0].level === 1
+      ? sections[0].title
+      : "Documento Analisado";
+
+  return {
+    title: documentTitle,
+    sections: nestSections(sections),
+    rawText: text,
+    pageCount: 1,
+  };
 }
 
-export async function readDocumentFromImage(
-  imageBase64: string,
-  mimeType: string,
-  extractedText?: string
-): Promise<DocumentStructure> {
-  const pages: PageContent[] = [
-    {
-      pageNumber: 1,
-      text: extractedText || "",
-      imageBase64,
-      mimeType,
-    },
-  ];
-  return readDocument(pages);
+function nestSections(flatSections: DocumentSection[]): DocumentSection[] {
+  const result: DocumentSection[] = [];
+  const stack: DocumentSection[] = [];
+
+  for (const section of flatSections) {
+    const newSection = { ...section, children: [] };
+
+    while (stack.length > 0 && stack[stack.length - 1].level >= section.level) {
+      stack.pop();
+    }
+
+    if (stack.length === 0) {
+      result.push(newSection);
+    } else {
+      stack[stack.length - 1].children.push(newSection);
+    }
+
+    stack.push(newSection);
+  }
+
+  return result;
 }
