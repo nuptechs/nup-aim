@@ -24,12 +24,95 @@ interface PatternMatch {
   lineIndex: number;
 }
 
+function isValidRoman(str: string): boolean {
+  const romanRegex = /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
+  return romanRegex.test(str) && str.length > 0;
+}
+
+function isProperName(text: string): boolean {
+  const words = text.trim().split(/\s+/);
+  const significantWords = words.filter(w => !['DE', 'DA', 'DO', 'DOS', 'DAS', 'E'].includes(w));
+  if (significantWords.length < 2 || significantWords.length > 5) return false;
+  
+  return significantWords.every(w => {
+    if (w.length < 2 || w.length > 15) return false;
+    if (!/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ]*$/.test(w)) return false;
+    const vowels = (w.match(/[AEIOUÀÁÂÃÉÊÍÓÔÕÚ]/gi) || []).length;
+    const consonants = w.length - vowels;
+    if (vowels === 0 || consonants === 0) return false;
+    return true;
+  });
+}
+
+function isIncompletePhrase(text: string): boolean {
+  const trimmed = text.trim();
+  const prepositions = /\s(DE|DO|DA|DOS|DAS|EM|NO|NA|NOS|NAS|AO|AOS|À|ÀS|PARA|POR|COM|SEM|SOB|E|OU|QUE|SE|A|O)$/i;
+  return prepositions.test(trimmed);
+}
+
+function isInstitutionalHeader(text: string): boolean {
+  const lower = text.toLowerCase();
+  const patterns = [
+    /^(governo|república|estado|município|prefeitura|câmara|senado|tribunal|ministério|secretaria|departamento|autarquia|fundação|empresa|agência|instituto|conselho|comissão|diretoria|gerência|coordenação|superintendência)/,
+    /\b(federal|estadual|municipal|distrital)\b/,
+    /(cnpj|cpf|inscri[çc][ãa]o|endere[çc]o|telefone|fax|e-?mail|site|www\.)/
+  ];
+  return patterns.some(p => p.test(lower));
+}
+
+function isListItem(marker: string, text: string): boolean {
+  if (!marker.match(/^\d+$/) || marker.includes('.')) return false;
+  
+  const firstWord = text.split(/\s+/)[0] || '';
+  
+  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+r$/i.test(firstWord)) return true;
+  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+ndo$/i.test(firstWord)) return true;
+  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+ção$/i.test(firstWord)) return true;
+  
+  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]/.test(text)) {
+    if (!/[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ]{2,}/.test(text)) return true;
+  }
+  
+  return false;
+}
+
+function isTableLabel(text: string): boolean {
+  const words = text.trim().split(/\s+/);
+  if (words.length < 2) return true;
+  
+  if (/X{3,}/i.test(text)) return true;
+  
+  const tableKeywords = ['QTD', 'QDE', 'QTDE', 'VLR', 'VALOR', 'TOTAL', 'ITEM', 'CÓDIGO', 'COD', 'REF', 'DESC', 'OBS', 'DATA', 'PRAZO', 'UND', 'UNID', 'HST', 'PERFIL', 'NOME'];
+  const matches = words.filter(w => tableKeywords.includes(w.toUpperCase()));
+  if (matches.length >= 2) return true;
+  
+  if (words.length <= 3 && words.every(w => w.length <= 4)) return true;
+  
+  return false;
+}
+
+function isTableRow(text: string): boolean {
+  const lower = text.toLowerCase();
+  
+  if (/^(ilha|lote|item|grupo)\s+(de\s+)?(serviço|serviços)/i.test(text)) return true;
+  
+  if (/^\d+\s*[-–]\s*(ilha|lote|item)/i.test(text)) return true;
+  
+  return false;
+}
+
 const PATTERNS = [
   {
     name: 'decimal_titled',
     regex: /^(\d+(?:\.\d+)*)\s*[.-]?\s*([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]{2,})$/,
     getLevel: (m: string) => m.split('.').length,
-    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`
+    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`,
+    validate: (_marker: string, match: RegExpMatchArray) => {
+      const text = match[2]?.trim() || '';
+      if (isProperName(text)) return false;
+      if (isTableLabel(text)) return false;
+      return true;
+    }
   },
   {
     name: 'decimal_dash',
@@ -37,10 +120,10 @@ const PATTERNS = [
     getLevel: (m: string) => m.split('.').length,
     getTitle: (m: RegExpMatchArray) => `${m[1]} - ${m[2].trim()}`,
     validate: (marker: string, match: RegExpMatchArray) => {
-      if (marker.match(/^\d{5}$/)) return false;
-      if (match[2] && match[2].match(/^\d+[-\/]/)) return false;
-      const text = match[2]?.toLowerCase() || '';
-      if (text.includes('ilha de serviço') || text.includes('ilha de serviços')) return false;
+      if (/^\d{5,}$/.test(marker)) return false;
+      if (match[2] && /^\d+[-\/]/.test(match[2])) return false;
+      const text = match[2]?.trim() || '';
+      if (isTableRow(text)) return false;
       return true;
     }
   },
@@ -51,20 +134,7 @@ const PATTERNS = [
     getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`,
     validate: (marker: string, match: RegExpMatchArray) => {
       const text = match[2]?.trim() || '';
-      const lower = text.toLowerCase();
-      
-      if (marker.match(/^\d+$/) && !marker.includes('.')) {
-        const firstWord = text.split(/\s+/)[0];
-        if (firstWord && /^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+[aeiou]r$/i.test(firstWord)) return false;
-        
-        if (/^Sobre\s/i.test(text)) return false;
-        
-        if (/^DECLARAÇÃO\s+PARA/i.test(text)) return false;
-        
-        if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]/.test(text) && !/^(D[OAE]S?|PARA|SOBRE|COM)\s/i.test(text)) {
-          if (!/[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ]{3,}/.test(text)) return false;
-        }
-      }
+      if (isListItem(marker, text)) return false;
       return true;
     }
   },
@@ -78,7 +148,13 @@ const PATTERNS = [
     name: 'decimal_simple',
     regex: /^(\d+)\s+([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]{2,})$/,
     getLevel: () => 1,
-    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`
+    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`,
+    validate: (_marker: string, match: RegExpMatchArray) => {
+      const text = match[2]?.trim() || '';
+      if (isProperName(text)) return false;
+      if (isTableLabel(text)) return false;
+      return true;
+    }
   },
   {
     name: 'artigo',
@@ -97,7 +173,12 @@ const PATTERNS = [
     regex: /^([IVXLCDM]+)\s*[-–.)\s]\s*([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]{2,})$/,
     getLevel: () => 1,
     getTitle: (m: RegExpMatchArray) => `${m[1]} - ${m[2].trim()}`,
-    validate: (marker: string, _match: RegExpMatchArray) => isValidRoman(marker)
+    validate: (marker: string, match: RegExpMatchArray) => {
+      if (!isValidRoman(marker)) return false;
+      const text = match[2]?.trim() || '';
+      if (isProperName(text)) return false;
+      return true;
+    }
   },
   {
     name: 'roman_lower',
@@ -149,54 +230,48 @@ const PATTERNS = [
     getTitle: (m: RegExpMatchArray) => m[2] ? `${m[1].toUpperCase()} - ${m[2].trim()}` : m[1].toUpperCase()
   },
   {
+    name: 'subsecao',
+    regex: /^(SUBSE[ÇC][ÃA]O\s+[IVXLCDM\d]+)\s*[-–:]?\s*(.*)$/i,
+    getLevel: () => 2,
+    getTitle: (m: RegExpMatchArray) => m[2] ? `${m[1].toUpperCase()} - ${m[2].trim()}` : m[1].toUpperCase()
+  },
+  {
     name: 'keyword_br',
     regex: /^(D[OAE]S?\s+[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]{2,})$/,
     getLevel: () => 1,
-    getTitle: (m: RegExpMatchArray) => m[1].trim()
+    getTitle: (m: RegExpMatchArray) => m[1].trim(),
+    validate: (_marker: string, match: RegExpMatchArray) => {
+      const text = match[1]?.trim() || '';
+      if (isIncompletePhrase(text)) return false;
+      if (text.length > 50) return false;
+      return true;
+    }
   },
   {
     name: 'all_caps_title',
     regex: /^([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]{5,})$/,
     getLevel: () => 1,
     getTitle: (m: RegExpMatchArray) => m[1].trim(),
-    validate: (marker: string, _match: RegExpMatchArray) => {
-      const text = marker.trim();
-      const lower = text.toLowerCase();
+    validate: (_marker: string, match: RegExpMatchArray) => {
+      const text = match[1]?.trim() || '';
       
-      const stopwords = ['governo', 'departamento', 'ministério', 'secretaria', 'página', 'folha', 'diário', 'oficial', 'pregão', 'processo', 'estimativa'];
-      if (stopwords.some(w => lower.includes(w))) return false;
+      if (text.length < 10 || text.length > 60) return false;
       
-      if (text.length > 60) return false;
-      if (text.length < 10) return false;
+      if (isIncompletePhrase(text)) return false;
       
-      if (/\s(DE|DO|DA|DOS|DAS|EM|NO|NA|NOS|NAS|AO|AOS|À|ÀS|PARA|POR|COM|SEM|SOB|E|OU)$/i.test(text)) return false;
+      if (isInstitutionalHeader(text)) return false;
       
-      const coverLabels = ['sessão pública', 'início da sessão', 'abertura do certame', 'endereço eletrônico', 'critério de julgamento', 'modo de disputa', 'tipo/regime'];
-      if (coverLabels.some(l => lower.includes(l))) return false;
+      if (isProperName(text)) return false;
       
-      const tableLabels = ['ilha de serviço', 'dados do contrato', 'produtos a serem', 'perfis profissionais', 'nome perfil', 'modelo de', 'modelo proposta', 'xxxxxxx', 'formação do preço', 'planilha de preço', 'minutas dos contratos', 'relatórios do programa'];
-      if (tableLabels.some(l => lower.includes(l))) return false;
-      
-      const formLabels = ['modalidade de licitação', 'numero da licitação', 'número da licitação', 'avaliação de programa'];
-      if (formLabels.some(l => lower.includes(l))) return false;
+      if (isTableLabel(text)) return false;
       
       const words = text.split(/\s+/).filter(w => w.length > 0);
-      if (words.length < 3) return false;
-      
-      const isProperName = words.length >= 2 && words.length <= 4 && 
-        words.filter(w => w !== 'DE' && w !== 'DA' && w !== 'DO' && w !== 'DOS' && w !== 'DAS')
-             .every(w => /^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ]+$/.test(w) && w.length >= 3 && w.length <= 12);
-      if (isProperName) return false;
+      if (words.length < 2) return false;
       
       return true;
     }
   }
 ];
-
-function isValidRoman(str: string): boolean {
-  const romanRegex = /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
-  return romanRegex.test(str) && str.length > 0;
-}
 
 function parseLine(line: string, lineIndex: number): PatternMatch | null {
   const trimmed = line.trim();
@@ -224,67 +299,60 @@ function parseLine(line: string, lineIndex: number): PatternMatch | null {
   return null;
 }
 
-function getContentAfterSection(lines: string[], startIndex: number, endIndex: number): string {
-  const contentLines = lines.slice(startIndex + 1, Math.min(endIndex, startIndex + 5));
-  const content = contentLines
-    .map(l => l.trim())
-    .filter(l => l.length > 0 && !parseLine(l, 0))
-    .slice(0, 2)
-    .join(' ')
-    .substring(0, 120);
-  
-  return content || '';
-}
-
-function buildHierarchy(matches: PatternMatch[], lines: string[]): DocumentSection[] {
-  if (matches.length === 0) return [];
-
-  const root: DocumentSection[] = [];
+function buildHierarchy(matches: PatternMatch[], lines: string[], maxLevel: number): DocumentSection[] {
+  const sections: DocumentSection[] = [];
   const stack: { section: DocumentSection; level: number }[] = [];
-
+  
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i];
-    const nextMatchIndex = i < matches.length - 1 ? matches[i + 1].lineIndex : lines.length;
-    const content = getContentAfterSection(lines, match.lineIndex, nextMatchIndex);
-
+    const nextMatch = matches[i + 1];
+    
+    const contentLines: string[] = [];
+    const startLine = match.lineIndex + 1;
+    const endLine = nextMatch ? nextMatch.lineIndex : lines.length;
+    
+    for (let j = startLine; j < endLine && j < startLine + 5; j++) {
+      const line = lines[j]?.trim();
+      if (line && line.length > 10) {
+        contentLines.push(line);
+      }
+    }
+    
     const section: DocumentSection = {
       level: match.level,
       title: match.title,
-      content: content.length > 100 ? content.substring(0, 100) + '...' : content,
+      content: contentLines.join(' ').substring(0, 500),
       children: [],
       marker: match.marker,
       type: match.type
     };
-
+    
     while (stack.length > 0 && stack[stack.length - 1].level >= match.level) {
       stack.pop();
     }
-
-    if (stack.length === 0) {
-      root.push(section);
-    } else {
+    
+    if (stack.length > 0) {
       stack[stack.length - 1].section.children.push(section);
+    } else {
+      sections.push(section);
     }
-
+    
     stack.push({ section, level: match.level });
   }
-
-  return root;
+  
+  return sections;
 }
 
-function flattenForDisplay(sections: DocumentSection[], maxLevel: number = 2): DocumentSection[] {
+function flattenSections(sections: DocumentSection[], maxLevel: number): DocumentSection[] {
   const result: DocumentSection[] = [];
   
   function traverse(items: DocumentSection[]) {
-    for (const item of items) {
-      if (item.level <= maxLevel) {
-        result.push({
-          ...item,
-          children: []
-        });
+    for (const section of items) {
+      if (section.level <= maxLevel) {
+        result.push(section);
       }
-      if (item.children.length > 0) {
-        traverse(item.children);
+      if (section.children.length > 0) {
+        traverse(section.children);
       }
     }
   }
@@ -293,19 +361,8 @@ function flattenForDisplay(sections: DocumentSection[], maxLevel: number = 2): D
   return result;
 }
 
-export function parseDocumentStructure(text: string, maxLevel: number = 2): DocumentStructure {
-  if (!text || text.trim().length === 0) {
-    return {
-      title: "Erro",
-      sections: [],
-      rawText: "",
-      pageCount: 0,
-      totalSections: 0,
-      error: "Nenhum texto foi fornecido para análise."
-    };
-  }
-
-  const lines = text.split('\n');
+export function parseDocumentStructure(text: string, maxLevel: number = 3): DocumentStructure {
+  const lines = text.split(/\r?\n/);
   const matches: PatternMatch[] = [];
   
   for (let i = 0; i < lines.length; i++) {
@@ -314,29 +371,17 @@ export function parseDocumentStructure(text: string, maxLevel: number = 2): Docu
       matches.push(match);
     }
   }
-
-  if (matches.length === 0) {
-    return {
-      title: "Documento",
-      sections: [],
-      rawText: text,
-      pageCount: Math.ceil(text.length / 3000),
-      totalSections: 0,
-      error: "Nenhuma seção estruturada foi encontrada no documento."
-    };
-  }
-
-  const hierarchicalSections = buildHierarchy(matches, lines);
-  const displaySections = flattenForDisplay(hierarchicalSections, maxLevel);
   
-  const documentTitle = displaySections.find(s => s.level === 1)?.title || displaySections[0]?.title || "Documento";
-  const pageCount = Math.ceil(text.length / 3000);
-
-  console.log(`[RegexParser] ${matches.length} seções totais, ${displaySections.length} exibidas (level <= ${maxLevel}) de ${lines.length} linhas (~${pageCount} páginas)`);
-
+  const hierarchy = buildHierarchy(matches, lines, maxLevel);
+  const flatSections = flattenSections(hierarchy, maxLevel);
+  
+  const pageCount = Math.ceil(lines.length / 30);
+  
+  console.log(`[RegexParser] ${matches.length} seções totais, ${flatSections.length} exibidas (level <= ${maxLevel}) de ${lines.length} linhas (~${pageCount} páginas)`);
+  
   return {
-    title: documentTitle,
-    sections: displaySections,
+    title: flatSections[0]?.title || 'Documento',
+    sections: flatSections,
     rawText: text,
     pageCount,
     totalSections: matches.length
