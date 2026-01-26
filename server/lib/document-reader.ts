@@ -22,15 +22,23 @@ export interface DocumentStructure {
 
 function extractJSON(text: string): string {
   let cleaned = text.trim();
-  cleaned = cleaned.replace(/```json\s*/gi, "").replace(/```\s*$/g, "").replace(/```/g, "");
-  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    cleaned = jsonMatch[0];
+  
+  // Remove markdown code blocks with any language tag
+  cleaned = cleaned.replace(/^```\w*\s*/i, "");
+  cleaned = cleaned.replace(/\s*```\s*$/i, "");
+  cleaned = cleaned.replace(/```/g, "");
+  
+  // Find the outermost JSON object
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start !== -1 && end !== -1 && end > start) {
+    cleaned = cleaned.substring(start, end + 1);
   }
-  cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, (char) => {
-    if (char === "\n" || char === "\r" || char === "\t") return " ";
-    return "";
-  });
+  
+  // Replace problematic escape sequences
+  cleaned = cleaned.replace(/\\n/g, " ");
+  cleaned = cleaned.replace(/\\t/g, " ");
+  
   return cleaned.trim();
 }
 
