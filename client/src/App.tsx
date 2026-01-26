@@ -24,7 +24,7 @@ import { getSystemSettings, SystemSettings } from './utils/systemSettings';
 import { ImpactAnalysis } from './types';
 import { Save, FolderOpen, LayoutDashboard, FileText } from 'lucide-react';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
-import { DocumentVisionDemo } from './lib/document-vision';
+import { SimpleDocumentReader } from './components/SimpleDocumentReader';
 
 const CURRENT_ANALYSIS_KEY = 'nup_aim_current_analysis';
 const CUSTOM_FIELDS_KEY = 'nup_aim_custom_fields';
@@ -657,9 +657,9 @@ const AppContent: React.FC = () => {
               </button>
             </div>
             <div className="p-6">
-              <DocumentVisionDemo
-                onExtractedData={(data) => {
-                  console.log('[DocumentVision] Extracted data:', data);
+              <SimpleDocumentReader
+                onDocumentAnalyzed={(doc) => {
+                  console.log('[DocumentReader] Documento analisado:', doc);
                 }}
               />
             </div>

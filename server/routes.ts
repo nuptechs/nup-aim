@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import { corsMiddleware } from './middleware/cors.middleware';
 import { authenticateToken } from './middleware/auth.middleware';
 import { Resend } from 'resend';
+import documentReaderRouter from './routes/document-reader';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'noreply@mail.nuptechs.com';
@@ -140,6 +141,8 @@ export function registerRoutes(app: Express) {
       timestamp: new Date().toISOString()
     });
   });
+
+  app.use('/api/document-reader', documentReaderRouter);
 
   // ============================================
   // AUTH ROUTES
