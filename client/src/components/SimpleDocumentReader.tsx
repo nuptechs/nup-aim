@@ -46,28 +46,26 @@ export function SimpleDocumentReader({ onDocumentAnalyzed }: SimpleDocumentReade
 
     try {
       let text = '';
-      let imageBase64: string | undefined;
-      let mimeType: string | undefined;
+      let fileBase64: string | undefined;
+      const mimeType = file.type;
+      const fileName = file.name;
 
       if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
         text = await file.text();
-      } else if (file.type.startsWith('image/')) {
+      } else {
         const reader = new FileReader();
         const base64 = await new Promise<string>((resolve, reject) => {
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
-        imageBase64 = base64.split(',')[1];
-        mimeType = file.type;
-      } else {
-        text = await file.text();
+        fileBase64 = base64.split(',')[1];
       }
 
       const response = await fetch('/api/document-reader/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, imageBase64, mimeType }),
+        body: JSON.stringify({ text, fileBase64, mimeType, fileName }),
       });
 
       if (!response.ok) {
