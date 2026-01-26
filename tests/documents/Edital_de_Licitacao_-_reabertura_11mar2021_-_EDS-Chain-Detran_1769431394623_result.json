@@ -1,25 +1,9 @@
 {
   "file": "attached_assets/Edital_de_Licitacao_-_reabertura_11mar2021_-_EDS-Chain-Detran_1769431394623.pdf",
-  "totalSections": 2092,
-  "displayedSections": 1407,
+  "totalSections": 2087,
+  "displayedSections": 1402,
   "pageCount": 131,
   "sections": [
-    {
-      "level": 1,
-      "title": "SESSÃO PÚBLICA DE ABERTURA DO CERTAME",
-      "content": "",
-      "children": [],
-      "marker": "SESSÃO PÚBLICA DE ABERTURA DO CERTAME",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "INÍCIO DA SESSÃO DE",
-      "content": "DISPUTA DE PREÇOS: ÀS 09:00 horas do dia 11/03/2021 (horário de Brasília/DF) ENDEREÇO ELETRÔNICO: h\u0000...",
-      "children": [],
-      "marker": "INÍCIO DA SESSÃO DE",
-      "type": "all_caps_title"
-    },
     {
       "level": 1,
       "title": "1. DO OBJETO",
@@ -2331,22 +2315,6 @@
       "children": [],
       "marker": "5.1",
       "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "TOTAL ESTIMADO DE",
-      "content": "",
-      "children": [],
-      "marker": "TOTAL ESTIMADO DE",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "USUÁRIOS",
-      "content": "609.200",
-      "children": [],
-      "marker": "USUÁRIOS",
-      "type": "all_caps_title"
     },
     {
       "level": 2,
@@ -9103,18 +9071,10 @@
     {
       "level": 1,
       "title": "1. DECLARAÇÃO PARA OS FINS DO DECRETO N° 39.860, DE 30 DE MAIO DE 2019",
-      "content": "ORGÃO/ENTIDADE",
+      "content": "ORGÃO/ENTIDADE PROCESSO",
       "children": [],
       "marker": "1",
       "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "PROCESSO",
-      "content": "",
-      "children": [],
-      "marker": "PROCESSO",
-      "type": "all_caps_title"
     },
     {
       "level": 1,
