@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { FileText, Upload, Loader2, ChevronRight, ChevronDown } from 'lucide-react';
 
 interface DocumentSection {
