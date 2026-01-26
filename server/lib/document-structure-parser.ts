@@ -39,6 +39,8 @@ const PATTERNS = [
     validate: (marker: string, match: RegExpMatchArray) => {
       if (marker.match(/^\d{5}$/)) return false;
       if (match[2] && match[2].match(/^\d+[-\/]/)) return false;
+      const text = match[2]?.toLowerCase() || '';
+      if (text.includes('ilha de serviço') || text.includes('ilha de serviços')) return false;
       return true;
     }
   },
@@ -46,7 +48,25 @@ const PATTERNS = [
     name: 'decimal_mixed',
     regex: /^(\d+(?:\.\d+)*)\.\s+(.{3,})$/,
     getLevel: (m: string) => m.split('.').length,
-    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`
+    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`,
+    validate: (marker: string, match: RegExpMatchArray) => {
+      const text = match[2]?.trim() || '';
+      const lower = text.toLowerCase();
+      
+      if (marker.match(/^\d+$/) && !marker.includes('.')) {
+        const firstWord = text.split(/\s+/)[0];
+        if (firstWord && /^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+[aeiou]r$/i.test(firstWord)) return false;
+        
+        if (/^Sobre\s/i.test(text)) return false;
+        
+        if (/^DECLARAÇÃO\s+PARA/i.test(text)) return false;
+        
+        if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]/.test(text) && !/^(D[OAE]S?|PARA|SOBRE|COM)\s/i.test(text)) {
+          if (!/[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ]{3,}/.test(text)) return false;
+        }
+      }
+      return true;
+    }
   },
   {
     name: 'decimal_paren',
@@ -147,14 +167,26 @@ const PATTERNS = [
       if (stopwords.some(w => lower.includes(w))) return false;
       
       if (text.length > 60) return false;
+      if (text.length < 10) return false;
       
       if (/\s(DE|DO|DA|DOS|DAS|EM|NO|NA|NOS|NAS|AO|AOS|À|ÀS|PARA|POR|COM|SEM|SOB|E|OU)$/i.test(text)) return false;
       
       const coverLabels = ['sessão pública', 'início da sessão', 'abertura do certame', 'endereço eletrônico', 'critério de julgamento', 'modo de disputa', 'tipo/regime'];
       if (coverLabels.some(l => lower.includes(l))) return false;
       
+      const tableLabels = ['ilha de serviço', 'dados do contrato', 'produtos a serem', 'perfis profissionais', 'nome perfil', 'modelo de', 'modelo proposta', 'xxxxxxx', 'formação do preço', 'planilha de preço', 'minutas dos contratos', 'relatórios do programa'];
+      if (tableLabels.some(l => lower.includes(l))) return false;
+      
+      const formLabels = ['modalidade de licitação', 'numero da licitação', 'número da licitação', 'avaliação de programa'];
+      if (formLabels.some(l => lower.includes(l))) return false;
+      
       const words = text.split(/\s+/).filter(w => w.length > 0);
-      if (words.length < 2) return false;
+      if (words.length < 3) return false;
+      
+      const isProperName = words.length >= 2 && words.length <= 4 && 
+        words.filter(w => w !== 'DE' && w !== 'DA' && w !== 'DO' && w !== 'DOS' && w !== 'DAS')
+             .every(w => /^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ]+$/.test(w) && w.length >= 3 && w.length <= 12);
+      if (isProperName) return false;
       
       return true;
     }

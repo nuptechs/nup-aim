@@ -1,7 +1,7 @@
 {
   "file": "attached_assets/Edital_de_Licitacao_-_reabertura_11mar2021_-_EDS-Chain-Detran_1769431394623.pdf",
-  "totalSections": 2087,
-  "displayedSections": 1402,
+  "totalSections": 2010,
+  "displayedSections": 1325,
   "pageCount": 131,
   "sections": [
     {
@@ -1835,14 +1835,6 @@
       "children": [],
       "marker": "20.20",
       "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "TERMO DE REFERÊNCIA",
-      "content": "",
-      "children": [],
-      "marker": "TERMO DE REFERÊNCIA",
-      "type": "all_caps_title"
     },
     {
       "level": 1,
@@ -7093,46 +7085,6 @@
       "type": "decimal_mixed"
     },
     {
-      "level": 1,
-      "title": "1. Acompanhar e coordenar o desenvolvimento do projeto, apoiando para",
-      "content": "remover impedimentos e interferências externas;",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "2. Promover a cooperação e coordenação entre os membros das equipes de",
-      "content": "projeto;",
-      "children": [],
-      "marker": "2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "3. Manter e alinhar, e, quando necessário coordenar o realinhamento do projeto;",
-      "content": "",
-      "children": [],
-      "marker": "3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "4. Realizar quando necessário revisão do Sprint Backlog e do Sprint Planning ;",
-      "content": "",
-      "children": [],
-      "marker": "4",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "5. Realizar quando necessário a revisão do Product Backlog, atualizando o",
-      "content": "product backlog; Entrega: Grooming do Product Backlog, do Sprint Backlog, do sprint planing e/ou",
-      "children": [],
-      "marker": "5",
-      "type": "decimal_mixed"
-    },
-    {
       "level": 3,
       "title": "11.8.5. Serviço de melhoria e aperfeiçoamento do projeto. Considerando que ao contrário",
       "content": "do modelo cascata a abordagem ágil pressupõe a qualidade durante todo o desenvolvimento do projeto, ...",
@@ -8886,251 +8838,35 @@
     },
     {
       "level": 1,
-      "title": "2 - Ilha de Serviços Técnicos Especializados de Gerenciamento de",
-      "content": "Projetos, Arquitetura, Análise de Negócios HST 8064 R$ 247,42 R$ 1.995.165,85",
-      "children": [],
-      "marker": "2",
-      "type": "decimal_dash"
-    },
-    {
-      "level": 1,
-      "title": "3 - Ilha de Serviços Técnicos Especializados em desenvolvimento de",
-      "content": "micro serviços na Plataforma Red Hat HST 16128 R$ 224,92 R$ 3.627.574,27",
-      "children": [],
-      "marker": "3",
-      "type": "decimal_dash"
-    },
-    {
-      "level": 1,
-      "title": "4 - Ilha de Serviços Técnicos Especializados de Teste e Qualidade de",
-      "content": "Micro Serviços HST 6048 R$ 152,63 R$ 923.088,10 VALOR GLOBAL - LOTE II R$ 7.682.684,08",
-      "children": [],
-      "marker": "4",
-      "type": "decimal_dash"
-    },
-    {
-      "level": 1,
       "title": "ANEXO I - (Do Termo de Referência)",
-      "content": "",
+      "content": "MODELO PROPOSTA DE FORMAÇÃO DE PREÇOS PREGÃO n. XXX/XXXX",
       "children": [],
       "marker": "ANEXO I",
       "type": "anexo"
     },
     {
       "level": 1,
-      "title": "MODELO PROPOSTA DE FORMAÇÃO DE PREÇOS",
-      "content": "PREGÃO n. XXX/XXXX Razão Social:",
-      "children": [],
-      "marker": "MODELO PROPOSTA DE FORMAÇÃO DE PREÇOS",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "ILHA DE SERVIÇO XXXXXXX",
-      "content": "Remuneração Média Encargos Sociais",
-      "children": [],
-      "marker": "ILHA DE SERVIÇO XXXXXXX",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
       "title": "ANEXO II - (Do Termo de Referência)",
-      "content": "",
+      "content": "MODELO DE ORDEM DE SERVIÇOS DOS SERVIÇOS ORDEM DE SERVIÇO Nº ___ /_______",
       "children": [],
       "marker": "ANEXO II",
       "type": "anexo"
     },
     {
       "level": 1,
-      "title": "MODELO DE ORDEM DE SERVIÇOS DOS SERVIÇOS",
-      "content": "ORDEM DE SERVIÇO Nº ___ /_______ DATA DE EMISSÃO ___ /___ /_______",
-      "children": [],
-      "marker": "MODELO DE ORDEM DE SERVIÇOS DOS SERVIÇOS",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "DADOS DO CONTRATO",
-      "content": "Contrato: ____/________ Edital de Pregão: ___/______",
-      "children": [],
-      "marker": "DADOS DO CONTRATO",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "PRODUTOS A SEREM ENTREGUES QTD HST PRAZO",
-      "content": "Produto 1 Produto 2",
-      "children": [],
-      "marker": "PRODUTOS A SEREM ENTREGUES QTD HST PRAZO",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "PERFIS PROFISSIONAIS PARA EXECUÇÃO DOS SERVIÇOS DA OS",
-      "content": "",
-      "children": [],
-      "marker": "PERFIS PROFISSIONAIS PARA EXECUÇÃO DOS SERVIÇOS DA OS",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "NOME PERFIL ILHA QTD DE HST",
-      "content": "",
-      "children": [],
-      "marker": "NOME PERFIL ILHA QTD DE HST",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "FORMAÇÃO DO PREÇO DA ORDEM DE SERVIÇO",
-      "content": "ILHA DE SERVIÇO QTD HST VALOR HST VALOR R$ DA ILHA VALOR TOTAL PREVISTO DA ORDEM DE SERVIÇO R$",
-      "children": [],
-      "marker": "FORMAÇÃO DO PREÇO DA ORDEM DE SERVIÇO",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "PLANILHA DE PREÇO MÁXIMO ADMISSÍVEL",
-      "content": "LOTE 1 Item PartNumber Descri\u0000vo Tipo Valor Unitário",
-      "children": [],
-      "marker": "PLANILHA DE PREÇO MÁXIMO ADMISSÍVEL",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
       "title": "ANEXO C - (do Edital)",
-      "content": "",
+      "content": "MODELO DE PROPOSTA DE PREÇOS AO",
       "children": [],
       "marker": "ANEXO C",
       "type": "anexo"
     },
     {
       "level": 1,
-      "title": "MODELO DE PROPOSTA DE PREÇOS",
-      "content": "AO DEPARTAMENTO DE TRÂNSITO DO DISTRITO FEDERAL",
-      "children": [],
-      "marker": "MODELO DE PROPOSTA DE PREÇOS",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "ILHA DE SERVIÇO XXXXXXX",
-      "content": "Remuneração Média Encargos Sociais",
-      "children": [],
-      "marker": "ILHA DE SERVIÇO XXXXXXX",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "1. Validade da Proposta: dias (não inferior a 60 dias).",
-      "content": "",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "2. Os Pagamentos deverão ser efetuados no Banco ________ Agência ______ Conta Corrente n° ___________. Obs. As empresas que possuem sede, filiais ou representações no Distrito Federal com créditos de valores iguais ou superiores",
-      "content": "a R$ 5.000,00 (cinco mil reais), os pagamentos serão feitos exclusivamente, mediante crédito em cont...",
-      "children": [],
-      "marker": "2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "3. Declaramos que na nossa proposta os valores apresentados englobam todas as despesas com tributos, impostos, contribuições fiscais, parafiscais ou taxas, inclusive, porventura, com serviços de terceiros, que incidam direta ou",
-      "content": "indiretamente no valor dos serviços cotados que venham a onerar o objeto desta licitação.",
-      "children": [],
-      "marker": "3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "4. Declaramos que os prazos serão os indicados ou os solicitados na forma do Termo de Referência e Edital.",
-      "content": "",
-      "children": [],
-      "marker": "4",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "5. Declaramos que aceitamos acréscimos ou supressões de até 25% (vinte e cinco por cento) do valor atualizado do Contrato, de acordo com o § 10 do Ar\u0000go 65 da Lei n.°8.666/93.",
-      "content": "Data da Proposta Nome, RG/CPF e assinatura do representante da empresa Carimbo do CNPJ/MF",
-      "children": [],
-      "marker": "5",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
       "title": "ANEXO D - (do Edital)",
-      "content": "MODELOS DE DECLARAÇÕES E RELATÓRIOS DO PROGRAMA DE INTEGRIDADE",
+      "content": "MODELOS DE DECLARAÇÕES E RELATÓRIOS DO PROGRAMA DE INTEGRIDADE 1. DECLARAÇÃO PARA OS FINS DO DECRETO...",
       "children": [],
       "marker": "ANEXO D",
       "type": "anexo"
-    },
-    {
-      "level": 1,
-      "title": "1. DECLARAÇÃO PARA OS FINS DO DECRETO N° 39.860, DE 30 DE MAIO DE 2019",
-      "content": "ORGÃO/ENTIDADE PROCESSO",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "MODALIDADE DE LICITAÇÃO",
-      "content": "",
-      "children": [],
-      "marker": "MODALIDADE DE LICITAÇÃO",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "NUMERO DA LICITAÇÃO",
-      "content": "CNPJ/CPF INSCRIÇÃO ESTADUAL/DISTRITAL",
-      "children": [],
-      "marker": "NUMERO DA LICITAÇÃO",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "REPRESENTANTE LEGAL",
-      "content": "CPF A pessoa \u0000sica ou jurídica acima iden\u0000ficada, por intermédio de seu representante legal, declara...",
-      "children": [],
-      "marker": "REPRESENTANTE LEGAL",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "2. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 4.770/2012",
-      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa__________________...",
-      "children": [],
-      "marker": "2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "3. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 5.847/2017",
-      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa__________________...",
-      "children": [],
-      "marker": "3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "4. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 6.128/2018",
-      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa__________________...",
-      "children": [],
-      "marker": "4",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "5. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 4.799/2012",
-      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa__________________...",
-      "children": [],
-      "marker": "5",
-      "type": "decimal_mixed"
     },
     {
       "level": 1,
@@ -9139,30 +8875,6 @@
       "children": [],
       "marker": "6",
       "type": "decimal_titled"
-    },
-    {
-      "level": 1,
-      "title": "7. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 6.112/2018",
-      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa__________________...",
-      "children": [],
-      "marker": "7",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "RELATÓRIOS DO PROGRAMA DE INTEGRIDADE",
-      "content": "",
-      "children": [],
-      "marker": "RELATÓRIOS DO PROGRAMA DE INTEGRIDADE",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
-      "title": "AVALIAÇÃO DE PROGRAMA DE INTEGRIDADE",
-      "content": "(Deverá ser apresentado após assinatura do contrato)",
-      "children": [],
-      "marker": "AVALIAÇÃO DE PROGRAMA DE INTEGRIDADE",
-      "type": "all_caps_title"
     },
     {
       "level": 1,
@@ -9175,122 +8887,10 @@
     {
       "level": 3,
       "title": "I. indicar os setores do mercado em que atua (no Distrito Federal, no Brasil e, conforme aplicável, no exterior).",
-      "content": "",
+      "content": "1. Informar as a\u0000vidades desenvolvidas pela pessoa jurídica no Brasil e no exterior, indicando as pr...",
       "children": [],
       "marker": "I",
       "type": "letter_dot"
-    },
-    {
-      "level": 1,
-      "title": "1. Informar as a\u0000vidades desenvolvidas pela pessoa jurídica no Brasil e no exterior, indicando as principais localidades em que atua;",
-      "content": "",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "2. Se for sociedade empresária de capital aberto, informar onde são negociados seus valores mobiliários.",
-      "content": "II. Apresentar sua estrutura organizacional, hierarquia interna, processo decisório e principais com...",
-      "children": [],
-      "marker": "2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "1. Apresentar a estrutura de governança da pessoa jurídica, deve-se anexar organograma e copia do contrato/estatuto social registrado;",
-      "content": "",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "2. Informar se a pessoa jurídica necessita de autorização ou determinações de outras pessoas jurídicas (matriz ou outra empresa do grupo econômico);",
-      "content": "",
-      "children": [],
-      "marker": "2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "3. Informar se a pessoa jurídica já for condenada administra\u0000va ou civilmente por atos corrupção e/ou fraude a licitações e contratos administra\u0000vos;",
-      "content": "III. Descrever as par\u0000cipações societárias em que está envolvida na condição de controladora, contro...",
-      "children": [],
-      "marker": "3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "1. Indicar a composição do capital social da pessoa jurídica, destacando quem são os principais sócios/acionistas e qual o percentual de\u0000do por cada um deles;",
-      "content": "",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "2. Informar se a pessoa jurídica detém par\u0000cipação em outras empresas, destacando quais são e o percentual de\u0000do;",
-      "content": "",
-      "children": [],
-      "marker": "2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "3. Informar se a pessoa jurídica integra grupo econômico e, caso posi\u0000vo, encaminhar organograma do grupo, bem como informar em que países atuam as demais empresas do grupo;",
-      "content": "",
-      "children": [],
-      "marker": "3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "4. Indicar se a pessoa jurídica realizou ou realiza ou realiza alguma das seguintes operações: fusão, aquisição, incorporação, joint venture, consórcios, parcerias e associações. Caso posi\u0000vo, informar quais operações realiza/realizou e a",
-      "content": "razão social das demais pessoas jurídicas envolvidas na operação. IV. Informar o quan\u0000ta\u0000vo de empre...",
-      "children": [],
-      "marker": "4",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "1. Informar quais autorizações, licenças ou permissões são necessárias para o exercício das a\u0000vidades da pessoa jurídica e os órgãos responsáveis pelas respec\u0000vas emissões.",
-      "content": "",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "2. Informar se a pessoa jurídica exerce uma a\u0000vidade regulada e, se for o caso, indicar o ente regulador.",
-      "content": "3 Quan\u0000ta\u0000vo e valores de contratos celebrados ou vigentes com en\u0000dades e órgãos públicos brasileiro...",
-      "children": [],
-      "marker": "2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "4. Informar se u\u0000liza intermediários nas interações com o setor público, destacando a frequência e em quais situações (exemplos: par\u0000cipação em licitações, execução de contratos administra\u0000vos, obtenção de autorizações, licenças e",
-      "content": "permissões, protocolo de documentos, desembaraço aduaneiro) eles são u\u0000lizados. VI. A pessoa jurídic...",
-      "children": [],
-      "marker": "4",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "1. Data em que a pessoa jurídica entende que o programa foi ins\u0000tuído.",
-      "content": "O responsável declara para todos os fins que as informações prestadas e os documentos apresentados s...",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "AVALIAÇÃO DE PROGRAMA DE INTEGRIDADE",
-      "content": "(Deverá ser apresentado após assinatura do contrato)",
-      "children": [],
-      "marker": "AVALIAÇÃO DE PROGRAMA DE INTEGRIDADE",
-      "type": "all_caps_title"
     },
     {
       "level": 1,
@@ -9299,14 +8899,6 @@
       "children": [],
       "marker": "2",
       "type": "decimal_titled"
-    },
-    {
-      "level": 1,
-      "title": "1. Sobre a estrutura organizacional da pessoa jurídica e sua relação com a integridade.",
-      "content": "",
-      "children": [],
-      "marker": "1",
-      "type": "decimal_mixed"
     },
     {
       "level": 2,
@@ -9319,17 +8911,9 @@
     {
       "level": 2,
       "title": "1.2. Informar se a pessoa jurídica possui órgão(s) colegiado(s) para tratar de temas de é\u0000ca e integridade, como Comitês e Conselhos de É\u0000ca. Caso possua, enviar os regulamentos que regem esse(s) órgão(s) colegiado(s) e documentos",
-      "content": "que comprovem o seu funcionamento, como atas de reunião.",
+      "content": "que comprovem o seu funcionamento, como atas de reunião. 2. Sobre o Comprome\u0000mento da Alta Direção",
       "children": [],
       "marker": "1.2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "2. Sobre o Comprome\u0000mento da Alta Direção",
-      "content": "",
-      "children": [],
-      "marker": "2",
       "type": "decimal_mixed"
     },
     {
@@ -9365,27 +8949,11 @@
       "type": "decimal_mixed"
     },
     {
-      "level": 1,
-      "title": "3. Sobre a instância interna responsável pelo Programa de Integridade",
-      "content": "",
-      "children": [],
-      "marker": "3",
-      "type": "decimal_mixed"
-    },
-    {
       "level": 2,
       "title": "3.1. Informar se a pessoa jurídica possui uma instância interna responsável pelas a\u0000vidades relacionadas ao programa.",
       "content": "Obs: não aplicável a microempresa e pequena de pequeno porte. Caso possua, os seguintes pontos devem...",
       "children": [],
       "marker": "3.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "4. Sobre os padrões de conduta e é\u0000ca",
-      "content": "",
-      "children": [],
-      "marker": "4",
       "type": "decimal_mixed"
     },
     {
@@ -9423,17 +8991,9 @@
     {
       "level": 2,
       "title": "4.5. Informar como esse documento é disponibilizado a terceiros e se são ofertados treinamentos sobre esse documento para terceiros, sobretudo para agentes intermediários, caso a pessoa jurídica u\u0000lize agentes intermediários.",
-      "content": "",
+      "content": "5. Sobre a estrutura para realização de treinamentos relacionados ao Programa de Integridade.",
       "children": [],
       "marker": "4.5",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "5. Sobre a estrutura para realização de treinamentos relacionados ao Programa de Integridade.",
-      "content": "",
-      "children": [],
-      "marker": "5",
       "type": "decimal_mixed"
     },
     {
@@ -9471,17 +9031,9 @@
     {
       "level": 2,
       "title": "6.1. Informar se foi realizada uma análise que contempla expressamente riscos relacionados a corrupção e fraude, destacando, caso tenha sido realizada, os responsáveis pela análise; quando ela foi realizada e se há planejamento",
-      "content": "definido sobre a periodicidade em que deve ser refeita.",
+      "content": "definido sobre a periodicidade em que deve ser refeita. 7. Sobre a prevenção de ilícitos nas interaç...",
       "children": [],
       "marker": "6.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "7. Sobre a prevenção de ilícitos nas interações com a Administração Pública .",
-      "content": "",
-      "children": [],
-      "marker": "7",
       "type": "decimal_mixed"
     },
     {
@@ -9527,17 +9079,9 @@
     {
       "level": 2,
       "title": "8.3. Informar se é dada transparência sobre as licitações das quais par\u0000cipa e os contratos administra\u0000vos que celebra, indicando obrigatoriamente onde os dados podem ser acessados.",
-      "content": "",
+      "content": "9. Precisão, Clareza e Confiabilidade dos Registros Contábeis e Demonstrações Financeiras",
       "children": [],
       "marker": "8.3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "9. Precisão, Clareza e Confiabilidade dos Registros Contábeis e Demonstrações Financeiras",
-      "content": "",
-      "children": [],
-      "marker": "9",
       "type": "decimal_mixed"
     },
     {
@@ -9546,14 +9090,6 @@
       "content": "Apresentar os fluxos de trabalho para elaboração de lançamentos contábeis; se possui regras que esta...",
       "children": [],
       "marker": "9.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "10. Diligências para contratação e supervisão de terceiros (não aplicável a microempresa e pequena de pequeno porte.)",
-      "content": "",
-      "children": [],
-      "marker": "10",
       "type": "decimal_mixed"
     },
     {
@@ -9567,17 +9103,9 @@
     {
       "level": 2,
       "title": "10.2. Informar se insere em seus contratos cláusulas que versam sobre a necessidade de cumprimento de normas é\u0000cas e vedação de prá\u0000cas de fraude e corrupção (cláusulas an\u0000corrupção). Enviar cópias de contratos que comprovam",
-      "content": "a aplicação da cláusula.",
+      "content": "a aplicação da cláusula. 11. Sobre diligências prévias a processos de fusões e aquisições (não aplic...",
       "children": [],
       "marker": "10.2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "11. Sobre diligências prévias a processos de fusões e aquisições (não aplicável a microempresa e pequena de pequeno porte.)",
-      "content": "",
-      "children": [],
-      "marker": "11",
       "type": "decimal_mixed"
     },
     {
@@ -9586,14 +9114,6 @@
       "content": "Destacar se as diligências buscam verificar se as pessoas jurídicas envolvidas nas operações societá...",
       "children": [],
       "marker": "11.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "12. Canais de denúncia",
-      "content": "",
-      "children": [],
-      "marker": "12",
       "type": "decimal_mixed"
     },
     {
@@ -9615,17 +9135,9 @@
     {
       "level": 2,
       "title": "12.3. Apresentar, se existentes, as esta\u0000s\u0000cas e dados sobre o funcionamento do canal de denúncias. Na avaliação, será considerada a proporcionalidade entre o número de denúncias e número de denúncias apuradas.",
-      "content": "",
+      "content": "13. Monitoramento con\u0000nuo do Programa de Integridade visando ao seu aperfeiçoamento na prevenção, de...",
       "children": [],
       "marker": "12.3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "13. Monitoramento con\u0000nuo do Programa de Integridade visando ao seu aperfeiçoamento na prevenção, detecção e combate dos atos lesivos referidos no art. 5º da Lei federal nº 12.846, de 1º de agosto de 2013, e na legislação",
-      "content": "correlata",
-      "children": [],
-      "marker": "13",
       "type": "decimal_mixed"
     },
     {
@@ -9655,73 +9167,17 @@
     {
       "level": 2,
       "title": "13.4. Informar as alterações propostas, a par\u0000r do monitoramento con\u0000nuo do Programa de Integridade, para o aperfeiçoamento na prevenção, detecção e combate dos atos lesivos.",
-      "content": "",
+      "content": "14. Ações de promoção da cultura é\u0000ca e de integridade por meio de eventos, e instrumentos que compr...",
       "children": [],
       "marker": "13.4",
       "type": "decimal_mixed"
     },
     {
-      "level": 1,
-      "title": "14. Ações de promoção da cultura é\u0000ca e de integridade por meio de eventos, e instrumentos que comprovem a sua realização.",
-      "content": "",
-      "children": [],
-      "marker": "14",
-      "type": "decimal_mixed"
-    },
-    {
       "level": 2,
       "title": "14.1. Informar a programação de eventos relacionados à promoção da cultura é\u0000ca e de integridade. Apresentar lista de presenças, registros dos eventos em site/intranet.",
-      "content": "III - Atuação da Pessoa Jurídica em Relação ao Ato Lesivo",
+      "content": "III - Atuação da Pessoa Jurídica em Relação ao Ato Lesivo 15. Informar se a pessoa jurídica consegui...",
       "children": [],
       "marker": "14.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "15. Informar se a pessoa jurídica conseguiu evitar a consumação da infração por meio dos controles previamente existentes.",
-      "content": "",
-      "children": [],
-      "marker": "15",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "16. Informar se a pessoa jurídica comunicou esses fatos às autoridades competentes.",
-      "content": "",
-      "children": [],
-      "marker": "16",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "17. Informar as ações que foram adotadas em relação aos envolvidos nos atos lesivos.",
-      "content": "",
-      "children": [],
-      "marker": "17",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "18. Informar se eles foram afastados dos seus quadros funcionais; ou se foram afastados dos cargos/funções que exerciam; ou, se man\u0000dos nos cargos/funções, estão sendo monitorados.",
-      "content": "",
-      "children": [],
-      "marker": "18",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "19. Informar se foram adotados novos procedimentos preven\u0000vos, ou aperfeiçoados os já existentes, para evitar que o ato lesivo ocorra novamente.",
-      "content": "",
-      "children": [],
-      "marker": "19",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "20. Informar se foram realizadas inves\u0000gações internas ou contratada organização independentes para verificar se ocorreram atos semelhantes.",
-      "content": "O responsável declara para todos os fins que as informações prestadas e os documentos apresentados s...",
-      "children": [],
-      "marker": "20",
       "type": "decimal_mixed"
     },
     {
@@ -9743,18 +9199,10 @@
     {
       "level": 1,
       "title": "SEÇÃO I",
-      "content": "",
+      "content": "DISPOSIÇÕES PRELIMINARES",
       "children": [],
       "marker": "SEÇÃO I",
       "type": "secao"
-    },
-    {
-      "level": 1,
-      "title": "DISPOSIÇÕES PRELIMINARES",
-      "content": "",
-      "children": [],
-      "marker": "DISPOSIÇÕES PRELIMINARES",
-      "type": "all_caps_title"
     },
     {
       "level": 2,
@@ -9806,14 +9254,6 @@
     },
     {
       "level": 1,
-      "title": "SUBSEÇÃO I",
-      "content": "",
-      "children": [],
-      "marker": "SUBSEÇÃO I",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
       "title": "DA ADVERTÊNCIA",
       "content": "",
       "children": [],
@@ -9827,14 +9267,6 @@
       "children": [],
       "marker": "Art. 3º",
       "type": "artigo"
-    },
-    {
-      "level": 1,
-      "title": "SUBSEÇÃO II",
-      "content": "",
-      "children": [],
-      "marker": "SUBSEÇÃO II",
-      "type": "all_caps_title"
     },
     {
       "level": 1,
@@ -9918,14 +9350,6 @@
     },
     {
       "level": 1,
-      "title": "SUBSEÇÃO III",
-      "content": "",
-      "children": [],
-      "marker": "SUBSEÇÃO III",
-      "type": "all_caps_title"
-    },
-    {
-      "level": 1,
       "title": "DA SUSPENSÃO",
       "content": "",
       "children": [],
@@ -9983,18 +9407,10 @@
     {
       "level": 3,
       "title": "§ 3° - O prazo previsto no inciso IV poderá ser aumentado para até 05 (cinco) anos, quando as condutas ali previstas forem pra\u0000cadas no âmbito dos procedimentos derivados dos pregões.",
-      "content": "",
+      "content": "SUBSEÇÃO IV",
       "children": [],
       "marker": "§ 3°",
       "type": "paragrafo"
-    },
-    {
-      "level": 1,
-      "title": "SUBSEÇÃO IV",
-      "content": "",
-      "children": [],
-      "marker": "SUBSEÇÃO IV",
-      "type": "all_caps_title"
     },
     {
       "level": 1,
@@ -10183,18 +9599,10 @@
     {
       "level": 1,
       "title": "CAPÍTULO VI",
-      "content": "",
+      "content": "DISPOSIÇÕES FINAIS",
       "children": [],
       "marker": "CAPÍTULO VI",
       "type": "capitulo"
-    },
-    {
-      "level": 1,
-      "title": "DISPOSIÇÕES FINAIS",
-      "content": "",
-      "children": [],
-      "marker": "DISPOSIÇÕES FINAIS",
-      "type": "all_caps_title"
     },
     {
       "level": 2,
@@ -10231,18 +9639,10 @@
     {
       "level": 2,
       "title": "Art. 16 - Revogam-se as disposições em contrário.",
-      "content": "ANEXO F (do Edital)",
+      "content": "ANEXO F (do Edital) MINUTAS DOS CONTRATOS",
       "children": [],
       "marker": "Art. 16",
       "type": "artigo"
-    },
-    {
-      "level": 1,
-      "title": "MINUTAS DOS CONTRATOS",
-      "content": "MINUTA DO CONTRATO - LOTE I PREGÃO ELETRÔNICO Nº 23/2020",
-      "children": [],
-      "marker": "MINUTAS DOS CONTRATOS",
-      "type": "all_caps_title"
     },
     {
       "level": 1,
@@ -10355,14 +9755,6 @@
       "children": [],
       "marker": "DO FORO E DAS DISPOSIÇÕES GERAIS",
       "type": "keyword_br"
-    },
-    {
-      "level": 1,
-      "title": "ZÉLIO MAIA DA ROCHA",
-      "content": "Pela CONTRATADA (Representante Legal)",
-      "children": [],
-      "marker": "ZÉLIO MAIA DA ROCHA",
-      "type": "all_caps_title"
     },
     {
       "level": 1,
@@ -11207,18 +10599,10 @@
     {
       "level": 2,
       "title": "15.4. “Havendo irregularidades neste instrumento entre em contato com a Ouvidoria de Combate à Corrupção, no telefone 0800-6449060”. (Decreto Distrital 34.031, de 12 de dezembro de 2012).",
-      "content": "Pelo CONTRATANTE",
+      "content": "Pelo CONTRATANTE ZÉLIO MAIA DA ROCHA",
       "children": [],
       "marker": "15.4",
       "type": "decimal_mixed"
-    },
-    {
-      "level": 1,
-      "title": "ZÉLIO MAIA DA ROCHA",
-      "content": "Pela CONTRATADA (Representante Legal)",
-      "children": [],
-      "marker": "ZÉLIO MAIA DA ROCHA",
-      "type": "all_caps_title"
     }
   ]
 }
