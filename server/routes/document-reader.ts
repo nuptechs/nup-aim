@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { readDocumentFromText, DocumentStructure } from "../lib/document-reader";
 import mammoth from "mammoth";
+import * as pdfParse from "pdf-parse";
 
 const router = Router();
 
@@ -23,11 +24,15 @@ router.post("/analyze", async (req, res) => {
       ) {
         const result = await mammoth.extractRawText({ buffer });
         extractedText = result.value;
+      } else if (mimeType === "application/pdf" || fileName?.endsWith(".pdf")) {
+        const pdfData = await (pdfParse as any).default(buffer);
+        extractedText = pdfData.text;
+        console.log(`[DocumentReader] PDF extraído: ${pdfData.numpages} páginas, ${extractedText.length} caracteres`);
       } else if (mimeType === "text/plain" || fileName?.endsWith(".txt")) {
         extractedText = buffer.toString("utf-8");
       } else if (mimeType?.startsWith("image/")) {
         return res.status(400).json({ 
-          error: "Imagens não são suportadas ainda. Envie arquivos .docx ou .txt" 
+          error: "Imagens não são suportadas. Envie arquivos PDF, DOCX ou TXT." 
         });
       } else {
         extractedText = buffer.toString("utf-8");
