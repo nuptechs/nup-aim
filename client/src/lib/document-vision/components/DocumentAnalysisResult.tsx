@@ -123,6 +123,19 @@ export const DocumentAnalysisResult: React.FC<DocumentAnalysisResultProps> = ({
           </div>
         )}
         
+        {showDetails && document.rawText && document.rawText.trim().length > 0 && (
+          <div className="p-6 border-b border-gray-100">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              Texto Extraído (OCR)
+            </h4>
+            <div className="bg-gray-50 rounded-lg p-4 max-h-80 overflow-y-auto">
+              <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono leading-relaxed">
+                {document.rawText}
+              </pre>
+            </div>
+          </div>
+        )}
+        
         {showDetails && (
           <div className="p-6 bg-gray-50">
             <h4 className="text-sm font-medium text-gray-700 mb-3">Metadados</h4>
