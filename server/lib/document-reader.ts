@@ -20,28 +20,6 @@ export interface DocumentStructure {
   error?: string;
 }
 
-function extractJSON(text: string): string {
-  let cleaned = text.trim();
-  
-  // Remove markdown code blocks with any language tag
-  cleaned = cleaned.replace(/^```\w*\s*/i, "");
-  cleaned = cleaned.replace(/\s*```\s*$/i, "");
-  cleaned = cleaned.replace(/```/g, "");
-  
-  // Find the outermost JSON object
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
-  if (start !== -1 && end !== -1 && end > start) {
-    cleaned = cleaned.substring(start, end + 1);
-  }
-  
-  // Replace problematic escape sequences
-  cleaned = cleaned.replace(/\\n/g, " ");
-  cleaned = cleaned.replace(/\\t/g, " ");
-  
-  return cleaned.trim();
-}
-
 export async function readDocumentFromText(text: string): Promise<DocumentStructure> {
   if (!text || text.trim().length === 0) {
     return {
@@ -53,108 +31,132 @@ export async function readDocumentFromText(text: string): Promise<DocumentStruct
     };
   }
 
-  const truncatedText = text.length > 30000 ? text.substring(0, 30000) + "\n[TEXTO TRUNCADO - muito longo]" : text;
+  // Limit text to avoid API issues
+  const truncatedText = text.length > 25000 ? text.substring(0, 25000) : text;
 
-  const prompt = `Você é um analisador de documentos. Analise o documento abaixo e extraia sua estrutura hierárquica completa.
+  const prompt = `Analise este documento e retorne APENAS um JSON válido com a estrutura hierárquica.
 
-INSTRUÇÕES IMPORTANTES:
-1. Identifique TODOS os títulos e subtítulos do documento
-2. level 1 = títulos principais (geralmente em MAIÚSCULAS ou numerados como "1.", "2.")
-3. level 2 = subtítulos (numerados como "1.1", "2.1" ou destacados)
-4. level 3 = sub-subtítulos (numerados como "1.1.1")
-5. O campo "content" deve conter o texto que está abaixo de cada título
-6. O campo "children" deve estar sempre como array vazio []
+REGRAS:
+1. Identifique títulos principais (level 1), subtítulos (level 2), etc.
+2. O campo "content" deve ser breve (máximo 100 caracteres)
+3. O campo "children" deve ser sempre um array vazio []
+4. Retorne NO MÁXIMO 20 seções para evitar respostas muito longas
 
-DOCUMENTO PARA ANÁLISE:
+DOCUMENTO:
 ${truncatedText}
 
-RESPONDA EXATAMENTE NESTE FORMATO JSON (sem texto adicional, sem markdown, sem explicações):
-{"sections":[{"level":1,"title":"TITULO AQUI","content":"conteudo aqui","children":[]}]}`;
+FORMATO (retorne EXATAMENTE assim, sem markdown, sem explicação):
+{"sections":[{"level":1,"title":"Titulo","content":"Resumo breve","children":[]}]}`;
 
   try {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-5",
-      max_tokens: 8192,
+      max_tokens: 4096,
       messages: [{ role: "user", content: prompt }],
     });
 
     const textContent = response.content.find((c) => c.type === "text");
     if (!textContent || textContent.type !== "text") {
       return {
-        title: "Erro na Análise",
+        title: "Erro",
         sections: [],
         rawText: text,
         pageCount: 1,
-        error: "A IA não retornou uma resposta de texto válida.",
+        error: "A IA não retornou texto.",
       };
     }
 
-    const jsonText = extractJSON(textContent.text);
+    let jsonText = textContent.text.trim();
     
+    // Remove markdown formatting
+    jsonText = jsonText.replace(/^```\w*\s*/i, "").replace(/\s*```$/i, "");
+    
+    // Extract JSON object
+    const start = jsonText.indexOf("{");
+    const end = jsonText.lastIndexOf("}");
+    if (start === -1 || end === -1 || end <= start) {
+      return {
+        title: "Erro",
+        sections: [],
+        rawText: text,
+        pageCount: 1,
+        error: "A IA não retornou JSON válido.",
+      };
+    }
+    
+    jsonText = jsonText.substring(start, end + 1);
+
     let parsed: { sections: DocumentSection[] };
     try {
       parsed = JSON.parse(jsonText);
-    } catch (parseError) {
-      console.error("[DocumentReader] JSON inválido:", jsonText.substring(0, 500));
-      return {
-        title: "Erro no Formato",
-        sections: [],
-        rawText: text,
-        pageCount: 1,
-        error: `A IA retornou um formato inválido. Resposta recebida: "${textContent.text.substring(0, 200)}..."`,
-      };
+    } catch (e) {
+      // JSON incompleto - tentar reparar fechando arrays/objetos
+      let repaired = jsonText;
+      
+      // Conta chaves abertas
+      const openBraces = (repaired.match(/{/g) || []).length;
+      const closeBraces = (repaired.match(/}/g) || []).length;
+      const openBrackets = (repaired.match(/\[/g) || []).length;
+      const closeBrackets = (repaired.match(/]/g) || []).length;
+      
+      // Fecha o que está aberto
+      for (let i = 0; i < openBrackets - closeBrackets; i++) {
+        repaired += "]}";
+      }
+      for (let i = 0; i < openBraces - closeBraces - (openBrackets - closeBrackets); i++) {
+        repaired += "}";
+      }
+      
+      try {
+        parsed = JSON.parse(repaired);
+      } catch {
+        console.error("[DocumentReader] JSON não pôde ser reparado");
+        return {
+          title: "Erro",
+          sections: [],
+          rawText: text,
+          pageCount: 1,
+          error: "Resposta da IA foi cortada. Tente com um documento menor.",
+        };
+      }
     }
 
-    if (!parsed.sections || !Array.isArray(parsed.sections)) {
-      return {
-        title: "Erro na Estrutura",
-        sections: [],
-        rawText: text,
-        pageCount: 1,
-        error: "A IA não identificou nenhuma seção no documento.",
-      };
-    }
-
-    if (parsed.sections.length === 0) {
+    if (!parsed.sections || !Array.isArray(parsed.sections) || parsed.sections.length === 0) {
       return {
         title: "Documento Vazio",
         sections: [],
         rawText: text,
         pageCount: 1,
-        error: "A IA não encontrou títulos ou seções neste documento.",
+        error: "Nenhuma seção identificada no documento.",
       };
     }
 
-    const documentTitle = parsed.sections[0]?.title || "Documento Analisado";
+    // Garante que cada seção tem children como array
+    const cleanSections = parsed.sections.map(s => ({
+      level: s.level || 1,
+      title: s.title || "Sem título",
+      content: s.content || "",
+      children: []
+    }));
 
     return {
-      title: documentTitle,
-      sections: parsed.sections,
+      title: cleanSections[0]?.title || "Documento",
+      sections: cleanSections,
       rawText: text,
       pageCount: 1,
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("[DocumentReader] Erro na API:", errorMessage);
-    
-    let userMessage = "Erro desconhecido ao processar o documento.";
-    
-    if (errorMessage.includes("413") || errorMessage.includes("too long")) {
-      userMessage = "O documento é muito grande. Tente enviar um arquivo menor ou apenas parte do texto.";
-    } else if (errorMessage.includes("429") || errorMessage.includes("rate")) {
-      userMessage = "Muitas requisições. Aguarde alguns segundos e tente novamente.";
-    } else if (errorMessage.includes("401") || errorMessage.includes("auth")) {
-      userMessage = "Erro de autenticação com a API de IA. Contate o administrador.";
-    } else if (errorMessage.includes("network") || errorMessage.includes("ECONNREFUSED")) {
-      userMessage = "Erro de conexão com a API de IA. Verifique sua internet.";
-    }
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[DocumentReader] Erro API:", msg);
     
     return {
       title: "Erro",
       sections: [],
       rawText: text,
       pageCount: 1,
-      error: userMessage,
+      error: msg.includes("too long") ? "Documento muito grande." : 
+             msg.includes("429") ? "Limite de requisições. Aguarde." : 
+             "Erro ao processar: " + msg.substring(0, 100),
     };
   }
 }
