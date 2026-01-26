@@ -33,9 +33,14 @@ const PATTERNS = [
   },
   {
     name: 'decimal_dash',
-    regex: /^(\d+(?:\.\d+)*)\s*[-–]\s*(.{3,})$/,
+    regex: /^(\d+(?:\.\d+)*)\s*[-–]\s*([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-Za-zÀ-ÿ\s]{2,})$/,
     getLevel: (m: string) => m.split('.').length,
-    getTitle: (m: RegExpMatchArray) => `${m[1]} - ${m[2].trim()}`
+    getTitle: (m: RegExpMatchArray) => `${m[1]} - ${m[2].trim()}`,
+    validate: (marker: string, match: RegExpMatchArray) => {
+      if (marker.match(/^\d{5}$/)) return false;
+      if (match[2] && match[2].match(/^\d+[-\/]/)) return false;
+      return true;
+    }
   },
   {
     name: 'decimal_mixed',
@@ -72,14 +77,14 @@ const PATTERNS = [
     regex: /^([IVXLCDM]+)\s*[-–.)\s]\s*([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]{2,})$/,
     getLevel: () => 1,
     getTitle: (m: RegExpMatchArray) => `${m[1]} - ${m[2].trim()}`,
-    validate: (marker: string) => isValidRoman(marker)
+    validate: (marker: string, _match: RegExpMatchArray) => isValidRoman(marker)
   },
   {
     name: 'roman_lower',
     regex: /^([ivxlcdm]+)\s*[-–.)\s]\s*(.{3,})$/,
     getLevel: () => 3,
     getTitle: (m: RegExpMatchArray) => `${m[1]}) ${m[2].trim()}`,
-    validate: (marker: string) => isValidRoman(marker.toUpperCase())
+    validate: (marker: string, _match: RegExpMatchArray) => isValidRoman(marker.toUpperCase())
   },
   {
     name: 'letter_lower_paren',
@@ -156,7 +161,7 @@ function parseLine(line: string, lineIndex: number): PatternMatch | null {
     if (match) {
       const marker = match[1];
       
-      if (pattern.validate && !pattern.validate(marker)) {
+      if (pattern.validate && !pattern.validate(marker, match)) {
         continue;
       }
       
