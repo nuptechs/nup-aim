@@ -139,10 +139,24 @@ const PATTERNS = [
     regex: /^([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]{5,})$/,
     getLevel: () => 1,
     getTitle: (m: RegExpMatchArray) => m[1].trim(),
-    validate: (marker: string) => {
-      const lower = marker.toLowerCase();
-      const stopwords = ['governo', 'departamento', 'ministério', 'secretaria', 'página', 'folha', 'diário', 'oficial'];
-      return !stopwords.some(w => lower.includes(w)) && marker.length < 60;
+    validate: (marker: string, _match: RegExpMatchArray) => {
+      const text = marker.trim();
+      const lower = text.toLowerCase();
+      
+      const stopwords = ['governo', 'departamento', 'ministério', 'secretaria', 'página', 'folha', 'diário', 'oficial', 'pregão', 'processo', 'estimativa'];
+      if (stopwords.some(w => lower.includes(w))) return false;
+      
+      if (text.length > 60) return false;
+      
+      if (/\s(DE|DO|DA|DOS|DAS|EM|NO|NA|NOS|NAS|AO|AOS|À|ÀS|PARA|POR|COM|SEM|SOB|E|OU)$/i.test(text)) return false;
+      
+      const coverLabels = ['sessão pública', 'início da sessão', 'abertura do certame', 'endereço eletrônico', 'critério de julgamento', 'modo de disputa', 'tipo/regime'];
+      if (coverLabels.some(l => lower.includes(l))) return false;
+      
+      const words = text.split(/\s+/).filter(w => w.length > 0);
+      if (words.length < 2) return false;
+      
+      return true;
     }
   }
 ];
