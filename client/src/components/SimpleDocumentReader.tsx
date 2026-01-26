@@ -13,6 +13,7 @@ interface DocumentStructure {
   sections: DocumentSection[];
   rawText: string;
   pageCount: number;
+  error?: string;
 }
 
 interface SimpleDocumentReaderProps {
@@ -214,9 +215,13 @@ export function SimpleDocumentReader({ onDocumentAnalyzed }: SimpleDocumentReade
             <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
               <div>
                 <h4 className="font-semibold text-gray-900">{document.title}</h4>
-                <p className="text-sm text-gray-500">
-                  {document.sections.length} seções encontradas
-                </p>
+                {document.error ? (
+                  <p className="text-sm text-red-600">{document.error}</p>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    {document.sections.length} seções encontradas
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => setDocument(null)}
