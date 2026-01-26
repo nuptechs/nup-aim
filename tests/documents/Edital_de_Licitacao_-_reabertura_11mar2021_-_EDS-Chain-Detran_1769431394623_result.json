@@ -1,7 +1,7 @@
 {
   "file": "attached_assets/Edital_de_Licitacao_-_reabertura_11mar2021_-_EDS-Chain-Detran_1769431394623.pdf",
-  "totalSections": 2011,
-  "displayedSections": 1326,
+  "totalSections": 2021,
+  "displayedSections": 1336,
   "pageCount": 134,
   "sections": [
     {
@@ -2859,11 +2859,278 @@
         {
           "level": 2,
           "title": "11.20. Encerrada a análise quanto à aceitação da proposta, o pregoeiro verificará a habilitação do licitante, observado o disposto neste Edital.",
-          "content": "12. HABILITAÇÃO",
+          "content": "",
           "children": [],
           "marker": "11.20",
           "type": "decimal_mixed"
+        }
+      ],
+      "marker": "11",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.1. Encerrada a etapa de negociação, será efe\u0000vada a verificação automá\u0000ca, junto à Receita Federal, do porte da en\u0000dade empresarial. O sistema iden\u0000ficará em coluna própria as microempresas e empresas de pequeno porte",
+      "content": "par\u0000cipantes, procedendo à comparação com os valores da primeira colocada, se esta for empresa de maior porte, assim como das demais classificadas, para o fim de aplicar-se o disposto nos arts. 44 e 45 da LC nº 123, de 2006, regulamentada pelo Decreto nº 8.538, de 2015. O pregoeiro examinará a proposta classificada em primeiro lugar quanto à adequação ao objeto e à compa\u0000bilidade do preço em relação ao máximo es\u0000pulado para contratação neste Edital e em seus anexos, observado o disposto no parág",
+      "children": [],
+      "marker": "11.1",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.2. Nessas condições, as propostas de microempresas, empresas de pequeno porte e sociedades coopera\u0000vas que se encontrarem na faixa de até 5% (cinco por cento) acima da proposta ou lance de menor preço serão consideradas",
+      "content": "empatadas com a primeira colocada.",
+      "children": [],
+      "marker": "11.2",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.3. A melhor classificada nos termos do item anterior terá o direito de encaminhar uma úl\u0000ma oferta para desempate, obrigatoriamente em valor inferior ao da primeira colocada, no prazo de 5 (cinco) minutos controlados pelo",
+      "content": "sistema, contados após a comunicação automá\u0000ca para tanto.",
+      "children": [],
+      "marker": "11.3",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.4. Caso a microempresa, empresa de pequeno porte ou sociedade coopera\u0000va melhor classificada desista ou não se manifeste no prazo estabelecido, serão convocadas as demais licitantes microempresa, empresa de pequeno porte e",
+      "content": "sociedade coopera\u0000va que se encontrem naquele intervalo de 5% (cinco por cento), na ordem de classificação, para o exercício do mesmo direito, no prazo estabelecido no subitem anterior.",
+      "children": [],
+      "marker": "11.4",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.5. No caso de equivalência dos valores apresentados pelas microempresas e empresas de pequeno porte que se encontrem nos intervalos estabelecidos nos subitens anteriores, será realizado sorteio entre elas para que se iden\u0000fique",
+      "content": "aquela que primeiro poderá apresentar melhor oferta.",
+      "children": [],
+      "marker": "11.5",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.6. Só poderá haver empate entre propostas iguais (não seguidas de lances), ou entre lances finais da fase fechada do modo de disputa aberto e fechado.",
+      "content": "",
+      "children": [],
+      "marker": "11.6",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.7. A proposta de preços deverá conter:",
+      "content": "",
+      "children": [
+        {
+          "level": 3,
+          "title": "11.7.1. Razão social do proponente, endereço completo, telefone, fax e endereço eletrônico (e-mail);",
+          "content": "",
+          "children": [],
+          "marker": "11.7.1",
+          "type": "decimal_mixed"
         },
+        {
+          "level": 3,
+          "title": "11.7.2. As especificações técnicas claras e detalhadas dos materiais e/ou do serviço de forma a demonstrar que atendem plenamente ao ANEXO A deste Edital, inclusive marca, quando for o caso.",
+          "content": "",
+          "children": [],
+          "marker": "11.7.2",
+          "type": "decimal_mixed"
+        },
+        {
+          "level": 3,
+          "title": "11.7.3. Prazo de validade, não inferior a 60 (sessenta) dias corridos, a contar da data de sua apresentação;",
+          "content": "",
+          "children": [],
+          "marker": "11.7.3",
+          "type": "decimal_mixed"
+        },
+        {
+          "level": 3,
+          "title": "11.7.4. Preços atualizados em conformidade com o úl\u0000mo lance ofertado, em moeda corrente nacional, expressos em algarismo e por extenso;",
+          "content": "",
+          "children": [],
+          "marker": "11.7.4",
+          "type": "decimal_mixed"
+        },
+        {
+          "level": 3,
+          "title": "11.7.5. Declaração de que nos preços cotados estão incluídos todas as despesas, tributos e encargos de qualquer natureza incidentes sobre o objeto deste Pregão Eletrônico, nada mais sendo lícito pleitear a esse \u0000tulo.",
+          "content": "",
+          "children": [],
+          "marker": "11.7.5",
+          "type": "decimal_mixed"
+        }
+      ],
+      "marker": "11.7",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 3,
+      "title": "11.7.1. Razão social do proponente, endereço completo, telefone, fax e endereço eletrônico (e-mail);",
+      "content": "",
+      "children": [],
+      "marker": "11.7.1",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 3,
+      "title": "11.7.2. As especificações técnicas claras e detalhadas dos materiais e/ou do serviço de forma a demonstrar que atendem plenamente ao ANEXO A deste Edital, inclusive marca, quando for o caso.",
+      "content": "",
+      "children": [],
+      "marker": "11.7.2",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 3,
+      "title": "11.7.3. Prazo de validade, não inferior a 60 (sessenta) dias corridos, a contar da data de sua apresentação;",
+      "content": "",
+      "children": [],
+      "marker": "11.7.3",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 3,
+      "title": "11.7.4. Preços atualizados em conformidade com o úl\u0000mo lance ofertado, em moeda corrente nacional, expressos em algarismo e por extenso;",
+      "content": "",
+      "children": [],
+      "marker": "11.7.4",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 3,
+      "title": "11.7.5. Declaração de que nos preços cotados estão incluídos todas as despesas, tributos e encargos de qualquer natureza incidentes sobre o objeto deste Pregão Eletrônico, nada mais sendo lícito pleitear a esse \u0000tulo.",
+      "content": "",
+      "children": [],
+      "marker": "11.7.5",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.8. A licitante deverá enviar a Proposta de Preços em conformidade com o ANEXO C deste Edital com os valores unitários e totais.",
+      "content": "",
+      "children": [],
+      "marker": "11.8",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.9. A apresentação da proposta implicará plena aceitação, por parte da proponente, das condições estabelecidas neste Edital e seus Anexos.",
+      "content": "",
+      "children": [],
+      "marker": "11.9",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.10. Será desclassificada a proposta vencedora que apresentar preço manifestamente inexequível ou como valor superior ao preço máximo fixado (Anexo B do Edital).",
+      "content": "",
+      "children": [],
+      "marker": "11.10",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.11. Considera-se inexequível a proposta que apresente preços global ou unitários simbólicos, irrisórios ou de valor zero, incompa\u0000veis com os preços dos insumos e salários de mercado, acrescidos dos respec\u0000vos encargos, ainda que",
+      "content": "o ato convocatório da licitação não tenha estabelecido limites mínimos, exceto quando se referirem a materiais e instalações de propriedade do próprio licitante, para os quais ele renuncie a parcela ou à totalidade da remuneração.",
+      "children": [],
+      "marker": "11.11",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.12. Serão desclassificadas as propostas que não atenderem às exigências do presente Edital e seus Anexos, sejam omissas ou apresentem irregularidades insanáveis.",
+      "content": "",
+      "children": [],
+      "marker": "11.12",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.13. Se a proposta for desclassificada, o Pregoeiro examinará a proposta subsequente, e, assim sucessivamente, na ordem de classificação.",
+      "content": "",
+      "children": [],
+      "marker": "11.13",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.14. Nas hipóteses em que o Pregoeiro não aceitar a proposta e passar à subsequente, poderá negociar com o licitante para que seja ob\u0000do preço melhor.",
+      "content": "",
+      "children": [],
+      "marker": "11.14",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.15. A negociação será realizada por meio do sistema, podendo ser acompanhada pelos demais licitante.",
+      "content": "",
+      "children": [],
+      "marker": "11.15",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.16. Qualquer interessado poderá requerer que se realizem diligências para aferir a exequibilidade e a legalidade das propostas, devendo apresentar as provas ou os indícios que fundamentam a suspeita.",
+      "content": "",
+      "children": [
+        {
+          "level": 3,
+          "title": "11.16.1. Na hipótese de necessidade de suspensão da sessão pública para a realização de diligências, com vistas ao saneamento das propostas, a sessão pública somente poderá ser reiniciada mediante aviso prévio no sistema com,",
+          "content": "no mínimo, vinte e quatro horas de antecedência, e a ocorrência será registrada em ata.",
+          "children": [],
+          "marker": "11.16.1",
+          "type": "decimal_mixed"
+        }
+      ],
+      "marker": "11.16",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 3,
+      "title": "11.16.1. Na hipótese de necessidade de suspensão da sessão pública para a realização de diligências, com vistas ao saneamento das propostas, a sessão pública somente poderá ser reiniciada mediante aviso prévio no sistema com,",
+      "content": "no mínimo, vinte e quatro horas de antecedência, e a ocorrência será registrada em ata.",
+      "children": [],
+      "marker": "11.16.1",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.17. Erros no preenchimento da planilha não são mo\u0000vos suficientes para a desclassificação da proposta, quando a planilha puder ser ajustada sem a necessidade de majoração do preço ofertado, atendidas as demais condições de",
+      "content": "aceitabilidade.",
+      "children": [],
+      "marker": "11.17",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.18. Se a proposta ou lance vencedor for desclassificado, o Pregoeiro examinará a proposta ou lance subsequente, e, assim sucessivamente, na ordem de classificação.",
+      "content": "",
+      "children": [],
+      "marker": "11.18",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.19. Havendo necessidade, o Pregoeiro suspenderá a sessão, informando no “chat” a nova data e horário para sua con\u0000nuidade.",
+      "content": "",
+      "children": [],
+      "marker": "11.19",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "11.20. Encerrada a análise quanto à aceitação da proposta, o pregoeiro verificará a habilitação do licitante, observado o disposto neste Edital.",
+      "content": "",
+      "children": [],
+      "marker": "11.20",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 1,
+      "title": "12. HABILITAÇÃO",
+      "content": "",
+      "children": [
         {
           "level": 2,
           "title": "12.1. Como condição prévia ao exame da documentação de habilitação do licitante detentor da proposta classificada em primeiro lugar, o Pregoeiro verificará o eventual descumprimento das condições de par\u0000cipação, especialmente",
@@ -3348,265 +3615,7 @@
           "type": "decimal_mixed"
         }
       ],
-      "marker": "11",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.1. Encerrada a etapa de negociação, será efe\u0000vada a verificação automá\u0000ca, junto à Receita Federal, do porte da en\u0000dade empresarial. O sistema iden\u0000ficará em coluna própria as microempresas e empresas de pequeno porte",
-      "content": "par\u0000cipantes, procedendo à comparação com os valores da primeira colocada, se esta for empresa de maior porte, assim como das demais classificadas, para o fim de aplicar-se o disposto nos arts. 44 e 45 da LC nº 123, de 2006, regulamentada pelo Decreto nº 8.538, de 2015. O pregoeiro examinará a proposta classificada em primeiro lugar quanto à adequação ao objeto e à compa\u0000bilidade do preço em relação ao máximo es\u0000pulado para contratação neste Edital e em seus anexos, observado o disposto no parág",
-      "children": [],
-      "marker": "11.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.2. Nessas condições, as propostas de microempresas, empresas de pequeno porte e sociedades coopera\u0000vas que se encontrarem na faixa de até 5% (cinco por cento) acima da proposta ou lance de menor preço serão consideradas",
-      "content": "empatadas com a primeira colocada.",
-      "children": [],
-      "marker": "11.2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.3. A melhor classificada nos termos do item anterior terá o direito de encaminhar uma úl\u0000ma oferta para desempate, obrigatoriamente em valor inferior ao da primeira colocada, no prazo de 5 (cinco) minutos controlados pelo",
-      "content": "sistema, contados após a comunicação automá\u0000ca para tanto.",
-      "children": [],
-      "marker": "11.3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.4. Caso a microempresa, empresa de pequeno porte ou sociedade coopera\u0000va melhor classificada desista ou não se manifeste no prazo estabelecido, serão convocadas as demais licitantes microempresa, empresa de pequeno porte e",
-      "content": "sociedade coopera\u0000va que se encontrem naquele intervalo de 5% (cinco por cento), na ordem de classificação, para o exercício do mesmo direito, no prazo estabelecido no subitem anterior.",
-      "children": [],
-      "marker": "11.4",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.5. No caso de equivalência dos valores apresentados pelas microempresas e empresas de pequeno porte que se encontrem nos intervalos estabelecidos nos subitens anteriores, será realizado sorteio entre elas para que se iden\u0000fique",
-      "content": "aquela que primeiro poderá apresentar melhor oferta.",
-      "children": [],
-      "marker": "11.5",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.6. Só poderá haver empate entre propostas iguais (não seguidas de lances), ou entre lances finais da fase fechada do modo de disputa aberto e fechado.",
-      "content": "",
-      "children": [],
-      "marker": "11.6",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.7. A proposta de preços deverá conter:",
-      "content": "",
-      "children": [
-        {
-          "level": 3,
-          "title": "11.7.1. Razão social do proponente, endereço completo, telefone, fax e endereço eletrônico (e-mail);",
-          "content": "",
-          "children": [],
-          "marker": "11.7.1",
-          "type": "decimal_mixed"
-        },
-        {
-          "level": 3,
-          "title": "11.7.2. As especificações técnicas claras e detalhadas dos materiais e/ou do serviço de forma a demonstrar que atendem plenamente ao ANEXO A deste Edital, inclusive marca, quando for o caso.",
-          "content": "",
-          "children": [],
-          "marker": "11.7.2",
-          "type": "decimal_mixed"
-        },
-        {
-          "level": 3,
-          "title": "11.7.3. Prazo de validade, não inferior a 60 (sessenta) dias corridos, a contar da data de sua apresentação;",
-          "content": "",
-          "children": [],
-          "marker": "11.7.3",
-          "type": "decimal_mixed"
-        },
-        {
-          "level": 3,
-          "title": "11.7.4. Preços atualizados em conformidade com o úl\u0000mo lance ofertado, em moeda corrente nacional, expressos em algarismo e por extenso;",
-          "content": "",
-          "children": [],
-          "marker": "11.7.4",
-          "type": "decimal_mixed"
-        },
-        {
-          "level": 3,
-          "title": "11.7.5. Declaração de que nos preços cotados estão incluídos todas as despesas, tributos e encargos de qualquer natureza incidentes sobre o objeto deste Pregão Eletrônico, nada mais sendo lícito pleitear a esse \u0000tulo.",
-          "content": "",
-          "children": [],
-          "marker": "11.7.5",
-          "type": "decimal_mixed"
-        }
-      ],
-      "marker": "11.7",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 3,
-      "title": "11.7.1. Razão social do proponente, endereço completo, telefone, fax e endereço eletrônico (e-mail);",
-      "content": "",
-      "children": [],
-      "marker": "11.7.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 3,
-      "title": "11.7.2. As especificações técnicas claras e detalhadas dos materiais e/ou do serviço de forma a demonstrar que atendem plenamente ao ANEXO A deste Edital, inclusive marca, quando for o caso.",
-      "content": "",
-      "children": [],
-      "marker": "11.7.2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 3,
-      "title": "11.7.3. Prazo de validade, não inferior a 60 (sessenta) dias corridos, a contar da data de sua apresentação;",
-      "content": "",
-      "children": [],
-      "marker": "11.7.3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 3,
-      "title": "11.7.4. Preços atualizados em conformidade com o úl\u0000mo lance ofertado, em moeda corrente nacional, expressos em algarismo e por extenso;",
-      "content": "",
-      "children": [],
-      "marker": "11.7.4",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 3,
-      "title": "11.7.5. Declaração de que nos preços cotados estão incluídos todas as despesas, tributos e encargos de qualquer natureza incidentes sobre o objeto deste Pregão Eletrônico, nada mais sendo lícito pleitear a esse \u0000tulo.",
-      "content": "",
-      "children": [],
-      "marker": "11.7.5",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.8. A licitante deverá enviar a Proposta de Preços em conformidade com o ANEXO C deste Edital com os valores unitários e totais.",
-      "content": "",
-      "children": [],
-      "marker": "11.8",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.9. A apresentação da proposta implicará plena aceitação, por parte da proponente, das condições estabelecidas neste Edital e seus Anexos.",
-      "content": "",
-      "children": [],
-      "marker": "11.9",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.10. Será desclassificada a proposta vencedora que apresentar preço manifestamente inexequível ou como valor superior ao preço máximo fixado (Anexo B do Edital).",
-      "content": "",
-      "children": [],
-      "marker": "11.10",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.11. Considera-se inexequível a proposta que apresente preços global ou unitários simbólicos, irrisórios ou de valor zero, incompa\u0000veis com os preços dos insumos e salários de mercado, acrescidos dos respec\u0000vos encargos, ainda que",
-      "content": "o ato convocatório da licitação não tenha estabelecido limites mínimos, exceto quando se referirem a materiais e instalações de propriedade do próprio licitante, para os quais ele renuncie a parcela ou à totalidade da remuneração.",
-      "children": [],
-      "marker": "11.11",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.12. Serão desclassificadas as propostas que não atenderem às exigências do presente Edital e seus Anexos, sejam omissas ou apresentem irregularidades insanáveis.",
-      "content": "",
-      "children": [],
-      "marker": "11.12",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.13. Se a proposta for desclassificada, o Pregoeiro examinará a proposta subsequente, e, assim sucessivamente, na ordem de classificação.",
-      "content": "",
-      "children": [],
-      "marker": "11.13",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.14. Nas hipóteses em que o Pregoeiro não aceitar a proposta e passar à subsequente, poderá negociar com o licitante para que seja ob\u0000do preço melhor.",
-      "content": "",
-      "children": [],
-      "marker": "11.14",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.15. A negociação será realizada por meio do sistema, podendo ser acompanhada pelos demais licitante.",
-      "content": "",
-      "children": [],
-      "marker": "11.15",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.16. Qualquer interessado poderá requerer que se realizem diligências para aferir a exequibilidade e a legalidade das propostas, devendo apresentar as provas ou os indícios que fundamentam a suspeita.",
-      "content": "",
-      "children": [
-        {
-          "level": 3,
-          "title": "11.16.1. Na hipótese de necessidade de suspensão da sessão pública para a realização de diligências, com vistas ao saneamento das propostas, a sessão pública somente poderá ser reiniciada mediante aviso prévio no sistema com,",
-          "content": "no mínimo, vinte e quatro horas de antecedência, e a ocorrência será registrada em ata.",
-          "children": [],
-          "marker": "11.16.1",
-          "type": "decimal_mixed"
-        }
-      ],
-      "marker": "11.16",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 3,
-      "title": "11.16.1. Na hipótese de necessidade de suspensão da sessão pública para a realização de diligências, com vistas ao saneamento das propostas, a sessão pública somente poderá ser reiniciada mediante aviso prévio no sistema com,",
-      "content": "no mínimo, vinte e quatro horas de antecedência, e a ocorrência será registrada em ata.",
-      "children": [],
-      "marker": "11.16.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.17. Erros no preenchimento da planilha não são mo\u0000vos suficientes para a desclassificação da proposta, quando a planilha puder ser ajustada sem a necessidade de majoração do preço ofertado, atendidas as demais condições de",
-      "content": "aceitabilidade.",
-      "children": [],
-      "marker": "11.17",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.18. Se a proposta ou lance vencedor for desclassificado, o Pregoeiro examinará a proposta ou lance subsequente, e, assim sucessivamente, na ordem de classificação.",
-      "content": "",
-      "children": [],
-      "marker": "11.18",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.19. Havendo necessidade, o Pregoeiro suspenderá a sessão, informando no “chat” a nova data e horário para sua con\u0000nuidade.",
-      "content": "",
-      "children": [],
-      "marker": "11.19",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "11.20. Encerrada a análise quanto à aceitação da proposta, o pregoeiro verificará a habilitação do licitante, observado o disposto neste Edital.",
-      "content": "12. HABILITAÇÃO",
-      "children": [],
-      "marker": "11.20",
+      "marker": "12",
       "type": "decimal_mixed"
     },
     {
@@ -6503,33 +6512,9 @@
         {
           "level": 2,
           "title": "5.6. Para entregar esses serviços com adequado nível de qualidade e eficiência, a área de TI do DETRAN/DF irá inves\u0000r no aprimoramento das prá\u0000cas de gestão e operacionalização desse ambiente tecnológico com base",
-          "content": "em modelos de melhores prá\u0000cas internacionalmente reconhecidos, associando desenvolvimento ágil com micro serviços em esteiras automa\u0000zadas de DevOps. 6. CONTRATAÇÃO DE ME/EPP",
+          "content": "em modelos de melhores prá\u0000cas internacionalmente reconhecidos, associando desenvolvimento ágil com micro serviços em esteiras automa\u0000zadas de DevOps.",
           "children": [],
           "marker": "5.6",
-          "type": "decimal_mixed"
-        },
-        {
-          "level": 2,
-          "title": "6.1. Mediante pesquisa de mercado (orçamentos no processo), não foi iden\u0000ficado para nenhum item, que existam no mínimo 3 ME/EPP capazes de atender integralmente ao objeto, desta forma a contratação não ser",
-          "content": "exclusiva para Microempresas e Emprestas de Pequeno Porte. 7. PARTICIPAÇÃO EM CONSÓRCIO",
-          "children": [],
-          "marker": "6.1",
-          "type": "decimal_mixed"
-        },
-        {
-          "level": 2,
-          "title": "7.1. No caso do presente processo não se vislumbra ganho em termos de compe\u0000\u0000vidade do certame caso seja permi\u0000da a par\u0000cipação de empresas reunidas em consórcio, pois existem inúmeros fornecedores do fabricante",
-          "content": "RedHat que possuem capacidade para fornecer individualmente todo o objeto descrito neste Termo de Referência.",
-          "children": [],
-          "marker": "7.1",
-          "type": "decimal_mixed"
-        },
-        {
-          "level": 2,
-          "title": "7.2. Não há escassez de empresas que forneçam as subscrições e igualmente prestem os serviços objeto do certame, tampouco é gravado de complexidade que torne problemá\u0000ca a compe\u0000ção, sendo desnecessário o",
-          "content": "consórcio entre empresas, fato que poderia ainda prejudicar a conquista da conjugação do menor preço e do melhor produto/serviço, assim como dificultar a fiscalização, cobrança e execução contratual. Portanto, não será permi\u0000da a par\u0000cipação de consórcios.",
-          "children": [],
-          "marker": "7.2",
           "type": "decimal_mixed"
         }
       ],
@@ -6579,17 +6564,59 @@
     {
       "level": 2,
       "title": "5.6. Para entregar esses serviços com adequado nível de qualidade e eficiência, a área de TI do DETRAN/DF irá inves\u0000r no aprimoramento das prá\u0000cas de gestão e operacionalização desse ambiente tecnológico com base",
-      "content": "em modelos de melhores prá\u0000cas internacionalmente reconhecidos, associando desenvolvimento ágil com micro serviços em esteiras automa\u0000zadas de DevOps. 6. CONTRATAÇÃO DE ME/EPP",
+      "content": "em modelos de melhores prá\u0000cas internacionalmente reconhecidos, associando desenvolvimento ágil com micro serviços em esteiras automa\u0000zadas de DevOps.",
       "children": [],
       "marker": "5.6",
       "type": "decimal_mixed"
     },
     {
+      "level": 1,
+      "title": "6. CONTRATAÇÃO DE ME/EPP",
+      "content": "",
+      "children": [
+        {
+          "level": 2,
+          "title": "6.1. Mediante pesquisa de mercado (orçamentos no processo), não foi iden\u0000ficado para nenhum item, que existam no mínimo 3 ME/EPP capazes de atender integralmente ao objeto, desta forma a contratação não ser",
+          "content": "exclusiva para Microempresas e Emprestas de Pequeno Porte.",
+          "children": [],
+          "marker": "6.1",
+          "type": "decimal_mixed"
+        }
+      ],
+      "marker": "6",
+      "type": "decimal_mixed"
+    },
+    {
       "level": 2,
       "title": "6.1. Mediante pesquisa de mercado (orçamentos no processo), não foi iden\u0000ficado para nenhum item, que existam no mínimo 3 ME/EPP capazes de atender integralmente ao objeto, desta forma a contratação não ser",
-      "content": "exclusiva para Microempresas e Emprestas de Pequeno Porte. 7. PARTICIPAÇÃO EM CONSÓRCIO",
+      "content": "exclusiva para Microempresas e Emprestas de Pequeno Porte.",
       "children": [],
       "marker": "6.1",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 1,
+      "title": "7. PARTICIPAÇÃO EM CONSÓRCIO",
+      "content": "",
+      "children": [
+        {
+          "level": 2,
+          "title": "7.1. No caso do presente processo não se vislumbra ganho em termos de compe\u0000\u0000vidade do certame caso seja permi\u0000da a par\u0000cipação de empresas reunidas em consórcio, pois existem inúmeros fornecedores do fabricante",
+          "content": "RedHat que possuem capacidade para fornecer individualmente todo o objeto descrito neste Termo de Referência.",
+          "children": [],
+          "marker": "7.1",
+          "type": "decimal_mixed"
+        },
+        {
+          "level": 2,
+          "title": "7.2. Não há escassez de empresas que forneçam as subscrições e igualmente prestem os serviços objeto do certame, tampouco é gravado de complexidade que torne problemá\u0000ca a compe\u0000ção, sendo desnecessário o",
+          "content": "consórcio entre empresas, fato que poderia ainda prejudicar a conquista da conjugação do menor preço e do melhor produto/serviço, assim como dificultar a fiscalização, cobrança e execução contratual. Portanto, não será permi\u0000da a par\u0000cipação de consórcios.",
+          "children": [],
+          "marker": "7.2",
+          "type": "decimal_mixed"
+        }
+      ],
+      "marker": "7",
       "type": "decimal_mixed"
     },
     {
@@ -7614,11 +7641,117 @@
         {
           "level": 2,
           "title": "10.8. Para cotação dos preços dos itens de serviços, baseados em HST (hora de serviço técnico) observar o quan\u0000ta\u0000vo por “ilhas de serviço”.",
-          "content": "11. ESPECIFICAÇÃO TÉCNICA",
+          "content": "",
           "children": [],
           "marker": "10.8",
           "type": "decimal_mixed"
+        }
+      ],
+      "marker": "10",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "10.1. As es\u0000ma\u0000vas foram levantadas baseadas nas seguintes premissas:",
+      "content": "",
+      "children": [],
+      "marker": "10.1",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "10.2. Estrutura \u0000sica hoje existente no DETRAN;",
+      "content": "",
+      "children": [],
+      "marker": "10.2",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "10.3. Histórico dos serviços realizados em TI;",
+      "content": "",
+      "children": [],
+      "marker": "10.3",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "10.4. Perspec\u0000va de crescimento da estrutura existente;",
+      "content": "",
+      "children": [],
+      "marker": "10.4",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "10.5. A vigência das subscrições dos so\u0000wares especificados é de 24 (vinte e quatro meses) meses a contar da abertura da ordem de fornecimento, a ser emi\u0000da após a assinatura do contrato.",
+      "content": "",
+      "children": [],
+      "marker": "10.5",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "10.6. Deverá ser considerada a modalidade de subscrição especificada na coluna “Tipo” para cada um dos produtos de so\u0000ware e nas quan\u0000dades constantes na tabela constante no modelo de proposta, a saber:",
+      "content": "",
+      "children": [
+        {
+          "level": 3,
+          "title": "10.6.1. Para todos os itens em que a coluna “\u0000po” seja especificada como “par de processadores” a contabilização deve ser realizada por par de sockets, ou seja, uma subscrição a cada 2 sockets.",
+          "content": "",
+          "children": [],
+          "marker": "10.6.1",
+          "type": "decimal_mixed"
         },
+        {
+          "level": 3,
+          "title": "10.6.2. Para todos os itens em que a coluna “\u0000po” seja especificada como “cores \u0000sicos ou virtuais” a contabilização deve ser realizada por core \u0000sico ou virtual onde a aplicação es\u0000ver hospedada. Devem ser realizadas as duas",
+          "content": "contagens e considerada aquela que for menor, ou seja, a mais vantajosa para a contratante.",
+          "children": [],
+          "marker": "10.6.2",
+          "type": "decimal_mixed"
+        }
+      ],
+      "marker": "10.6",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 3,
+      "title": "10.6.1. Para todos os itens em que a coluna “\u0000po” seja especificada como “par de processadores” a contabilização deve ser realizada por par de sockets, ou seja, uma subscrição a cada 2 sockets.",
+      "content": "",
+      "children": [],
+      "marker": "10.6.1",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 3,
+      "title": "10.6.2. Para todos os itens em que a coluna “\u0000po” seja especificada como “cores \u0000sicos ou virtuais” a contabilização deve ser realizada por core \u0000sico ou virtual onde a aplicação es\u0000ver hospedada. Devem ser realizadas as duas",
+      "content": "contagens e considerada aquela que for menor, ou seja, a mais vantajosa para a contratante.",
+      "children": [],
+      "marker": "10.6.2",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "10.7. Para a cotação de preços dos itens de treinamento na modalidade de subscrição RedHat Learning Subscrip\u0000on, a quan\u0000dade a ser informada será por pessoa (por aluno).",
+      "content": "",
+      "children": [],
+      "marker": "10.7",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 2,
+      "title": "10.8. Para cotação dos preços dos itens de serviços, baseados em HST (hora de serviço técnico) observar o quan\u0000ta\u0000vo por “ilhas de serviço”.",
+      "content": "",
+      "children": [],
+      "marker": "10.8",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 1,
+      "title": "11. ESPECIFICAÇÃO TÉCNICA",
+      "content": "",
+      "children": [
         {
           "level": 2,
           "title": "11.1. RED HAT ENTERPRISE LINUX FOR VIRTUAL DATACENTERS WITH SMART MANAGEMENT, PREMIUM",
@@ -16690,104 +16823,7 @@
           "type": "decimal_titled"
         }
       ],
-      "marker": "10",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "10.1. As es\u0000ma\u0000vas foram levantadas baseadas nas seguintes premissas:",
-      "content": "",
-      "children": [],
-      "marker": "10.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "10.2. Estrutura \u0000sica hoje existente no DETRAN;",
-      "content": "",
-      "children": [],
-      "marker": "10.2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "10.3. Histórico dos serviços realizados em TI;",
-      "content": "",
-      "children": [],
-      "marker": "10.3",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "10.4. Perspec\u0000va de crescimento da estrutura existente;",
-      "content": "",
-      "children": [],
-      "marker": "10.4",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "10.5. A vigência das subscrições dos so\u0000wares especificados é de 24 (vinte e quatro meses) meses a contar da abertura da ordem de fornecimento, a ser emi\u0000da após a assinatura do contrato.",
-      "content": "",
-      "children": [],
-      "marker": "10.5",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "10.6. Deverá ser considerada a modalidade de subscrição especificada na coluna “Tipo” para cada um dos produtos de so\u0000ware e nas quan\u0000dades constantes na tabela constante no modelo de proposta, a saber:",
-      "content": "",
-      "children": [
-        {
-          "level": 3,
-          "title": "10.6.1. Para todos os itens em que a coluna “\u0000po” seja especificada como “par de processadores” a contabilização deve ser realizada por par de sockets, ou seja, uma subscrição a cada 2 sockets.",
-          "content": "",
-          "children": [],
-          "marker": "10.6.1",
-          "type": "decimal_mixed"
-        },
-        {
-          "level": 3,
-          "title": "10.6.2. Para todos os itens em que a coluna “\u0000po” seja especificada como “cores \u0000sicos ou virtuais” a contabilização deve ser realizada por core \u0000sico ou virtual onde a aplicação es\u0000ver hospedada. Devem ser realizadas as duas",
-          "content": "contagens e considerada aquela que for menor, ou seja, a mais vantajosa para a contratante.",
-          "children": [],
-          "marker": "10.6.2",
-          "type": "decimal_mixed"
-        }
-      ],
-      "marker": "10.6",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 3,
-      "title": "10.6.1. Para todos os itens em que a coluna “\u0000po” seja especificada como “par de processadores” a contabilização deve ser realizada por par de sockets, ou seja, uma subscrição a cada 2 sockets.",
-      "content": "",
-      "children": [],
-      "marker": "10.6.1",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 3,
-      "title": "10.6.2. Para todos os itens em que a coluna “\u0000po” seja especificada como “cores \u0000sicos ou virtuais” a contabilização deve ser realizada por core \u0000sico ou virtual onde a aplicação es\u0000ver hospedada. Devem ser realizadas as duas",
-      "content": "contagens e considerada aquela que for menor, ou seja, a mais vantajosa para a contratante.",
-      "children": [],
-      "marker": "10.6.2",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "10.7. Para a cotação de preços dos itens de treinamento na modalidade de subscrição RedHat Learning Subscrip\u0000on, a quan\u0000dade a ser informada será por pessoa (por aluno).",
-      "content": "",
-      "children": [],
-      "marker": "10.7",
-      "type": "decimal_mixed"
-    },
-    {
-      "level": 2,
-      "title": "10.8. Para cotação dos preços dos itens de serviços, baseados em HST (hora de serviço técnico) observar o quan\u0000ta\u0000vo por “ilhas de serviço”.",
-      "content": "11. ESPECIFICAÇÃO TÉCNICA",
-      "children": [],
-      "marker": "10.8",
+      "marker": "11",
       "type": "decimal_mixed"
     },
     {
@@ -39442,10 +39478,50 @@
     {
       "level": 1,
       "title": "ANEXO D - (do Edital)",
-      "content": "MODELOS DE DECLARAÇÕES E RELATÓRIOS DO PROGRAMA DE INTEGRIDADE 1. DECLARAÇÃO PARA OS FINS DO DECRETO N° 39.860, DE 30 DE MAIO DE 2019 ORGÃO/ENTIDADE",
+      "content": "MODELOS DE DECLARAÇÕES E RELATÓRIOS DO PROGRAMA DE INTEGRIDADE",
       "children": [],
       "marker": "ANEXO D",
       "type": "anexo"
+    },
+    {
+      "level": 1,
+      "title": "1. DECLARAÇÃO PARA OS FINS DO DECRETO N° 39.860, DE 30 DE MAIO DE 2019",
+      "content": "ORGÃO/ENTIDADE MODALIDADE DE LICITAÇÃO NUMERO DA LICITAÇÃO",
+      "children": [],
+      "marker": "1",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 1,
+      "title": "2. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 4.770/2012",
+      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa___________________________________________________________, inscrita no CNPJ sob o nº _______________________________, sediada no endereço_________________________________, telefone/fax nº _____________, por intermédio do seu representante legal Sr(a). __________________________________________________________, portador(a) da Carteira de Iden\u0000dade nº ____________________ e do CPF nº _________________, DECLARA para",
+      "children": [],
+      "marker": "2",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 1,
+      "title": "3. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 5.847/2017",
+      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa___________________________________________________________, inscrita no CNPJ sob o nº _______________________________, sediada no endereço_________________________________, telefone/fax nº _____________, por intermédio do seu representante legal Sr(a). __________________________________________________________, portador(a) da Carteira de Iden\u0000dade nº ____________________ e do CPF nº _________________, DECLARA para",
+      "children": [],
+      "marker": "3",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 1,
+      "title": "4. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 6.128/2018",
+      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa___________________________________________________________, inscrita no CNPJ sob o nº _______________________________, sediada no endereço_________________________________, telefone/fax nº _____________, por intermédio do seu representante legal Sr(a). __________________________________________________________, portador(a) da Carteira de Iden\u0000dade nº ____________________ e do CPF nº _________________, DECLARA para",
+      "children": [],
+      "marker": "4",
+      "type": "decimal_mixed"
+    },
+    {
+      "level": 1,
+      "title": "5. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 4.799/2012",
+      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa___________________________________________________________, inscrita no CNPJ sob o nº _______________________________, sediada no endereço_________________________________, telefone/fax nº _____________, por intermédio do seu representante legal Sr(a). __________________________________________________________, portador(a) da Carteira de Iden\u0000dade nº ____________________ e do CPF nº _________________, DECLARA que ",
+      "children": [],
+      "marker": "5",
+      "type": "decimal_mixed"
     },
     {
       "level": 1,
@@ -39454,6 +39530,14 @@
       "children": [],
       "marker": "6",
       "type": "decimal_titled"
+    },
+    {
+      "level": 1,
+      "title": "7. DECLARAÇÃO PARA ATENDIMENTO À LEI DISTRITAL N° 6.112/2018",
+      "content": "Pregão Eletrônico nº__/2020 Departamento de Trânsito do Distrito Federal A empresa___________________________________________________________, inscrita no CNPJ sob o nº _______________________________, sediada no endereço_________________________________, telefone/fax nº _____________, por intermédio do seu representante legal Sr(a). __________________________________________________________, portador(a) da Carteira de Iden\u0000dade nº ____________________ e do CPF nº _________________, DECLARA para",
+      "children": [],
+      "marker": "7",
+      "type": "decimal_mixed"
     },
     {
       "level": 1,
