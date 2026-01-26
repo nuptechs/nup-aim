@@ -45,7 +45,7 @@ router.post("/analyze", async (req, res) => {
       return res.status(400).json({ error: "Nenhum texto foi extraído do arquivo" });
     }
 
-    const maxLength = 50000;
+    const maxLength = 120000;
     if (extractedText.length > maxLength) {
       console.log(`[DocumentReader] Texto truncado de ${extractedText.length} para ${maxLength} caracteres`);
       extractedText = extractedText.substring(0, maxLength) + "\n\n[TEXTO TRUNCADO - documento muito longo]";

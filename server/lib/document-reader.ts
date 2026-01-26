@@ -31,7 +31,7 @@ export async function readDocumentFromText(text: string): Promise<DocumentStruct
     };
   }
 
-  const truncatedText = text.length > 25000 ? text.substring(0, 25000) : text;
+  const truncatedText = text.length > 100000 ? text.substring(0, 100000) : text;
 
   const prompt = `Você é um especialista em análise de documentos técnicos brasileiros (editais, termos de referência, contratos).
 
