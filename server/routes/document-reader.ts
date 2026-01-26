@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { readDocumentFromText, DocumentStructure } from "../lib/document-reader";
 import mammoth from "mammoth";
-import * as pdfParse from "pdf-parse";
+import { extractText, getDocumentProxy } from "unpdf";
 
 const router = Router();
 
@@ -24,10 +24,12 @@ router.post("/analyze", async (req, res) => {
       ) {
         const result = await mammoth.extractRawText({ buffer });
         extractedText = result.value;
+        console.log(`[DocumentReader] DOCX extraído: ${extractedText.length} caracteres`);
       } else if (mimeType === "application/pdf" || fileName?.endsWith(".pdf")) {
-        const pdfData = await (pdfParse as any).default(buffer);
-        extractedText = pdfData.text;
-        console.log(`[DocumentReader] PDF extraído: ${pdfData.numpages} páginas, ${extractedText.length} caracteres`);
+        const pdf = await getDocumentProxy(new Uint8Array(buffer));
+        const { totalPages, text: pdfText } = await extractText(pdf, { mergePages: true });
+        extractedText = pdfText;
+        console.log(`[DocumentReader] PDF extraído: ${totalPages} páginas, ${extractedText.length} caracteres`);
       } else if (mimeType === "text/plain" || fileName?.endsWith(".txt")) {
         extractedText = buffer.toString("utf-8");
       } else if (mimeType?.startsWith("image/")) {
@@ -45,7 +47,8 @@ router.post("/analyze", async (req, res) => {
 
     const maxLength = 50000;
     if (extractedText.length > maxLength) {
-      extractedText = extractedText.substring(0, maxLength) + "\n\n[TEXTO TRUNCADO...]";
+      console.log(`[DocumentReader] Texto truncado de ${extractedText.length} para ${maxLength} caracteres`);
+      extractedText = extractedText.substring(0, maxLength) + "\n\n[TEXTO TRUNCADO - documento muito longo]";
     }
 
     const result: DocumentStructure = await readDocumentFromText(extractedText);
