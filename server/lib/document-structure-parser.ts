@@ -106,16 +106,10 @@ function isTableRow(text: string): boolean {
 
 const PATTERNS = [
   {
-    name: 'decimal_titled',
-    regex: /^(\d+(?:\.\d+)*)\s*[.-]?\s*([A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]{2,})$/,
+    name: 'decimal_any',
+    regex: /^(\d+(?:\.\d+)*)\.\s+(.+)$/,
     getLevel: (m: string) => m.split('.').length,
-    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`,
-    validate: (_marker: string, match: RegExpMatchArray) => {
-      const text = match[2]?.trim() || '';
-      if (isProperName(text)) return false;
-      if (isTableLabel(text)) return false;
-      return true;
-    }
+    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`
   },
   {
     name: 'decimal_dash',
@@ -127,17 +121,6 @@ const PATTERNS = [
       if (match[2] && /^\d+[-\/]/.test(match[2])) return false;
       const text = match[2]?.trim() || '';
       if (isTableRow(text)) return false;
-      return true;
-    }
-  },
-  {
-    name: 'decimal_mixed',
-    regex: /^(\d+(?:\.\d+)*)\.\s+(.{3,})$/,
-    getLevel: (m: string) => m.split('.').length,
-    getTitle: (m: RegExpMatchArray) => `${m[1]}. ${m[2].trim()}`,
-    validate: (marker: string, match: RegExpMatchArray) => {
-      const text = match[2]?.trim() || '';
-      if (isListItem(marker, text)) return false;
       return true;
     }
   },
