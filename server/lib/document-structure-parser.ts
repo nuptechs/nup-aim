@@ -63,11 +63,14 @@ function isInstitutionalHeader(text: string): boolean {
 function isListItem(marker: string, text: string): boolean {
   if (!marker.match(/^\d+$/) || marker.includes('.')) return false;
   
+  const isAllCaps = /^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s\/\-\(\)]+$/.test(text.trim());
+  if (isAllCaps) return false;
+  
   const firstWord = text.split(/\s+/)[0] || '';
   
-  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+r$/i.test(firstWord)) return true;
-  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+ndo$/i.test(firstWord)) return true;
-  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+ção$/i.test(firstWord)) return true;
+  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+r$/.test(firstWord)) return true;
+  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+ndo$/.test(firstWord)) return true;
+  if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]+ção$/.test(firstWord)) return true;
   
   if (/^[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ][a-zàáâãéêíóôõúç]/.test(text)) {
     if (!/[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ]{2,}/.test(text)) return true;
