@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { readDocumentFromText, DocumentStructure } from "../lib/document-reader";
+import { parseDocumentStructure, DocumentStructure } from "../lib/document-structure-parser";
 import mammoth from "mammoth";
 import { extractText, getDocumentProxy } from "unpdf";
 
@@ -27,11 +27,12 @@ router.post("/analyze", async (req, res) => {
         console.log(`[DocumentReader] DOCX extraído: ${extractedText.length} caracteres`);
       } else if (mimeType === "application/pdf" || fileName?.endsWith(".pdf")) {
         const pdf = await getDocumentProxy(new Uint8Array(buffer));
-        const { totalPages, text: pdfText } = await extractText(pdf, { mergePages: true });
-        extractedText = pdfText;
+        const { totalPages, text: pdfPages } = await extractText(pdf, { mergePages: false });
+        extractedText = Array.isArray(pdfPages) ? pdfPages.join('\n\n') : String(pdfPages);
         console.log(`[DocumentReader] PDF extraído: ${totalPages} páginas, ${extractedText.length} caracteres`);
       } else if (mimeType === "text/plain" || fileName?.endsWith(".txt")) {
         extractedText = buffer.toString("utf-8");
+        console.log(`[DocumentReader] TXT extraído: ${extractedText.length} caracteres`);
       } else if (mimeType?.startsWith("image/")) {
         return res.status(400).json({ 
           error: "Imagens não são suportadas. Envie arquivos PDF, DOCX ou TXT." 
@@ -45,13 +46,7 @@ router.post("/analyze", async (req, res) => {
       return res.status(400).json({ error: "Nenhum texto foi extraído do arquivo" });
     }
 
-    const maxLength = 120000;
-    if (extractedText.length > maxLength) {
-      console.log(`[DocumentReader] Texto truncado de ${extractedText.length} para ${maxLength} caracteres`);
-      extractedText = extractedText.substring(0, maxLength) + "\n\n[TEXTO TRUNCADO - documento muito longo]";
-    }
-
-    const result: DocumentStructure = await readDocumentFromText(extractedText);
+    const result: DocumentStructure = parseDocumentStructure(extractedText);
     res.json(result);
   } catch (error) {
     console.error("Erro ao analisar documento:", error);
