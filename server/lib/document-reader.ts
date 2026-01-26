@@ -92,7 +92,18 @@ Responda APENAS em JSON válido, sem markdown:
       return [];
     }
 
-    const parsed = JSON.parse(textContent.text);
+    let jsonText = textContent.text.trim();
+    if (jsonText.startsWith("```json")) {
+      jsonText = jsonText.slice(7);
+    } else if (jsonText.startsWith("```")) {
+      jsonText = jsonText.slice(3);
+    }
+    if (jsonText.endsWith("```")) {
+      jsonText = jsonText.slice(0, -3);
+    }
+    jsonText = jsonText.trim();
+
+    const parsed = JSON.parse(jsonText);
     return parsed.sections || [];
   } catch (error) {
     console.error("Erro ao analisar página:", error);
