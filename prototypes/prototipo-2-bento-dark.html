@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NuP_AIM - Protótipo 2: Bento Dark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a24;
+      --bg-elevated: #18182a;
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.12);
+      --text-primary: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #52525b;
+      --accent-primary: #8b5cf6;
+      --accent-secondary: #06b6d4;
+      --accent-gradient: linear-gradient(135deg, #8b5cf6, #06b6d4);
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --glow-purple: 0 0 60px rgba(139, 92, 246, 0.15);
+      --glow-cyan: 0 0 60px rgba(6, 182, 212, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--bg-card);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 0;
+      gap: 2rem;
+    }
+
+    .sidebar-logo {
+      width: 44px;
+      height: 44px;
+      background: var(--accent-gradient);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1rem;
+      color: white;
+      box-shadow: var(--glow-purple);
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .nav-item {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1.25rem;
+      position: relative;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-secondary);
+    }
+
+    .nav-item.active {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-primary);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      width: 4px;
+      height: 24px;
+      background: var(--accent-primary);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .sidebar-user {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .main-area {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .top-bar {
+      height: 72px;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .breadcrumb span:last-child {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: inherit;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-gradient {
+      background: var(--accent-gradient);
+      color: white;
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-gradient:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(139, 92, 246, 0.4);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      color: var(--success);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .content-area {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      background: var(--bg-dark);
+    }
+
+    .page-title {
+      margin-bottom: 2rem;
+    }
+
+    .page-title h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-title p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto auto;
+      gap: 1.5rem;
+    }
+
+    .bento-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 1.75rem;
+      transition: all 0.3s ease;
+    }
+
+    .bento-card:hover {
+      border-color: var(--border-hover);
+      box-shadow: var(--glow-purple);
+    }
+
+    .bento-card.span-2 {
+      grid-column: span 2;
+    }
+
+    .bento-card.span-3 {
+      grid-column: span 3;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .card-icon.purple {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-primary);
+    }
+
+    .card-icon.cyan {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-secondary);
+    }
+
+    .card-icon.orange {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    .card-title h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .card-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-primary);
+    }
+
+    .form-field {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .field-label span {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .field-label .required {
+      color: var(--accent-primary);
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      font-size: 1rem;
+      color: var(--text-primary);
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .field-input:hover {
+      border-color: var(--border-hover);
+    }
+
+    .field-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .field-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .field-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    textarea.field-input {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper select {
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .select-wrapper::after {
+      content: '▾';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 1rem;
+      background: var(--bg-dark);
+      border-radius: 12px;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 0.25rem;
+    }
+
+    .progress-ring {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .ring-visual {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent-primary) 0% 25%, var(--bg-dark) 25% 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .ring-visual::before {
+      content: '25%';
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: var(--bg-card);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--accent-primary);
+    }
+
+    .ring-info h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .ring-info p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-subtle);
+      margin-top: 1.5rem;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn-lg {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+    }
+
+    .ai-fab {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      background: var(--accent-gradient);
+      border-radius: 100px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4);
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .ai-fab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.5);
+    }
+
+    .ai-icon {
+      font-size: 1.25rem;
+    }
+
+    @media (max-width: 1024px) {
+      .bento-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .bento-card.span-3 {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        display: none;
+      }
+      
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .bento-card.span-2,
+      .bento-card.span-3 {
+        grid-column: span 1;
+      }
+      
+      .quick-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">PA</div>
+      
+      <nav class="sidebar-nav">
+        <div class="nav-item" title="Dashboard">📊</div>
+        <div class="nav-item active" title="Formulário">📝</div>
+        <div class="nav-item" title="Visualização">👁️</div>
+        <div class="nav-item" title="Relatórios">📈</div>
+        <div class="nav-item" title="Configurações">⚙️</div>
+      </nav>
+      
+      <div class="sidebar-user">WA</div>
+    </aside>
+
+    <div class="main-area">
+      <header class="top-bar">
+        <div class="breadcrumb">
+          <span>Análises</span>
+          <span>›</span>
+          <span>PA0025-2025</span>
+        </div>
+        
+        <div class="top-actions">
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            Salvando automaticamente
+          </div>
+          <button class="btn btn-outline">
+            <span>📷</span>
+            Extrair OCR
+          </button>
+          <button class="btn btn-gradient">
+            <span>📄</span>
+            Exportar Word
+          </button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <div class="page-title">
+          <h1>Nova Análise de Impacto</h1>
+          <p>Configure os detalhes da sua análise de forma modular</p>
+        </div>
+
+        <div class="bento-grid">
+          <div class="bento-card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon purple">📋</div>
+                <h3>Identificação</h3>
+              </div>
+              <span class="card-badge">Obrigatório</span>
+            </div>
+            
+            <div class="form-field">
+              <div class="field-label">
+                <span>Número da PA <span class="required">*</span></span>
+              </div>
+              <input type="text" class="field-input" value="PA0025-2025" placeholder="PANNNN-AAAA">
+              <p class="field-hint">Formato: PANNNN-AAAA</p>
+            </div>
+            
+            <div class="form-field">
+              <div class="field-label">
+                <span>Versão</span>
+              </div>
+              <input type="text" class="field-input" value="1.0" readonly style="opacity: 0.6;">
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon cyan">🎯</div>
+                <h3>Projeto</h3>
+              </div>
+            </div>
+            
+            <div class="form-field">
+              <div class="field-label">
+                <span>Selecionar projeto <span class="required">*</span></span>
+              </div>
+              <div class="select-wrapper">
+                <select class="field-input">
+                  <option value="">Escolha um projeto...</option>
+                  <option value="1">DETRAN - Modernização</option>
+                  <option value="2">SEFAZ - Integração</option>
+                  <option value="3">TJDFT - Sistema Jurídico</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-field">
+              <div class="field-label">
+                <span>Autor <span class="required">*</span></span>
+              </div>
+              <input type="text" class="field-input" value="Welber Ferreira Alves">
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon orange">📊</div>
+                <h3>Progresso</h3>
+              </div>
+            </div>
+            
+            <div class="progress-ring">
+              <div class="ring-visual"></div>
+              <div class="ring-info">
+                <h4>1 de 4 seções</h4>
+                <p>Complete todas as seções para exportar</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bento-card span-2">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon purple">📝</div>
+                <h3>Descrição da Análise</h3>
+              </div>
+              <span class="card-badge">IA disponível</span>
+            </div>
+            
+            <div class="form-field">
+              <textarea class="field-input" placeholder="Descreva o contexto, objetivo e escopo desta análise de impacto. A IA pode ajudar a sugerir melhorias..."></textarea>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="card-header">
+              <div class="card-title">
+                <h3>Estatísticas</h3>
+              </div>
+            </div>
+            
+            <div class="quick-stats">
+              <div class="stat-item">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Impactos</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Riscos</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Mitigações</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bento-card span-3">
+            <div class="actions-bar" style="border-top: none; padding-top: 0; margin-top: 0;">
+              <button class="btn btn-outline btn-lg">
+                ← Voltar ao Dashboard
+              </button>
+              
+              <div class="action-group">
+                <button class="btn btn-outline btn-lg">
+                  Salvar Rascunho
+                </button>
+                <button class="btn btn-gradient btn-lg">
+                  Próxima Seção →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="ai-fab">
+    <span class="ai-icon">✨</span>
+    <span>Assistente IA</span>
+  </div>
+</body>
+</html>

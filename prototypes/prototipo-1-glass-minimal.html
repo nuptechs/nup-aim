@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NuP_AIM - Protótipo 1: Glass Minimal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #8a8aa3;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --success: #10b981;
+      --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.08);
+      --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .header {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 0 2rem;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .logo-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .logo-text span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .session-badge {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--accent);
+      padding: 0.5rem 1rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .session-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .btn-header {
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--glass-bg);
+      color: var(--text-primary);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 0.35rem;
+      border-radius: 12px;
+    }
+
+    .nav-tab {
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: transparent;
+      border: none;
+    }
+
+    .nav-tab.active {
+      background: white;
+      color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .nav-tab:hover:not(.active) {
+      color: var(--text-primary);
+    }
+
+    .main-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .page-header h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-header p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+    }
+
+    .stepper {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .step.active {
+      background: white;
+      color: var(--accent);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .step.completed {
+      background: var(--success);
+      color: white;
+    }
+
+    .step-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: currentColor;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .step.active .step-number {
+      background: var(--accent);
+    }
+
+    .step.completed .step-number {
+      background: white;
+      color: var(--success);
+    }
+
+    .form-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: var(--shadow-soft), var(--shadow-glow);
+      border: 1px solid var(--glass-border);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .section-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .form-label .required {
+      color: #ef4444;
+    }
+
+    .form-input {
+      padding: 0.875rem 1rem;
+      border: 2px solid rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      font-size: 1rem;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.8);
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .form-input:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+      background: white;
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon .form-input {
+      padding-left: 2.75rem;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper select {
+      appearance: none;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .select-wrapper::after {
+      content: '▾';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    textarea.form-input {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-large {
+      padding: 1rem 2rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(0, 0, 0, 0.04);
+      color: var(--text-primary);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: white;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-accent:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(99, 102, 241, 0.5);
+    }
+
+    .save-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--success);
+      font-size: 0.875rem;
+    }
+
+    .ai-assistant {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.5);
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .ai-assistant:hover {
+      transform: scale(1.1);
+      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.6);
+    }
+
+    .ai-tooltip {
+      position: absolute;
+      right: 80px;
+      background: white;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      box-shadow: var(--shadow-soft);
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateX(10px);
+      transition: all 0.3s ease;
+    }
+
+    .ai-assistant:hover .ai-tooltip {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header {
+        padding: 0 1rem;
+      }
+      
+      .header-actions .btn-header span {
+        display: none;
+      }
+      
+      .stepper {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo-area">
+      <div class="logo-icon">PA</div>
+      <div class="logo-text">
+        <h1>NuP_AIM</h1>
+        <span>Análise de Impacto</span>
+      </div>
+    </div>
+    
+    <nav class="nav-tabs">
+      <button class="nav-tab">Dashboard</button>
+      <button class="nav-tab active">Formulário</button>
+      <button class="nav-tab">Visualização</button>
+    </nav>
+    
+    <div class="header-actions">
+      <div class="session-badge">Sessão ativa • 12:34</div>
+      <button class="btn-header btn-secondary">
+        <span>📷</span>
+        <span>Extrair OCR</span>
+      </button>
+      <button class="btn-header btn-primary">
+        <span>📄</span>
+        <span>Exportar Word</span>
+      </button>
+      <div class="user-avatar">WA</div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="page-header">
+      <h2>Nova Análise de Impacto</h2>
+      <p>Preencha as informações abaixo para criar sua análise</p>
+    </div>
+
+    <div class="stepper">
+      <div class="step completed">
+        <span class="step-number">✓</span>
+        <span>Identificação</span>
+      </div>
+      <div class="step active">
+        <span class="step-number">2</span>
+        <span>Informações Básicas</span>
+      </div>
+      <div class="step">
+        <span class="step-number">3</span>
+        <span>Escopo</span>
+      </div>
+      <div class="step">
+        <span class="step-number">4</span>
+        <span>Impactos</span>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="section-header">
+        <div class="section-icon">📋</div>
+        <h3 class="section-title">Informações Básicas</h3>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">
+            Número da PA <span class="required">*</span>
+          </label>
+          <div class="input-with-icon">
+            <span class="input-icon">#</span>
+            <input type="text" class="form-input" value="PA0025-2025" placeholder="PANNNN-AAAA">
+          </div>
+          <span class="form-hint">Formato: PANNNN-AAAA (Ex: PA0001-2024)</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Projeto <span class="required">*</span>
+          </label>
+          <div class="select-wrapper">
+            <select class="form-input">
+              <option value="">Selecione um projeto</option>
+              <option value="1">DETRAN - Modernização</option>
+              <option value="2">SEFAZ - Integração</option>
+              <option value="3">TJDFT - Sistema Jurídico</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Autor <span class="required">*</span>
+          </label>
+          <div class="input-with-icon">
+            <span class="input-icon">👤</span>
+            <input type="text" class="form-input" value="Welber Ferreira Alves" placeholder="Nome completo">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Versão</label>
+          <input type="text" class="form-input" value="1.0" readonly style="background: rgba(0,0,0,0.02);">
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">
+            Descrição <span class="required">*</span>
+          </label>
+          <textarea class="form-input" placeholder="Descreva o contexto e objetivo desta análise de impacto..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-large btn-ghost">
+          ← Voltar
+        </button>
+        
+        <div class="save-indicator">
+          <span>✓</span>
+          <span>Salvo automaticamente</span>
+        </div>
+        
+        <button class="btn-large btn-accent">
+          Continuar
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="ai-assistant">
+    ✨
+    <div class="ai-tooltip">Assistente IA disponível</div>
+  </div>
+</body>
+</html>

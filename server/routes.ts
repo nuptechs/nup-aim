@@ -1808,4 +1808,7 @@ Se não houver funcionalidades adicionais, retorne: {"additionalFunctionalities"
       res.status(500).json({ error: 'Failed to get active FPA guidelines', message: error.message });
     }
   });
+
+  // Serve UI prototypes (separate from main app)
+  app.use('/prototypes', express.static('prototypes'));
 }
