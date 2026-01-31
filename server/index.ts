@@ -15,6 +15,9 @@ async function startServer() {
   // Register all routes first
   await registerRoutes(app);
 
+  // Serve prototypes as static files (both dev and prod)
+  app.use('/prototypes', express.static(path.join(__dirname, '../prototypes')));
+
   if (isDev) {
     // Development: use Vite middleware
     const { createServer } = await import('vite');
