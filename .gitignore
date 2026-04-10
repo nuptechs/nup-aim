@@ -1,0 +1,9 @@
+# Replit generated files
+.local/
+.agent_state_*
+
+# Dependencies
+node_modules/
+
+# OS
+.DS_Store
