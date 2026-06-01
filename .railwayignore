@@ -1,0 +1,17 @@
+node_modules
+.git
+attached_assets
+prototypes
+tests
+docs
+sdk
+migrations
+.env
+.env.*
+.local
+.agent_state_*
+*.log
+.DS_Store
+dist
+.vite
+.cache
